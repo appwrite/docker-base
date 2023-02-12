@@ -84,3 +84,11 @@ commandTests:
     command: "magick"
     args: ["--version"]
     expectedOutput: [".*ImageMagick 7.1.0-16.*"]
+  - name: 'Certbot command'
+    command: "certbot"
+    args: ["--version"]
+    expectedOutput: ["certbot 1.*"]
+  - name: 'Docker command'
+    command: "docker"
+    args: ["--version"]
+    expectedOutput: ["Docker version 20.*"]
