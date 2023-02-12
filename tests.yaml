@@ -1,0 +1,54 @@
+schemaVersion: '2.0.0'
+
+fileExistenceTests:
+  - name: 'Check swoole extension'
+    path: /usr/local/lib/php/extensions/no-debug-non-zts-20200930/swoole.so
+    shouldExist: true
+  - name: 'Check redis extension'
+    path: /usr/local/lib/php/extensions/no-debug-non-zts-20200930/redis.so
+    shouldExist: true
+  - name: 'Check imagick extension'
+    path: /usr/local/lib/php/extensions/no-debug-non-zts-20200930/imagick.so
+    shouldExist: true
+  - name: 'Check yaml extension'
+    path: /usr/local/lib/php/extensions/no-debug-non-zts-20200930/yaml.so
+    shouldExist: true
+  - name: 'Check maxminddb extension'
+    path: /usr/local/lib/php/extensions/no-debug-non-zts-20200930/maxminddb.so
+    shouldExist: true
+  - name: 'Check mongodb extension'
+    path: /usr/local/lib/php/extensions/no-debug-non-zts-20200930/mongodb.so
+    shouldExist: true
+  - name: 'Check libphp_scrypt extension'
+    path: /usr/local/lib/php/extensions/no-debug-non-zts-20200930/libphp_scrypt.so
+    shouldExist: true
+  - name: 'Check zstd extension'
+    path: /usr/local/lib/php/extensions/no-debug-non-zts-20200930/zstd.so
+    shouldExist: true
+  - name: 'Check swoole ini'
+    path: /usr/local/etc/php/conf.d/swoole.ini
+    shouldExist: true
+  - name: 'Check redis ini'
+    path: /usr/local/etc/php/conf.d/redis.ini
+    shouldExist: true
+  - name: 'Check imagick ini'
+    path: /usr/local/etc/php/conf.d/imagick.ini
+    shouldExist: true
+  - name: 'Check yaml ini'
+    path: /usr/local/etc/php/conf.d/yaml.ini
+    shouldExist: true
+  - name: 'Check maxminddb ini'
+    path: /usr/local/etc/php/conf.d/maxminddb.ini
+    shouldExist: true
+  - name: 'Check libphp_scrypt ini'
+    path: /usr/local/etc/php/conf.d/libphp_scrypt.ini
+    shouldExist: true
+  - name: 'Check zstd ini'
+    path: /usr/local/etc/php/conf.d/zstd.ini
+    shouldExist: true
+  
+commandTests:
+  - name: 'Imagemagick command'
+    command: "magick"
+    args: ["--version"]
+    expectedOutput: [".*ImageMagick 7.1.0-16.*"]
