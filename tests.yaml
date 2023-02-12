@@ -1,6 +1,7 @@
 schemaVersion: '2.0.0'
 
 fileExistenceTests:
+  ## Extension files
   - name: 'Check swoole extension'
     path: /usr/local/lib/php/extensions/no-debug-non-zts-20200930/swoole.so
     shouldExist: true
@@ -25,6 +26,8 @@ fileExistenceTests:
   - name: 'Check zstd extension'
     path: /usr/local/lib/php/extensions/no-debug-non-zts-20200930/zstd.so
     shouldExist: true
+
+  ## ini files
   - name: 'Check swoole ini'
     path: /usr/local/etc/php/conf.d/swoole.ini
     shouldExist: true
@@ -40,6 +43,9 @@ fileExistenceTests:
   - name: 'Check maxminddb ini'
     path: /usr/local/etc/php/conf.d/maxminddb.ini
     shouldExist: true
+  - name: 'Check mongodb ini'
+    path: /usr/local/etc/php/conf.d/mongodb.ini
+    shouldExist: true
   - name: 'Check libphp_scrypt ini'
     path: /usr/local/etc/php/conf.d/libphp_scrypt.ini
     shouldExist: true
@@ -48,10 +54,31 @@ fileExistenceTests:
     shouldExist: true
 
 fileContentTests:
-  - name: 'Swoole ini'
+  - name: 'swoole ini'
     path: '/usr/local/etc/php/conf.d/swoole.ini'
     expectedContents: ['extension=swoole.so']
-
+  - name: 'redis ini'
+    path: '/usr/local/etc/php/conf.d/redis.ini'
+    expectedContents: ['extension=redis.so']
+  - name: 'imagick ini'
+    path: '/usr/local/etc/php/conf.d/imagick.ini'
+    expectedContents: ['extension=imagick.so']
+  - name: 'yaml ini'
+    path: '/usr/local/etc/php/conf.d/yaml.ini'
+    expectedContents: ['extension=yaml.so']
+  - name: 'maxminddb ini'
+    path: '/usr/local/etc/php/conf.d/maxminddb.ini'
+    expectedContents: ['extension=maxminddb.so']
+  - name: 'mongodb ini'
+    path: '/usr/local/etc/php/conf.d/mongodb.ini'
+    expectedContents: ['extension=mongodb.so']
+  - name: 'libphp_scrypt ini'
+    path: '/usr/local/etc/php/conf.d/libphp_scrypt.ini'
+    expectedContents: ['extension=libphp_scrypt.so']
+  - name: 'zstd ini'
+    path: '/usr/local/etc/php/conf.d/zstd.ini'
+    expectedContents: ['extension=zstd.so']
+  
 commandTests:
   - name: 'Imagemagick command'
     command: "magick"
