@@ -27,3 +27,13 @@ install:
 
 script:
   - container-structure-test test --image appwrite-base-test --config tests.yaml
+
+deploy:
+  - provider: script
+    edge: true
+    script: docker run --rm --privileged linuxkit/binfmt:v0.8 &&
+      docker buildx create --use &&
+      docker buildx build --platform linux/amd64,linux/arm64/v8,linux/ppc64le -t appwrite/base:$TRAVIS_TAG ./ --push
+    on:
+      tags: true
+      condition: "$TRAVIS_CPU_ARCH = amd64"
