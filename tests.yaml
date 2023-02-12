@@ -86,3 +86,10 @@ commandTests:
     command: "docker"
     args: ["--version"]
     expectedOutput: ["Docker version 20.*"]
+  - name: 'PHP info'
+    command: "php"
+    args: ["-r", "echo phpinfo();"]
+    expectedOutput:
+      - ".*imagick module => enabled.*"
+      - ".*MaxMind DB Reader => enabled.*"
+      - ".*mysqlnd => enabled.*"
