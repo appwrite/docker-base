@@ -43,9 +43,6 @@ fileExistenceTests:
   - name: 'Check maxminddb ini'
     path: /usr/local/etc/php/conf.d/maxminddb.ini
     shouldExist: true
-  - name: 'Check mongodb ini'
-    path: /usr/local/etc/php/conf.d/mongodb.ini
-    shouldExist: true
   - name: 'Check libphp_scrypt ini'
     path: /usr/local/etc/php/conf.d/libphp_scrypt.ini
     shouldExist: true
@@ -69,9 +66,6 @@ fileContentTests:
   - name: 'maxminddb ini'
     path: '/usr/local/etc/php/conf.d/maxminddb.ini'
     expectedContents: ['extension=maxminddb.so']
-  - name: 'mongodb ini'
-    path: '/usr/local/etc/php/conf.d/mongodb.ini'
-    expectedContents: ['extension=mongodb.so']
   - name: 'libphp_scrypt ini'
     path: '/usr/local/etc/php/conf.d/libphp_scrypt.ini'
     expectedContents: ['extension=libphp_scrypt.so']
