@@ -1,0 +1,29 @@
+
+dist: focal
+
+arch:
+  - amd64
+
+services:
+  - docker
+
+os: linux
+
+language: shell
+
+notifications:
+  email:
+    - team@appwrite.io
+
+before_install:
+  - curl -LO https://storage.googleapis.com/container-structure-test/latest/container-structure-test-linux-amd64 && chmod +x container-structure-test-linux-amd64 && sudo mv container-structure-test-linux-amd64 /usr/local/bin/container-structure-test
+  - >
+    if [ ! -z "${DOCKERHUB_PULL_USERNAME:-}" ]; then
+      echo "${DOCKERHUB_PULL_PASSWORD}" | docker login --username "${DOCKERHUB_PULL_USERNAME}" --password-stdin
+    fi
+install:
+  - docker --version
+  - docker build -t appwrite-base-test .
+
+script:
+  - container-structure-test test --image appwrite-base-test --config tests.yaml
