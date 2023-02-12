@@ -46,7 +46,12 @@ fileExistenceTests:
   - name: 'Check zstd ini'
     path: /usr/local/etc/php/conf.d/zstd.ini
     shouldExist: true
-  
+
+fileContentTests:
+  - name: 'Swoole ini'
+    path: '/usr/local/etc/php/conf.d/swoole.ini'
+    expectedContents: ['extension=swoole.so']
+
 commandTests:
   - name: 'Imagemagick command'
     command: "magick"
