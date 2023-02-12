@@ -88,8 +88,15 @@ commandTests:
     expectedOutput: ["Docker version 20.*"]
   - name: 'PHP info'
     command: "php"
-    args: ["-r", "echo phpinfo();"]
+    args: ["-m"]
     expectedOutput:
-      - ".*imagick module => enabled.*"
-      - ".*MaxMind DB Reader => enabled.*"
-      - ".*mysqlnd => enabled.*"
+      - ".*imagick.*"
+      - ".*maxminddb.*"
+      - ".*swoole.*"
+      - ".*redis.*"
+      - ".*yaml.*"
+      - ".*php-scrypt.*"
+      - ".*curl.*"
+      - ".*PDO.*"
+      - ".*pdo_mysql.*"
+      - ".*zstd.*"
