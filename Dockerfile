@@ -1,8 +1,5 @@
 FROM php:8.0.18-cli-alpine3.15 as compile
 
-ARG DEBUG=false
-ENV DEBUG=$DEBUG
-
 ENV PHP_REDIS_VERSION=5.3.7 \
     PHP_MONGODB_VERSION=1.13.0 \
     PHP_SWOOLE_VERSION=v4.8.10 \
@@ -50,16 +47,14 @@ RUN \
   cd ..
 
 ## Swoole Debugger setup
-RUN if [ "$DEBUG" == "true" ]; then \
-    cd /tmp && \
+RUN cd /tmp && \
     apk add boost-dev && \
     git clone --depth 1 https://github.com/swoole/yasd && \
     cd yasd && \
     phpize && \
     ./configure && \
     make && make install && \
-    cd ..;\
-  fi
+    cd ..;
 
 ## Imagick Extension
 FROM compile AS imagick
