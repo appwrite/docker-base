@@ -145,6 +145,10 @@ ENV DOCKER_COMPOSE_VERSION=v2.5.0
 
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
+RUN set -ex \
+  && apk --no-cache add \
+    postgresql-dev
+
 RUN \
   apk update \
   && apk add --no-cache --virtual .deps \
@@ -165,7 +169,7 @@ RUN \
   certbot \
   docker-cli \
   libgomp \
-  && docker-php-ext-install sockets opcache pdo_mysql \
+  && docker-php-ext-install sockets opcache pdo_mysql pdo_pgsql \
   && apk del .deps \
   && rm -rf /var/cache/apk/*
 
