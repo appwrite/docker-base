@@ -29,6 +29,15 @@ fileExistenceTests:
   - name: 'Check zstd extension'
     path: /usr/local/lib/php/extensions/no-debug-non-zts-20200930/zstd.so
     shouldExist: true
+  - name: 'Check brotli extension'
+    path: /usr/local/lib/php/extensions/no-debug-non-zts-20200930/brotli.so
+    shouldExist: true
+  - name: 'Check lz4 extension'
+    path: /usr/local/lib/php/extensions/no-debug-non-zts-20200930/lz4.so
+    shouldExist: true
+  - name: 'Check snappy extension'
+    path: /usr/local/lib/php/extensions/no-debug-non-zts-20200930/snappy.so
+    shouldExist: true
 
   ## ini files
   - name: 'Check swoole ini'
@@ -51,6 +60,15 @@ fileExistenceTests:
     shouldExist: true
   - name: 'Check zstd ini'
     path: /usr/local/etc/php/conf.d/zstd.ini
+    shouldExist: true
+  - name: 'Check brotli ini'
+    path: /usr/local/etc/php/conf.d/brotli.ini
+    shouldExist: true
+  - name: 'Check lz4 ini'
+    path: /usr/local/etc/php/conf.d/lz4.ini
+    shouldExist: true
+  - name: 'Check snappy ini'
+    path: /usr/local/etc/php/conf.d/snappy.ini
     shouldExist: true
 
 fileContentTests:
@@ -75,6 +93,15 @@ fileContentTests:
   - name: 'zstd ini'
     path: '/usr/local/etc/php/conf.d/zstd.ini'
     expectedContents: ['extension=zstd.so']
+  - name: 'brotli ini'
+    path: '/usr/local/etc/php/conf.d/brotli.ini'
+    expectedContents: ['extension=brotli.so']
+  - name: 'lz4 ini'
+    path: '/usr/local/etc/php/conf.d/lz4.ini'
+    expectedContents: ['extension=lz4.so']
+  - name: 'snappy ini'
+    path: '/usr/local/etc/php/conf.d/snappy.ini'
+    expectedContents: ['extension=snappy.so']
   
 commandTests:
   - name: 'Imagemagick command'
@@ -103,3 +130,6 @@ commandTests:
       - ".*PDO.*"
       - ".*pdo_mysql.*"
       - ".*zstd.*"
+      - ".*brotli.*"
+      - ".*lz4.*"
+      - ".*snappy.*"
