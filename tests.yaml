@@ -23,8 +23,8 @@ fileExistenceTests:
   - name: 'Check mongodb extension'
     path: /usr/local/lib/php/extensions/no-debug-non-zts-20200930/mongodb.so
     shouldExist: true
-  - name: 'Check libphp_scrypt extension'
-    path: /usr/local/lib/php/extensions/no-debug-non-zts-20200930/libphp_scrypt.so
+  - name: 'Check scrypt extension'
+    path: /usr/local/lib/php/extensions/no-debug-non-zts-20200930/scrypt.so
     shouldExist: true
   - name: 'Check zstd extension'
     path: /usr/local/lib/php/extensions/no-debug-non-zts-20200930/zstd.so
@@ -46,8 +46,8 @@ fileExistenceTests:
   - name: 'Check maxminddb ini'
     path: /usr/local/etc/php/conf.d/maxminddb.ini
     shouldExist: true
-  - name: 'Check libphp_scrypt ini'
-    path: /usr/local/etc/php/conf.d/libphp_scrypt.ini
+  - name: 'Check scrypt ini'
+    path: /usr/local/etc/php/conf.d/scrypt.ini
     shouldExist: true
   - name: 'Check zstd ini'
     path: /usr/local/etc/php/conf.d/zstd.ini
@@ -69,9 +69,9 @@ fileContentTests:
   - name: 'maxminddb ini'
     path: '/usr/local/etc/php/conf.d/maxminddb.ini'
     expectedContents: ['extension=maxminddb.so']
-  - name: 'libphp_scrypt ini'
-    path: '/usr/local/etc/php/conf.d/libphp_scrypt.ini'
-    expectedContents: ['extension=libphp_scrypt.so']
+  - name: 'scrypt ini'
+    path: '/usr/local/etc/php/conf.d/scrypt.ini'
+    expectedContents: ['extension=scrypt.so']
   - name: 'zstd ini'
     path: '/usr/local/etc/php/conf.d/zstd.ini'
     expectedContents: ['extension=zstd.so']
@@ -98,7 +98,7 @@ commandTests:
       - ".*swoole.*"
       - ".*redis.*"
       - ".*yaml.*"
-      - ".*php-scrypt.*"
+      - ".*scrypt.*"
       - ".*curl.*"
       - ".*PDO.*"
       - ".*pdo_mysql.*"
