@@ -103,6 +103,32 @@ RUN git clone --recursive -n https://github.com/kjdev/php-ext-zstd.git \
   && ./configure --with-libzstd \
   && make && make install
 
+## Brotli Extension
+FROM compile as brotli
+RUN git clone https://github.com/kjdev/php-ext-brotli.git \
+ && cd php-ext-brotli \
+ && git reset --hard $PHP_BROTLI_VERSION \
+ && phpize \
+ && ./configure --with-libbrotli \
+ && make && make install
+
+## LZ4 Extension
+FROM compile AS lz4
+RUN git clone --recursive https://github.com/kjdev/php-ext-lz4.git \
+  && cd php-ext-lz4 \
+  && git reset --hard $PHP_LZ4_VERSION \
+  && phpize \
+  && ./configure --with-lz4-includedir=/usr \ 
+  && make && make install
+
+## Snappy Extension
+FROM compile AS snappy
+RUN git clone --recursive https://github.com/kjdev/php-ext-snappy.git \
+  && cd php-ext-snappy \
+  && git reset --hard $PHP_SNAPPY_VERSION \
+  && phpize \
+  && ./configure \
+  && make && make install
 
 # Rust Extensions Compile Image
 FROM php:8.0.18-cli as rust_compile
@@ -180,6 +206,10 @@ COPY --from=maxmind /usr/local/lib/php/extensions/no-debug-non-zts-20200930/maxm
 COPY --from=mongodb /usr/local/lib/php/extensions/no-debug-non-zts-20200930/mongodb.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
 COPY --from=scrypt  /usr/local/lib/php/extensions/php-scrypt/target/libphp_scrypt.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
 COPY --from=zstd /usr/local/lib/php/extensions/no-debug-non-zts-20200930/zstd.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
+COPY --from=brotli /usr/local/lib/php/extensions/no-debug-non-zts-20200930/brotli.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
+COPY --from=lz4 /usr/local/lib/php/extensions/no-debug-non-zts-20200930/lz4.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
+COPY --from=snappy /usr/local/lib/php/extensions/no-debug-non-zts-20200930/snappy.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
+
 
 # Enable Extensions
 RUN echo extension=swoole.so >> /usr/local/etc/php/conf.d/swoole.ini
@@ -189,6 +219,9 @@ RUN echo extension=yaml.so >> /usr/local/etc/php/conf.d/yaml.ini
 RUN echo extension=maxminddb.so >> /usr/local/etc/php/conf.d/maxminddb.ini
 RUN echo extension=libphp_scrypt.so >> /usr/local/etc/php/conf.d/libphp_scrypt.ini
 RUN echo extension=zstd.so >> /usr/local/etc/php/conf.d/zstd.ini
+RUN echo extension=brotli.so >> /usr/local/etc/php/conf.d/brotli.ini
+RUN echo extension=lz4.so >> /usr/local/etc/php/conf.d/lz4.ini
+RUN echo extension=snappy.so >> /usr/local/etc/php/conf.d/snappy.ini
 
 EXPOSE 80
 
