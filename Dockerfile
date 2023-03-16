@@ -26,7 +26,9 @@ RUN \
   imagemagick \
   imagemagick-dev \
   libmaxminddb-dev \
-  zstd-dev
+  zstd-dev \
+  brotli-dev \
+  lz4-dev
 
 RUN docker-php-ext-install sockets
 
