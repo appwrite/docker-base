@@ -168,7 +168,7 @@ RUN \
   curl-dev \
   && apk add --no-cache \
   libstdc++ \
-  certbot \
+  rsync \
   brotli-dev \
   yaml-dev \
   imagemagick \
