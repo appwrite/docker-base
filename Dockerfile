@@ -139,14 +139,11 @@ RUN git clone --recursive https://github.com/kjdev/php-ext-snappy.git \
 ## Scrypt Extension
 FROM compile AS scrypt
 RUN \
-  git clone --depth 1 --branch master https://github.com/DomBlack/php-scrypt.git && \
-  cd php-scrypt && \
-  git reset --hard $PHP_SCRYPT_COMMIT_SHA && \
+  git clone --depth 1 --branch fix-invalid-sse-flags https://github.com/PineappleIOnic/php-scrypt-c.git && \
+  cd php-scrypt-c && \
   phpize && \
   ./configure --enable-scrypt && \
   make && make install
-
-
 
 FROM php:8.0.18-cli-alpine3.15 as final
 
