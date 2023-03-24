@@ -108,6 +108,10 @@ commandTests:
     command: "magick"
     args: ["--version"]
     expectedOutput: [".*ImageMagick 7.1.0-16.*"]
+  - name: 'rsync command'
+    command: "rsync"
+    args: ["--version"]
+    expectedOutput: ["rsync  version 3.*"]
   - name: 'Certbot command'
     command: "certbot"
     args: ["--version"]
