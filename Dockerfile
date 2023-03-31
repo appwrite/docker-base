@@ -21,7 +21,6 @@ RUN \
   g++ \
   git \
   zlib-dev \
-  brotli-dev \
   openssl-dev \
   yaml-dev \
   imagemagick \
@@ -167,6 +166,7 @@ RUN \
   libstdc++ \
   rsync \
   brotli-dev \
+  lz4-dev \
   yaml-dev \
   imagemagick \
   imagemagick-dev \
