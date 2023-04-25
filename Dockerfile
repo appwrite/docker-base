@@ -139,8 +139,8 @@ RUN git clone --recursive https://github.com/kjdev/php-ext-snappy.git \
 ## Scrypt Extension
 FROM compile AS scrypt
 RUN \
-  git clone --depth 1 --branch fix-invalid-sse-flags https://github.com/PineappleIOnic/php-scrypt-c.git && \
-  cd php-scrypt-c && \
+  git clone --depth 1 https://github.com/DomBlack/php-scrypt.git && \
+  cd php-scrypt && \
   phpize && \
   ./configure --enable-scrypt && \
   make && make install
