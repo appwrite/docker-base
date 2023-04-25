@@ -154,6 +154,8 @@ ENV DOCKER_COMPOSE_VERSION=v2.5.0
 
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
+RUN apk add git
+
 RUN \
   apk update \
   && apk add --no-cache --virtual .deps \
