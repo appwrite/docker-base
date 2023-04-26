@@ -6,7 +6,7 @@ ENV PHP_REDIS_VERSION=5.3.7 \
     PHP_IMAGICK_VERSION=3.7.0 \
     PHP_YAML_VERSION=2.2.2 \
     PHP_MAXMINDDB_VERSION=v1.11.0 \
-    PHP_SCRYPT_COMMIT_SHA="af0378533cbde920aa1985405c12423577685c5d" \
+    PHP_SCRYPT_COMMIT_SHA="9a8e615cb210d8564213be90a229c95c07c3f20a" \
     PHP_ZSTD_VERSION="4504e4186e79b197cfcb75d4d09aa47ef7d92fe9" \
     PHP_BROTLI_VERSION="7ae4fcd8b81a65d7521c298cae49af386d1ea4e3" \
     PHP_SNAPPY_VERSION="bfefe4906e0abb1f6cc19005b35f9af5240d9025" \
@@ -139,8 +139,9 @@ RUN git clone --recursive https://github.com/kjdev/php-ext-snappy.git \
 ## Scrypt Extension
 FROM compile AS scrypt
 RUN \
-  git clone --depth 1 --branch fix-invalid-sse-flags https://github.com/PineappleIOnic/php-scrypt-c.git && \
-  cd php-scrypt-c && \
+  git clone --depth 1 https://github.com/DomBlack/php-scrypt.git && \
+  cd php-scrypt && \
+  git checkout $PHP_SCRYPT_COMMIT_SHA && \
   phpize && \
   ./configure --enable-scrypt && \
   make && make install
