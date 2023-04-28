@@ -175,6 +175,7 @@ RUN \
   certbot \
   docker-cli \
   libgomp \
+  git \
   && docker-php-ext-install sockets opcache pdo_mysql \
   && apk del .deps \
   && rm -rf /var/cache/apk/*
