@@ -47,7 +47,7 @@ RUN \
   git clone --depth 1 --branch $PHP_SWOOLE_VERSION https://github.com/swoole/swoole-src.git && \
   cd swoole-src && \
   phpize && \
-  ./configure --enable-sockets --enable-http2 --enable-openssl && \
+  ./configure --enable-sockets --enable-http2 --enable-openssl --enable-hook-curl && \
   make && make install && \
   cd ..
 
