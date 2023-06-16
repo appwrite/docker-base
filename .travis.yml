@@ -1,4 +1,3 @@
-
 dist: focal
 
 arch:
@@ -33,13 +32,3 @@ install:
 
 script:
   - container-structure-test test --image appwrite-base-test --config tests.yaml
-
-deploy:
-  - provider: script
-    edge: true
-    script: docker run --privileged --rm tonistiigi/binfmt --install all &&
-      docker buildx create --use &&
-      docker buildx build --platform linux/amd64,linux/arm64/v8 -t appwrite/base:$TRAVIS_TAG ./ --push
-    on:
-      tags: true
-      condition: "$TRAVIS_CPU_ARCH = amd64"
