@@ -6,7 +6,7 @@ ENV PHP_REDIS_VERSION=5.3.7 \
     PHP_IMAGICK_VERSION=3.7.0 \
     PHP_YAML_VERSION=2.2.2 \
     PHP_MAXMINDDB_VERSION=v1.11.0 \
-    PHP_SCRYPT_COMMIT_SHA="9a8e615cb210d8564213be90a229c95c07c3f20a" \
+    PHP_SCRYPT_COMMIT_SHA="845b889bdbe817afe1633237f8fc68667c7a700b" \
     PHP_ZSTD_VERSION="4504e4186e79b197cfcb75d4d09aa47ef7d92fe9" \
     PHP_BROTLI_VERSION="7ae4fcd8b81a65d7521c298cae49af386d1ea4e3" \
     PHP_SNAPPY_VERSION="bfefe4906e0abb1f6cc19005b35f9af5240d9025" \
@@ -154,6 +154,10 @@ ENV DOCKER_COMPOSE_VERSION=v2.5.0
 
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
+RUN set -ex \
+  && apk --no-cache add \
+    postgresql-dev
+
 RUN \
   apk update \
   && apk add --no-cache --virtual .deps \
@@ -175,8 +179,7 @@ RUN \
   certbot \
   docker-cli \
   libgomp \
-  git \
-  && docker-php-ext-install sockets opcache pdo_mysql \
+  && docker-php-ext-install sockets opcache pdo_mysql pdo_pgsql \
   && apk del .deps \
   && rm -rf /var/cache/apk/*
 
