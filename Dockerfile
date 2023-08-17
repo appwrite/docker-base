@@ -1,14 +1,14 @@
-FROM php:8.0.18-cli-alpine3.15 as compile
+FROM php:8.0.30-cli-alpine3.16 as compile
 
-ENV PHP_REDIS_VERSION=5.3.7 \
-    PHP_MONGODB_VERSION=1.16.1 \
-    PHP_SWOOLE_VERSION=v5.0.1 \
-    PHP_IMAGICK_VERSION=3.7.0 \
-    PHP_YAML_VERSION=2.2.3 \
-    PHP_MAXMINDDB_VERSION=v1.11.0 \
-    PHP_SCRYPT_COMMIT_SHA="845b889bdbe817afe1633237f8fc68667c7a700b" \
-    PHP_ZSTD_VERSION="9a01a21b1f1555100540db0ae4f71274407f7896" \
-    PHP_BROTLI_VERSION="50aa46650c79339e5e886919dbfcb6edac00967f" \
+ENV PHP_REDIS_VERSION="5.3.7" \
+    PHP_MONGODB_VERSION="1.16.1" \
+    PHP_SWOOLE_VERSION="v5.0.3" \
+    PHP_IMAGICK_VERSION="3.7.0" \
+    PHP_YAML_VERSION="2.2.3" \
+    PHP_MAXMINDDB_VERSION="v1.11.0" \
+    PHP_SCRYPT_VERSION="2.0.1" \
+    PHP_ZSTD_VERSION="0.12.3" \
+    PHP_BROTLI_VERSION="0.14.0" \
     PHP_SNAPPY_VERSION="c27f830dcfe6c41eb2619a374de10fd0597f4939" \
     PHP_LZ4_VERSION="2f006c3e4f1fb3a60d2656fc164f9ba26b71e995"
 
@@ -112,11 +112,11 @@ RUN git clone --recursive -n https://github.com/kjdev/php-ext-zstd.git \
 ## Brotli Extension
 FROM compile as brotli
 RUN git clone https://github.com/kjdev/php-ext-brotli.git \
- && cd php-ext-brotli \
- && git reset --hard $PHP_BROTLI_VERSION \
- && phpize \
- && ./configure --with-libbrotli \
- && make && make install
+  && cd php-ext-brotli \
+  && git reset --hard $PHP_BROTLI_VERSION \
+  && phpize \
+  && ./configure --with-libbrotli \
+  && make && make install
 
 ## LZ4 Extension
 FROM compile AS lz4
@@ -124,7 +124,7 @@ RUN git clone --recursive https://github.com/kjdev/php-ext-lz4.git \
   && cd php-ext-lz4 \
   && git reset --hard $PHP_LZ4_VERSION \
   && phpize \
-  && ./configure --with-lz4-includedir=/usr \ 
+  && ./configure --with-lz4-includedir=/usr \
   && make && make install
 
 ## Snappy Extension
@@ -138,20 +138,19 @@ RUN git clone --recursive https://github.com/kjdev/php-ext-snappy.git \
 
 ## Scrypt Extension
 FROM compile AS scrypt
-RUN \
-  git clone --depth 1 https://github.com/DomBlack/php-scrypt.git && \
-  cd php-scrypt && \
-  git checkout $PHP_SCRYPT_COMMIT_SHA && \
-  phpize && \
-  ./configure --enable-scrypt && \
-  make && make install
+RUN git clone --depth 1 https://github.com/DomBlack/php-scrypt.git  \
+  && cd php-scrypt  \
+  && git reset --hard $PHP_SCRYPT_VERSION  \
+  && phpize  \
+  && ./configure --enable-scrypt  \
+  && make && make install
 
-FROM php:8.0.18-cli-alpine3.15 as final
+FROM php:8.0.30-cli-alpine3.16 as final
 
 LABEL maintainer="team@appwrite.io"
 
 ENV DOCKER_CONFIG=${DOCKER_CONFIG:-$HOME/.docker}
-ENV DOCKER_COMPOSE_VERSION=v2.5.0
+ENV DOCKER_COMPOSE_VERSION=v2.20.3
 
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
@@ -204,7 +203,6 @@ COPY --from=zstd /usr/local/lib/php/extensions/no-debug-non-zts-20200930/zstd.so
 COPY --from=brotli /usr/local/lib/php/extensions/no-debug-non-zts-20200930/brotli.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
 COPY --from=lz4 /usr/local/lib/php/extensions/no-debug-non-zts-20200930/lz4.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
 COPY --from=snappy /usr/local/lib/php/extensions/no-debug-non-zts-20200930/snappy.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
-
 
 # Enable Extensions
 RUN echo extension=swoole.so >> /usr/local/etc/php/conf.d/swoole.ini
