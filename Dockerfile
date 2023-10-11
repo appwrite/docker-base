@@ -31,7 +31,7 @@ RUN \
   lz4-dev \
   curl-dev
 
-RUN docker-php-ext-install sockets
+RUN docker-php-ext-install sockets pcntl
 
 FROM compile AS redis
 RUN \
