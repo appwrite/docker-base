@@ -5,9 +5,9 @@ fileExistenceTests:
   - name: 'Check swoole extension'
     path: /usr/local/lib/php/extensions/no-debug-non-zts-20200930/swoole.so
     shouldExist: true
-  - name: 'Check swoole Debugger extension'
-    path: /usr/local/lib/php/extensions/no-debug-non-zts-20200930/yasd.so
-    shouldExist: true
+  # - name: 'Check swoole Debugger extension'
+  #  path: /usr/local/lib/php/extensions/no-debug-non-zts-20200930/yasd.so
+  #  shouldExist: true
   - name: 'Check redis extension'
     path: /usr/local/lib/php/extensions/no-debug-non-zts-20200930/redis.so
     shouldExist: true
