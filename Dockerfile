@@ -53,16 +53,6 @@ RUN \
   make && make install && \
   cd ..
 
-## Swoole Debugger setup
-RUN cd /tmp && \
-    apk add boost-dev && \
-    git clone --depth 1 https://github.com/swoole/yasd && \
-    cd yasd && \
-    phpize && \
-    ./configure && \
-    make && make install && \
-    cd ..;
-
 ## Imagick Extension
 FROM compile AS imagick
 RUN \
@@ -195,7 +185,6 @@ RUN \
 WORKDIR /usr/src/code
 
 COPY --from=swoole /usr/local/lib/php/extensions/no-debug-non-zts-20220829/swoole.so /usr/local/lib/php/extensions/no-debug-non-zts-20220829/
-COPY --from=swoole /usr/local/lib/php/extensions/no-debug-non-zts-20220829/yasd.so /usr/local/lib/php/extensions/no-debug-non-zts-20220829/
 COPY --from=redis /usr/local/lib/php/extensions/no-debug-non-zts-20220829/redis.so /usr/local/lib/php/extensions/no-debug-non-zts-20220829/
 COPY --from=imagick /usr/local/lib/php/extensions/no-debug-non-zts-20220829/imagick.so /usr/local/lib/php/extensions/no-debug-non-zts-20220829/
 COPY --from=yaml /usr/local/lib/php/extensions/no-debug-non-zts-20220829/yaml.so /usr/local/lib/php/extensions/no-debug-non-zts-20220829/
@@ -209,7 +198,6 @@ COPY --from=snappy /usr/local/lib/php/extensions/no-debug-non-zts-20220829/snapp
 
 # Enable Extensions
 RUN echo extension=swoole.so >> /usr/local/etc/php/conf.d/swoole.ini
-RUN echo extension=yasd.so >> /usr/local/etc/php/conf.d/yasd.ini
 RUN echo extension=redis.so >> /usr/local/etc/php/conf.d/redis.ini
 RUN echo extension=imagick.so >> /usr/local/etc/php/conf.d/imagick.ini
 RUN echo extension=yaml.so >> /usr/local/etc/php/conf.d/yaml.ini
