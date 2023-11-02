@@ -3,40 +3,37 @@ schemaVersion: '2.0.0'
 fileExistenceTests:
   ## Extension files
   - name: 'Check swoole extension'
-    path: /usr/local/lib/php/extensions/no-debug-non-zts-20200930/swoole.so
-    shouldExist: true
-  - name: 'Check swoole Debugger extension'
-    path: /usr/local/lib/php/extensions/no-debug-non-zts-20200930/yasd.so
+    path: /usr/local/lib/php/extensions/no-debug-non-zts-20220829/swoole.so
     shouldExist: true
   - name: 'Check redis extension'
-    path: /usr/local/lib/php/extensions/no-debug-non-zts-20200930/redis.so
+    path: /usr/local/lib/php/extensions/no-debug-non-zts-20220829/redis.so
     shouldExist: true
   - name: 'Check imagick extension'
-    path: /usr/local/lib/php/extensions/no-debug-non-zts-20200930/imagick.so
+    path: /usr/local/lib/php/extensions/no-debug-non-zts-20220829/imagick.so
     shouldExist: true
   - name: 'Check yaml extension'
-    path: /usr/local/lib/php/extensions/no-debug-non-zts-20200930/yaml.so
+    path: /usr/local/lib/php/extensions/no-debug-non-zts-20220829/yaml.so
     shouldExist: true
   - name: 'Check maxminddb extension'
-    path: /usr/local/lib/php/extensions/no-debug-non-zts-20200930/maxminddb.so
+    path: /usr/local/lib/php/extensions/no-debug-non-zts-20220829/maxminddb.so
     shouldExist: true
   - name: 'Check mongodb extension'
-    path: /usr/local/lib/php/extensions/no-debug-non-zts-20200930/mongodb.so
+    path: /usr/local/lib/php/extensions/no-debug-non-zts-20220829/mongodb.so
     shouldExist: true
   - name: 'Check scrypt extension'
-    path: /usr/local/lib/php/extensions/no-debug-non-zts-20200930/scrypt.so
+    path: /usr/local/lib/php/extensions/no-debug-non-zts-20220829/scrypt.so
     shouldExist: true
   - name: 'Check zstd extension'
-    path: /usr/local/lib/php/extensions/no-debug-non-zts-20200930/zstd.so
+    path: /usr/local/lib/php/extensions/no-debug-non-zts-20220829/zstd.so
     shouldExist: true
   - name: 'Check brotli extension'
-    path: /usr/local/lib/php/extensions/no-debug-non-zts-20200930/brotli.so
+    path: /usr/local/lib/php/extensions/no-debug-non-zts-20220829/brotli.so
     shouldExist: true
   - name: 'Check lz4 extension'
-    path: /usr/local/lib/php/extensions/no-debug-non-zts-20200930/lz4.so
+    path: /usr/local/lib/php/extensions/no-debug-non-zts-20220829/lz4.so
     shouldExist: true
   - name: 'Check snappy extension'
-    path: /usr/local/lib/php/extensions/no-debug-non-zts-20200930/snappy.so
+    path: /usr/local/lib/php/extensions/no-debug-non-zts-20220829/snappy.so
     shouldExist: true
 
   ## ini files
@@ -107,7 +104,7 @@ commandTests:
   - name: 'Imagemagick command'
     command: "magick"
     args: ["--version"]
-    expectedOutput: [".*ImageMagick 7.1.0-50.*"]
+    expectedOutput: [".*ImageMagick 7.1.*"]
   - name: 'rsync command'
     command: "rsync"
     args: ["--version"]
@@ -115,11 +112,11 @@ commandTests:
   - name: 'Certbot command'
     command: "certbot"
     args: ["--version"]
-    expectedOutput: ["certbot 1.*"]
+    expectedOutput: ["certbot 2.*"]
   - name: 'Docker command'
     command: "docker"
     args: ["--version"]
-    expectedOutput: ["Docker version 20.*"]
+    expectedOutput: ["Docker version 23.*"]
   - name: 'PHP info'
     command: "php"
     args: ["-m"]
