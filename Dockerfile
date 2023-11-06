@@ -10,7 +10,8 @@ ENV PHP_REDIS_VERSION="5.3.7" \
     PHP_ZSTD_VERSION="0.12.3" \
     PHP_BROTLI_VERSION="0.14.0" \
     PHP_SNAPPY_VERSION="c27f830dcfe6c41eb2619a374de10fd0597f4939" \
-    PHP_LZ4_VERSION="2f006c3e4f1fb3a60d2656fc164f9ba26b71e995"
+    PHP_LZ4_VERSION="2f006c3e4f1fb3a60d2656fc164f9ba26b71e995" \
+    PHP_XDEBUG_VERSION="3.2.2"
 
 RUN \
   apk add --no-cache --virtual .deps \
@@ -136,6 +137,15 @@ RUN git clone --depth 1 https://github.com/DomBlack/php-scrypt.git  \
   && ./configure --enable-scrypt  \
   && make && make install
 
+## XDebug Extension
+FROM compile AS xdebug
+RUN \
+  git clone --depth 1 --branch $PHP_XDEBUG_VERSION https://github.com/xdebug/xdebug && \
+  cd xdebug && \
+  phpize && \
+  ./configure && \
+  make && make install
+
 FROM php:8.2.6-cli-alpine3.18 as final
 
 LABEL maintainer="team@appwrite.io"
@@ -195,6 +205,7 @@ COPY --from=zstd /usr/local/lib/php/extensions/no-debug-non-zts-20220829/zstd.so
 COPY --from=brotli /usr/local/lib/php/extensions/no-debug-non-zts-20220829/brotli.so /usr/local/lib/php/extensions/no-debug-non-zts-20220829/
 COPY --from=lz4 /usr/local/lib/php/extensions/no-debug-non-zts-20220829/lz4.so /usr/local/lib/php/extensions/no-debug-non-zts-20220829/
 COPY --from=snappy /usr/local/lib/php/extensions/no-debug-non-zts-20220829/snappy.so /usr/local/lib/php/extensions/no-debug-non-zts-20220829/
+COPY --from=xdebug /usr/local/lib/php/extensions/no-debug-non-zts-20220829/xdebug.so /usr/local/lib/php/extensions/no-debug-non-zts-20220829/
 
 # Enable Extensions
 RUN echo extension=swoole.so >> /usr/local/etc/php/conf.d/swoole.ini
