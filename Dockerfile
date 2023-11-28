@@ -178,11 +178,13 @@ RUN \
   imagemagick \
   imagemagick-dev \
   libmaxminddb-dev \
+  libpng-dev \
   certbot \
   docker-cli \
   libgomp \
   git \
-  && docker-php-ext-install sockets opcache pdo_mysql pdo_pgsql \
+  && docker-php-ext-install sockets opcache pdo_mysql pdo_pgsql gd \
+  && docker-php-ext-enable gd \
   && apk del .deps \
   && rm -rf /var/cache/apk/*
 
