@@ -116,7 +116,7 @@ commandTests:
   - name: 'Docker command'
     command: "docker"
     args: ["--version"]
-    expectedOutput: ["Docker version 23.*"]
+    expectedOutput: ["Docker version 24.*"]
   - name: 'PHP info'
     command: "php"
     args: ["-m"]
