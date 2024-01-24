@@ -27,6 +27,9 @@ RUN \
   yaml-dev \
   imagemagick \
   imagemagick-dev \
+  libjpeg-turbo-dev \
+  jpeg-dev \
+  libjxl-dev \
   libmaxminddb-dev \
   zstd-dev \
   brotli-dev \
@@ -177,6 +180,9 @@ RUN \
   yaml-dev \
   imagemagick \
   imagemagick-dev \
+  libjpeg-turbo-dev \
+  jpeg-dev \
+  libjxl-dev \
   libmaxminddb-dev \
   certbot \
   docker-cli \
