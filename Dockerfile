@@ -1,16 +1,16 @@
 FROM php:8.0.18-cli-alpine3.15 as compile
 
 ENV PHP_REDIS_VERSION=5.3.7 \
-    PHP_MONGODB_VERSION=1.16.1 \
-    PHP_SWOOLE_VERSION=v5.1.2 \
-    PHP_IMAGICK_VERSION=3.7.0 \
-    PHP_YAML_VERSION=2.2.3 \
-    PHP_MAXMINDDB_VERSION=v1.11.0 \
-    PHP_SCRYPT_COMMIT_SHA="845b889bdbe817afe1633237f8fc68667c7a700b" \
-    PHP_ZSTD_VERSION="9a01a21b1f1555100540db0ae4f71274407f7896" \
-    PHP_BROTLI_VERSION="50aa46650c79339e5e886919dbfcb6edac00967f" \
-    PHP_SNAPPY_VERSION="c27f830dcfe6c41eb2619a374de10fd0597f4939" \
-    PHP_LZ4_VERSION="2f006c3e4f1fb3a60d2656fc164f9ba26b71e995"
+  PHP_MONGODB_VERSION=1.16.1 \
+  PHP_SWOOLE_VERSION=v5.1.2 \
+  PHP_IMAGICK_VERSION=3.7.0 \
+  PHP_YAML_VERSION=2.2.3 \
+  PHP_MAXMINDDB_VERSION=v1.11.0 \
+  PHP_SCRYPT_COMMIT_SHA="845b889bdbe817afe1633237f8fc68667c7a700b" \
+  PHP_ZSTD_VERSION="9a01a21b1f1555100540db0ae4f71274407f7896" \
+  PHP_BROTLI_VERSION="50aa46650c79339e5e886919dbfcb6edac00967f" \
+  PHP_SNAPPY_VERSION="c27f830dcfe6c41eb2619a374de10fd0597f4939" \
+  PHP_LZ4_VERSION="2f006c3e4f1fb3a60d2656fc164f9ba26b71e995"
 
 RUN \
   apk add --no-cache --virtual .deps \
@@ -54,13 +54,13 @@ RUN \
 
 ## Swoole Debugger setup
 RUN cd /tmp && \
-    apk add boost-dev && \
-    git clone --depth 1 https://github.com/swoole/yasd && \
-    cd yasd && \
-    phpize && \
-    ./configure && \
-    make && make install && \
-    cd ..;
+  apk add boost-dev && \
+  git clone --depth 1 https://github.com/swoole/yasd && \
+  cd yasd && \
+  phpize && \
+  ./configure && \
+  make && make install && \
+  cd ..;
 
 ## Imagick Extension
 FROM compile AS imagick
@@ -112,11 +112,11 @@ RUN git clone --recursive -n https://github.com/kjdev/php-ext-zstd.git \
 ## Brotli Extension
 FROM compile as brotli
 RUN git clone https://github.com/kjdev/php-ext-brotli.git \
- && cd php-ext-brotli \
- && git reset --hard $PHP_BROTLI_VERSION \
- && phpize \
- && ./configure --with-libbrotli \
- && make && make install
+  && cd php-ext-brotli \
+  && git reset --hard $PHP_BROTLI_VERSION \
+  && phpize \
+  && ./configure --with-libbrotli \
+  && make && make install
 
 ## LZ4 Extension
 FROM compile AS lz4
@@ -157,7 +157,7 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 RUN set -ex \
   && apk --no-cache add \
-    postgresql-dev
+  postgresql-dev
 
 RUN \
   apk update \
@@ -177,8 +177,8 @@ RUN \
   imagemagick \
   imagemagick-dev \
   libmaxminddb-dev \
-  certbot \
-  docker-cli \
+  'certbot<2.0.0' \
+  'docker-cli<21.0.0' \
   libgomp \
   git \
   && docker-php-ext-install sockets opcache pdo_mysql pdo_pgsql \
