@@ -188,7 +188,7 @@ RUN \
   docker-cli \
   libgomp \
   git \
-  && docker-php-ext-install sockets opcache pdo_mysql pdo_pgsql \
+  && docker-php-ext-install sockets pdo_mysql pdo_pgsql \
   && apk del .deps \
   && rm -rf /var/cache/apk/*
 
