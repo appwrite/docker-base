@@ -30,9 +30,6 @@ RUN \
   libjpeg-turbo-dev \
   jpeg-dev \
   libjxl-dev \
-  libavif \
-  libheif \
-  imagemagick-heic \
   libmaxminddb-dev \
   zstd-dev \
   brotli-dev \
@@ -186,6 +183,9 @@ RUN \
   libjpeg-turbo-dev \
   jpeg-dev \
   libjxl-dev \
+  libavif \
+  libheif \
+  imagemagick-heic \
   libmaxminddb-dev \
   certbot \
   docker-cli \
