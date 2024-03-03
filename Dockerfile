@@ -30,6 +30,9 @@ RUN \
   libjpeg-turbo-dev \
   jpeg-dev \
   libjxl-dev \
+  libavif \
+  libheif \
+  imagemagick-heic \
   libmaxminddb-dev \
   zstd-dev \
   brotli-dev \
