@@ -134,3 +134,8 @@ commandTests:
       - ".*brotli.*"
       - ".*lz4.*"
       - ".*snappy.*"
+  - name: 'PHP intl'
+    command: "php"
+    args: ["-r", 'print(\Normalizer::FORM_D);']
+    expectedOutput:
+      - "4"
