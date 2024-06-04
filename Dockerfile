@@ -1,4 +1,4 @@
-FROM php:8.3.3-cli-alpine3.19 as compile
+FROM php:8.3.7-cli-alpine3.19 as compile
 
 ENV PHP_REDIS_VERSION="6.0.2" \
     PHP_MONGODB_VERSION="1.16.1" \
@@ -149,7 +149,7 @@ RUN \
   ./configure && \
   make && make install
 
-FROM php:8.3.3-cli-alpine3.19 as final
+FROM php:8.3.7-cli-alpine3.19 as final
 
 LABEL maintainer="team@appwrite.io"
 
