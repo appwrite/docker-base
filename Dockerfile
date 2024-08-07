@@ -1,8 +1,8 @@
-FROM php:8.3.7-cli-alpine3.19 as compile
+FROM php:8.3.10-cli-alpine3.20 as compile
 
 ENV PHP_REDIS_VERSION="6.0.2" \
-    PHP_MONGODB_VERSION="1.16.1" \
-    PHP_SWOOLE_VERSION="v5.1.2" \
+    PHP_MONGODB_VERSION="1.19.3" \
+    PHP_SWOOLE_VERSION="v5.1.3" \
     PHP_IMAGICK_VERSION="3.7.0" \
     PHP_YAML_VERSION="2.2.3" \
     PHP_MAXMINDDB_VERSION="v1.11.1" \
@@ -11,7 +11,7 @@ ENV PHP_REDIS_VERSION="6.0.2" \
     PHP_BROTLI_VERSION="0.15.0" \
     PHP_SNAPPY_VERSION="c27f830dcfe6c41eb2619a374de10fd0597f4939" \
     PHP_LZ4_VERSION="2f006c3e4f1fb3a60d2656fc164f9ba26b71e995" \
-    PHP_XDEBUG_VERSION="3.3.1"
+    PHP_XDEBUG_VERSION="3.3.2"
 
 RUN \
   apk add --no-cache --virtual .deps \
@@ -154,7 +154,7 @@ FROM php:8.3.7-cli-alpine3.19 as final
 LABEL maintainer="team@appwrite.io"
 
 ENV DOCKER_CONFIG=${DOCKER_CONFIG:-$HOME/.docker}
-ENV DOCKER_COMPOSE_VERSION="v2.24.6"
+ENV DOCKER_COMPOSE_VERSION="v2.29.1"
 
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
