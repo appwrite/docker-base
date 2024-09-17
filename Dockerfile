@@ -154,7 +154,7 @@ FROM php:8.3.11-cli-alpine3.20 as final
 LABEL maintainer="team@appwrite.io"
 
 ENV DOCKER_CONFIG=${DOCKER_CONFIG:-$HOME/.docker}
-ENV DOCKER_COMPOSE_VERSION="v2.29.1"
+ENV DOCKER_COMPOSE_VERSION="v2.29.5"
 
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
