@@ -1,4 +1,4 @@
-FROM php:8.3.10-cli-alpine3.20 as compile
+FROM php:8.3.11-cli-alpine3.20 as compile
 
 ENV PHP_REDIS_VERSION="6.0.2" \
     PHP_MONGODB_VERSION="1.19.3" \
@@ -149,12 +149,12 @@ RUN \
   ./configure && \
   make && make install
 
-FROM php:8.3.7-cli-alpine3.19 as final
+FROM php:8.3.11-cli-alpine3.20 as final
 
 LABEL maintainer="team@appwrite.io"
 
 ENV DOCKER_CONFIG=${DOCKER_CONFIG:-$HOME/.docker}
-ENV DOCKER_COMPOSE_VERSION="v2.29.1"
+ENV DOCKER_COMPOSE_VERSION="v2.29.5"
 
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
