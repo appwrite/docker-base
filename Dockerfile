@@ -1,10 +1,12 @@
-FROM php:8.3.11-cli-alpine3.20 as compile
+ARG BASEIMAGE="php:8.3.13-cli-alpine3.20"
 
-ENV PHP_REDIS_VERSION="6.0.2" \
-    PHP_MONGODB_VERSION="1.19.3" \
-    PHP_SWOOLE_VERSION="v5.1.3" \
+FROM $BASEIMAGE as compile
+
+ENV PHP_REDIS_VERSION="6.1.0" \
+    PHP_MONGODB_VERSION="1.20.0" \
+    PHP_SWOOLE_VERSION="v5.1.5" \
     PHP_IMAGICK_VERSION="3.7.0" \
-    PHP_YAML_VERSION="2.2.3" \
+    PHP_YAML_VERSION="2.2.4" \
     PHP_MAXMINDDB_VERSION="v1.11.1" \
     PHP_SCRYPT_VERSION="2.0.1" \
     PHP_ZSTD_VERSION="0.13.3" \
@@ -149,7 +151,7 @@ RUN \
   ./configure && \
   make && make install
 
-FROM php:8.3.11-cli-alpine3.20 as final
+FROM $BASEIMAGE as final
 
 LABEL maintainer="team@appwrite.io"
 
