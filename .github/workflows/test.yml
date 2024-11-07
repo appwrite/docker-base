@@ -1,9 +1,6 @@
 name: Test container structure
 
-on:
-  pull_request:
-    branches:
-      - main
+on: [pull_request]
 
 env:
   REGISTRY: docker.io
