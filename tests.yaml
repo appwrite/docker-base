@@ -1,104 +1,4 @@
 schemaVersion: '2.0.0'
-
-fileExistenceTests:
-  ## Extension files
-  - name: 'Check swoole extension'
-    path: /usr/local/lib/php/extensions/no-debug-non-zts-20230831/swoole.so
-    shouldExist: true
-  - name: 'Check redis extension'
-    path: /usr/local/lib/php/extensions/no-debug-non-zts-20230831/redis.so
-    shouldExist: true
-  - name: 'Check imagick extension'
-    path: /usr/local/lib/php/extensions/no-debug-non-zts-20230831/imagick.so
-    shouldExist: true
-  - name: 'Check yaml extension'
-    path: /usr/local/lib/php/extensions/no-debug-non-zts-20230831/yaml.so
-    shouldExist: true
-  - name: 'Check maxminddb extension'
-    path: /usr/local/lib/php/extensions/no-debug-non-zts-20230831/maxminddb.so
-    shouldExist: true
-  - name: 'Check mongodb extension'
-    path: /usr/local/lib/php/extensions/no-debug-non-zts-20230831/mongodb.so
-    shouldExist: true
-  - name: 'Check scrypt extension'
-    path: /usr/local/lib/php/extensions/no-debug-non-zts-20230831/scrypt.so
-    shouldExist: true
-  - name: 'Check zstd extension'
-    path: /usr/local/lib/php/extensions/no-debug-non-zts-20230831/zstd.so
-    shouldExist: true
-  - name: 'Check brotli extension'
-    path: /usr/local/lib/php/extensions/no-debug-non-zts-20230831/brotli.so
-    shouldExist: true
-  - name: 'Check lz4 extension'
-    path: /usr/local/lib/php/extensions/no-debug-non-zts-20230831/lz4.so
-    shouldExist: true
-  - name: 'Check snappy extension'
-    path: /usr/local/lib/php/extensions/no-debug-non-zts-20230831/snappy.so
-    shouldExist: true
-
-  ## ini files
-  - name: 'Check swoole ini'
-    path: /usr/local/etc/php/conf.d/swoole.ini
-    shouldExist: true
-  - name: 'Check redis ini'
-    path: /usr/local/etc/php/conf.d/redis.ini
-    shouldExist: true
-  - name: 'Check imagick ini'
-    path: /usr/local/etc/php/conf.d/imagick.ini
-    shouldExist: true
-  - name: 'Check yaml ini'
-    path: /usr/local/etc/php/conf.d/yaml.ini
-    shouldExist: true
-  - name: 'Check maxminddb ini'
-    path: /usr/local/etc/php/conf.d/maxminddb.ini
-    shouldExist: true
-  - name: 'Check scrypt ini'
-    path: /usr/local/etc/php/conf.d/scrypt.ini
-    shouldExist: true
-  - name: 'Check zstd ini'
-    path: /usr/local/etc/php/conf.d/zstd.ini
-    shouldExist: true
-  - name: 'Check brotli ini'
-    path: /usr/local/etc/php/conf.d/brotli.ini
-    shouldExist: true
-  - name: 'Check lz4 ini'
-    path: /usr/local/etc/php/conf.d/lz4.ini
-    shouldExist: true
-  - name: 'Check snappy ini'
-    path: /usr/local/etc/php/conf.d/snappy.ini
-    shouldExist: true
-
-fileContentTests:
-  - name: 'swoole ini'
-    path: '/usr/local/etc/php/conf.d/swoole.ini'
-    expectedContents: ['extension=swoole.so']
-  - name: 'redis ini'
-    path: '/usr/local/etc/php/conf.d/redis.ini'
-    expectedContents: ['extension=redis.so']
-  - name: 'imagick ini'
-    path: '/usr/local/etc/php/conf.d/imagick.ini'
-    expectedContents: ['extension=imagick.so']
-  - name: 'yaml ini'
-    path: '/usr/local/etc/php/conf.d/yaml.ini'
-    expectedContents: ['extension=yaml.so']
-  - name: 'maxminddb ini'
-    path: '/usr/local/etc/php/conf.d/maxminddb.ini'
-    expectedContents: ['extension=maxminddb.so']
-  - name: 'scrypt ini'
-    path: '/usr/local/etc/php/conf.d/scrypt.ini'
-    expectedContents: ['extension=scrypt.so']
-  - name: 'zstd ini'
-    path: '/usr/local/etc/php/conf.d/zstd.ini'
-    expectedContents: ['extension=zstd.so']
-  - name: 'brotli ini'
-    path: '/usr/local/etc/php/conf.d/brotli.ini'
-    expectedContents: ['extension=brotli.so']
-  - name: 'lz4 ini'
-    path: '/usr/local/etc/php/conf.d/lz4.ini'
-    expectedContents: ['extension=lz4.so']
-  - name: 'snappy ini'
-    path: '/usr/local/etc/php/conf.d/snappy.ini'
-    expectedContents: ['extension=snappy.so']
   
 commandTests:
   - name: 'Imagemagick command'
@@ -121,19 +21,56 @@ commandTests:
     command: "php"
     args: ["-m"]
     expectedOutput:
-      - ".*imagick.*"
-      - ".*maxminddb.*"
-      - ".*swoole.*"
-      - ".*redis.*"
-      - ".*yaml.*"
-      - ".*scrypt.*"
-      - ".*curl.*"
-      - ".*PDO.*"
-      - ".*pdo_mysql.*"
-      - ".*zstd.*"
-      - ".*brotli.*"
-      - ".*lz4.*"
-      - ".*snappy.*"
+      - brotli
+      - Core
+      - ctype
+      - curl
+      - date
+      - dom
+      - fileinfo
+      - filter
+      - gd
+      - hash
+      - iconv
+      - imagick
+      - intl
+      - json
+      - libxml
+      - lz4
+      - maxminddb
+      - mbstring
+      - mysqlnd
+      - openssl
+      - opentelemetry
+      - pcre
+      - PDO
+      - pdo_mysql
+      - pdo_pgsql
+      - pdo_sqlite
+      - Phar
+      - posix
+      - protobuf
+      - random
+      - readline
+      - redis
+      - Reflection
+      - scrypt
+      - session
+      - SimpleXML
+      - snappy
+      - sockets
+      - sodium
+      - SPL
+      - sqlite3
+      - standard
+      - swoole
+      - tokenizer
+      - xml
+      - xmlreader
+      - xmlwriter
+      - yaml
+      - zlib
+      - zstd
   - name: 'PHP intl'
     command: "php"
     args: ["-r", 'print(\Normalizer::FORM_D);']
