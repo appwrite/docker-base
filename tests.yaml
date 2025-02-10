@@ -78,6 +78,6 @@ commandTests:
       - "4"
   - name: 'ZIP'
     command: "zip"
-    args: ["-v"]
+    args: ["-v", "| sed -n '2p'"]
     expectedOutput:
       - "Zip 3.0 (July 5th 2008)"
