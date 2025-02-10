@@ -78,6 +78,6 @@ commandTests:
       - "4"
   - name: 'ZIP'
     command: "zip"
-    args: ["--help"]
+    args: ["-v"]
     expectedOutput:
       - "Zip 3.0 (July 5th 2008)"
