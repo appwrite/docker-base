@@ -76,3 +76,8 @@ commandTests:
     args: ["-r", 'print(\Normalizer::FORM_D);']
     expectedOutput:
       - "4"
+  - name: 'ZIP'
+    command: "zip"
+    args: ["--help"]
+    expectedOutput:
+      - "Zip 3.0 (July 5th 2008)"
