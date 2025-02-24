@@ -1,21 +1,23 @@
 ARG BASEIMAGE="php:8.3.13-cli-alpine3.20"
 
-FROM $BASEIMAGE as compile
+FROM $BASEIMAGE AS compile
 
 ENV PHP_REDIS_VERSION="6.1.0" \
-    PHP_MONGODB_VERSION="1.20.0" \
-    PHP_SWOOLE_VERSION="v5.1.5" \
+    PHP_MONGODB_VERSION="1.20.1" \
+    PHP_SWOOLE_VERSION="v5.1.7" \
     PHP_IMAGICK_VERSION="3.7.0" \
     PHP_YAML_VERSION="2.2.4" \
-    PHP_MAXMINDDB_VERSION="v1.11.1" \
+    PHP_MAXMINDDB_VERSION="v1.12.0" \
     PHP_SCRYPT_VERSION="2.0.1" \
-    PHP_ZSTD_VERSION="0.13.3" \
-    PHP_BROTLI_VERSION="0.15.0" \
-    PHP_SNAPPY_VERSION="c27f830dcfe6c41eb2619a374de10fd0597f4939" \
-    PHP_LZ4_VERSION="2f006c3e4f1fb3a60d2656fc164f9ba26b71e995" \
-    PHP_XDEBUG_VERSION="3.3.2" \
-    PHP_OPENTELEMETRY_VERSION="1.1.0" \
-    PHP_PROTOBUF_VERSION="4.28.3"
+    PHP_ZSTD_VERSION="0.14.0" \
+    PHP_BROTLI_VERSION="0.15.2" \
+    PHP_SNAPPY_VERSION="0.2.2" \
+    PHP_LZ4_VERSION="0.4.4" \
+    PHP_XDEBUG_VERSION="3.4.1" \
+    PHP_OPENTELEMETRY_VERSION="1.1.2" \
+    PHP_PROTOBUF_VERSION="4.29.3"
+
+RUN apk update && apk upgrade
 
 RUN \
   apk add --no-cache --virtual .deps \
@@ -92,7 +94,7 @@ RUN \
   make && make install
 
 # Mongodb Extension
-FROM compile as mongodb
+FROM compile AS mongodb
 RUN \
   git clone --depth 1 --branch $PHP_MONGODB_VERSION https://github.com/mongodb/mongo-php-driver.git && \
   cd mongo-php-driver && \
@@ -102,7 +104,7 @@ RUN \
   make && make install
 
 # Zstd Compression
-FROM compile as zstd
+FROM compile AS zstd
 RUN git clone --recursive -n https://github.com/kjdev/php-ext-zstd.git \
   && cd php-ext-zstd \
   && git checkout $PHP_ZSTD_VERSION \
@@ -111,7 +113,7 @@ RUN git clone --recursive -n https://github.com/kjdev/php-ext-zstd.git \
   && make && make install
 
 ## Brotli Extension
-FROM compile as brotli
+FROM compile AS brotli
 RUN git clone https://github.com/kjdev/php-ext-brotli.git \
   && cd php-ext-brotli \
   && git reset --hard $PHP_BROTLI_VERSION \
@@ -164,7 +166,7 @@ RUN pecl install protobuf-${PHP_PROTOBUF_VERSION}
 FROM compile AS gd
 RUN docker-php-ext-install gd
 
-FROM $BASEIMAGE as final
+FROM $BASEIMAGE AS final
 
 LABEL maintainer="team@appwrite.io"
 
