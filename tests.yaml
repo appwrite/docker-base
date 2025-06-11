@@ -12,11 +12,11 @@ commandTests:
   - name: 'Certbot command'
     command: "certbot"
     args: ["--version"]
-    expectedOutput: ["certbot 2.*"]
+    expectedOutput: ["certbot 3.*"]
   - name: 'Docker command'
     command: "docker"
     args: ["--version"]
-    expectedOutput: ["Docker version 26.*"]
+    expectedOutput: ["Docker version 27.*"]
   - name: 'PHP info'
     command: "php"
     args: ["-m"]
