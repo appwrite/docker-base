@@ -1,4 +1,4 @@
-ARG BASEIMAGE="php:8.3.17-cli-alpine3.20"
+ARG BASEIMAGE="php:8.3.22-cli-alpine3.22"
 
 FROM $BASEIMAGE AS compile
 
@@ -171,7 +171,7 @@ FROM $BASEIMAGE AS final
 LABEL maintainer="team@appwrite.io"
 
 ENV DOCKER_CONFIG=${DOCKER_CONFIG:-$HOME/.docker}
-ENV DOCKER_COMPOSE_VERSION="v2.33.1"
+ENV DOCKER_COMPOSE_VERSION="v2.37.0"
 
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
