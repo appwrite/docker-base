@@ -5,6 +5,7 @@ FROM $BASEIMAGE AS compile
 ENV PHP_REDIS_VERSION="6.2.0" \
     PHP_SWOOLE_VERSION="v6.0.2" \
     PHP_IMAGICK_VERSION="3.8.0" \
+    PHP_MONGODB_VERSION="1.20.1" \
     PHP_YAML_VERSION="2.2.4" \
     PHP_MAXMINDDB_VERSION="v1.12.0" \
     PHP_SCRYPT_VERSION="2.0.1" \
@@ -88,6 +89,16 @@ RUN \
   ./configure && \
   make && make install
 
+# Mongodb Extension
+FROM compile AS mongodb
+RUN \
+  git clone --depth 1 --branch $PHP_MONGODB_VERSION https://github.com/mongodb/mongo-php-driver.git && \
+  cd mongo-php-driver && \
+  git submodule update --init && \
+  phpize && \
+  ./configure && \
+  make && make install
+
 # Zstd Compression
 FROM compile AS zstd
 RUN git clone --recursive -n https://github.com/kjdev/php-ext-zstd.git \
@@ -156,7 +167,7 @@ FROM $BASEIMAGE AS final
 LABEL maintainer="team@appwrite.io"
 
 ENV DOCKER_CONFIG=${DOCKER_CONFIG:-$HOME/.docker}
-ENV DOCKER_COMPOSE_VERSION="v2.36.2"
+ENV DOCKER_COMPOSE_VERSION="v2.33.1"
 
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
@@ -218,6 +229,7 @@ COPY --from=xdebug /usr/local/lib/php/extensions/no-debug-non-zts-20240924/xdebu
 COPY --from=opentelemetry /usr/local/lib/php/extensions/no-debug-non-zts-20240924/opentelemetry.so /usr/local/lib/php/extensions/no-debug-non-zts-20240924/
 COPY --from=protobuf /usr/local/lib/php/extensions/no-debug-non-zts-20240924/protobuf.so /usr/local/lib/php/extensions/no-debug-non-zts-20240924/
 COPY --from=gd /usr/local/lib/php/extensions/no-debug-non-zts-20240924/gd.so /usr/local/lib/php/extensions/no-debug-non-zts-20240924/
+COPY --from=mongodb /usr/local/lib/php/extensions/no-debug-non-zts-20240924/mongodb.so /usr/local/lib/php/extensions/no-debug-non-zts-20240924/
 
 # Enable Extensions
 RUN docker-php-ext-enable swoole redis imagick yaml maxminddb scrypt zstd brotli lz4 snappy opentelemetry protobuf gd
