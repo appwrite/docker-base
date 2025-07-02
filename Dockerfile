@@ -1,4 +1,4 @@
-ARG BASEIMAGE="php:8.4.7-alpine3.21"
+ARG BASEIMAGE="php:8.4.8-cli-alpine3.22"
 
 FROM $BASEIMAGE AS compile
 
