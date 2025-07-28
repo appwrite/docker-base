@@ -232,7 +232,7 @@ COPY --from=gd /usr/local/lib/php/extensions/no-debug-non-zts-20240924/gd.so /us
 COPY --from=mongodb /usr/local/lib/php/extensions/no-debug-non-zts-20240924/mongodb.so /usr/local/lib/php/extensions/no-debug-non-zts-20240924/
 
 # Enable Extensions
-RUN docker-php-ext-enable swoole redis imagick yaml maxminddb scrypt zstd brotli lz4 snappy opentelemetry protobuf gd
+RUN docker-php-ext-enable swoole redis imagick yaml maxminddb scrypt zstd brotli lz4 snappy opentelemetry protobuf gd mongodb
 
 EXPOSE 80
 
