@@ -5,7 +5,7 @@ FROM $BASEIMAGE AS compile
 ENV PHP_REDIS_VERSION="6.2.0" \
     PHP_SWOOLE_VERSION="v6.0.2" \
     PHP_IMAGICK_VERSION="3.8.0" \
-    PHP_MONGODB_VERSION="1.20.1" \
+    PHP_MONGODB_VERSION="2.1.1" \
     PHP_YAML_VERSION="2.2.4" \
     PHP_MAXMINDDB_VERSION="v1.12.0" \
     PHP_SCRYPT_VERSION="2.0.1" \
@@ -232,7 +232,7 @@ COPY --from=gd /usr/local/lib/php/extensions/no-debug-non-zts-20240924/gd.so /us
 COPY --from=mongodb /usr/local/lib/php/extensions/no-debug-non-zts-20240924/mongodb.so /usr/local/lib/php/extensions/no-debug-non-zts-20240924/
 
 # Enable Extensions
-RUN docker-php-ext-enable swoole redis imagick yaml maxminddb scrypt zstd brotli lz4 snappy opentelemetry protobuf gd
+RUN docker-php-ext-enable swoole redis imagick yaml maxminddb scrypt zstd brotli lz4 snappy opentelemetry protobuf gd mongodb
 
 EXPOSE 80
 
