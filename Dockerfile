@@ -3,7 +3,7 @@ ARG BASEIMAGE="php:8.3.17-cli-alpine3.20"
 FROM $BASEIMAGE AS compile
 
 ENV PHP_REDIS_VERSION="6.1.0" \
-    PHP_MONGODB_VERSION="1.20.1" \
+    PHP_MONGODB_VERSION="2.1.1" \
     PHP_SWOOLE_VERSION="v5.1.7" \
     PHP_IMAGICK_VERSION="3.7.0" \
     PHP_YAML_VERSION="2.2.4" \
@@ -240,7 +240,7 @@ COPY --from=protobuf /usr/local/lib/php/extensions/no-debug-non-zts-20230831/pro
 COPY --from=gd /usr/local/lib/php/extensions/no-debug-non-zts-20230831/gd.so /usr/local/lib/php/extensions/no-debug-non-zts-20230831/
 
 # Enable Extensions
-RUN docker-php-ext-enable swoole redis imagick yaml maxminddb scrypt zstd brotli lz4 snappy opentelemetry protobuf gd
+RUN docker-php-ext-enable swoole redis imagick yaml maxminddb scrypt zstd brotli lz4 snappy opentelemetry protobuf gd mongodb
 
 EXPOSE 80
 
