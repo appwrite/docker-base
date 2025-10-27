@@ -19,7 +19,7 @@ commandTests:
     expectedOutput: ["Docker version 28.*"]
   - name: 'PHP info'
     command: "php"
-    args: ["-m"]
+    args: ["-i"]
     expectedOutput:
       - brotli
       - Core
@@ -33,6 +33,7 @@ commandTests:
       - hash
       - iconv
       - imagick
+      - WEBP
       - intl
       - json
       - libxml

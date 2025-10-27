@@ -23,4 +23,5 @@ jobs:
       - name: Run container structure test
         run: |
           docker build -t appwrite-base-test .
-          container-structure-test test --image appwrite-base-test --config tests.yaml
+          docker build -f Dockerfile.test -t appwrite-base-test-with-tests .
+          container-structure-test test --image appwrite-base-test-with-tests --config tests.yaml
