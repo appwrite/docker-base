@@ -17,7 +17,7 @@ commandTests:
     command: "docker"
     args: ["--version"]
     expectedOutput: ["Docker version 28.*"]
-  - name: 'PHP info'
+  - name: 'PHP modules'
     command: "php"
     args: ["-m"]
     expectedOutput:
@@ -71,6 +71,11 @@ commandTests:
       - yaml
       - zlib
       - zstd
+  - name: 'ImageMagick supported formats'
+    command: "php"
+    args: ["-i"]
+    expectedOutput:
+      - "ImageMagick supported formats .*WEBP.*"
   - name: 'PHP intl'
     command: "php"
     args: ["-r", 'print(\Normalizer::FORM_D);']
