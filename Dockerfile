@@ -202,6 +202,7 @@ RUN \
   libjxl-dev \
   libavif \
   libheif \
+  libwebp \
   imagemagick-heic \
   zlib-dev \
   libpng-dev \
