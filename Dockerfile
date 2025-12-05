@@ -173,6 +173,7 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 RUN \
   apk update \
+  && apk upgrade \
   && apk add --no-cache --virtual .deps \
   linux-headers \
   make \
