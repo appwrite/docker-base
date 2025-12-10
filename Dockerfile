@@ -168,8 +168,6 @@ LABEL maintainer="team@appwrite.io"
 
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
-RUN set -ex
-
 RUN \
   apk update \
   && apk upgrade \
