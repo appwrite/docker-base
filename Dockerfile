@@ -166,13 +166,11 @@ FROM $BASEIMAGE AS final
 
 LABEL maintainer="team@appwrite.io"
 
-ENV DOCKER_CONFIG=${DOCKER_CONFIG:-$HOME/.docker}
-ENV DOCKER_COMPOSE_VERSION="v2.33.1"
-
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 RUN \
   apk update \
+  && apk upgrade \
   && apk add --no-cache --virtual .deps \
   linux-headers \
   make \
@@ -201,6 +199,7 @@ RUN \
   libmaxminddb-dev \
   certbot \
   docker-cli \
+  docker-cli-compose \
   libgomp \
   git \
   zip \
@@ -208,11 +207,6 @@ RUN \
   && docker-php-ext-install sockets pdo_mysql pdo_pgsql intl \
   && apk del .deps \
   && rm -rf /var/cache/apk/*
-
-RUN mkdir -p $DOCKER_CONFIG/cli-plugins \
-  && ARCH=$(uname -m) && if [ $ARCH == "armv7l" ]; then ARCH="armv7"; fi \
-  && curl -SL https://github.com/docker/compose/releases/download/$DOCKER_COMPOSE_VERSION/docker-compose-linux-$ARCH -o $DOCKER_CONFIG/cli-plugins/docker-compose \
-  && chmod +x $DOCKER_CONFIG/cli-plugins/docker-compose
 
 WORKDIR /usr/src/code
 
