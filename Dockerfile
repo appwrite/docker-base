@@ -179,6 +179,7 @@ RUN \
   gcc \
   g++ \
   curl-dev \
+  postgresql-dev \
   && apk add --no-cache \
   libstdc++ \
   rsync \
@@ -203,7 +204,7 @@ RUN \
   libgomp \
   git \
   zip \
-  postgresql-dev \
+  libpq \
   && docker-php-ext-install sockets pdo_mysql pdo_pgsql intl \
   && apk del .deps \
   && rm -rf /var/cache/apk/*
