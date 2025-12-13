@@ -44,37 +44,37 @@ RUN apk update && apk upgrade && apk add --no-cache --virtual .deps \
 RUN docker-php-ext-install sockets
 
 FROM compile AS redis
-RUN pecl install redis-${PHP_REDIS_VERSION}
+RUN MAKEFLAGS="-j4" pecl install redis-${PHP_REDIS_VERSION}
 
 ## Swoole Extension
 FROM compile AS swoole
-RUN pecl install swoole-${PHP_SWOOLE_VERSION#v}
+RUN MAKEFLAGS="-j4" pecl install swoole-${PHP_SWOOLE_VERSION#v}
 
 ## Imagick Extension
 FROM compile AS imagick
-RUN pecl install imagick-${PHP_IMAGICK_VERSION}
+RUN MAKEFLAGS="-j4" pecl install imagick-${PHP_IMAGICK_VERSION}
 
 ## YAML Extension
 FROM compile AS yaml
-RUN pecl install yaml-${PHP_YAML_VERSION}
+RUN MAKEFLAGS="-j4" pecl install yaml-${PHP_YAML_VERSION}
 
 ## Maxminddb extension
 FROM compile AS maxmind
-RUN pecl install maxminddb-${PHP_MAXMINDDB_VERSION#v}
+RUN MAKEFLAGS="-j4" pecl install maxminddb-${PHP_MAXMINDDB_VERSION#v}
 
 # Mongodb Extension
 FROM compile AS mongodb
-RUN pecl install mongodb-${PHP_MONGODB_VERSION}
+RUN MAKEFLAGS="-j4" pecl install mongodb-${PHP_MONGODB_VERSION}
 
 # Zstd Compression
 FROM compile AS zstd
-RUN pecl install zstd-${PHP_ZSTD_VERSION}
+RUN MAKEFLAGS="-j4" pecl install zstd-${PHP_ZSTD_VERSION}
 
 FROM compile AS scrypt
-RUN pecl install scrypt-${PHP_SCRYPT_VERSION}
+RUN MAKEFLAGS="-j4" pecl install scrypt-${PHP_SCRYPT_VERSION}
 
 FROM compile AS xdebug
-RUN pecl install xdebug-${PHP_XDEBUG_VERSION}
+RUN MAKEFLAGS="-j4" pecl install xdebug-${PHP_XDEBUG_VERSION}
 
 ## Brotli Extension
 FROM compile AS brotli
@@ -104,10 +104,10 @@ RUN git clone --recursive https://github.com/kjdev/php-ext-snappy.git \
   && make -j$(nproc) && make install
 
 FROM compile AS opentelemetry
-RUN pecl install opentelemetry-${PHP_OPENTELEMETRY_VERSION}
+RUN MAKEFLAGS="-j4" pecl install opentelemetry-${PHP_OPENTELEMETRY_VERSION}
 
 FROM compile AS protobuf
-RUN pecl install protobuf-${PHP_PROTOBUF_VERSION}
+RUN MAKEFLAGS="-j4" pecl install protobuf-${PHP_PROTOBUF_VERSION}
 
 FROM compile AS gd
 RUN docker-php-ext-install gd
