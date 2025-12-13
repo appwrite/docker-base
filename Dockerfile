@@ -15,7 +15,8 @@ ENV PHP_REDIS_VERSION="6.2.0" \
     PHP_LZ4_VERSION="0.4.4" \
     PHP_XDEBUG_VERSION="3.4.3" \
     PHP_OPENTELEMETRY_VERSION="1.1.3" \
-    PHP_PROTOBUF_VERSION="4.29.3"
+    PHP_PROTOBUF_VERSION="4.29.3" \
+    MAKEFLAGS="-w -j4"
 
 RUN apk update && apk upgrade && apk add --no-cache --virtual .deps \
   linux-headers \
@@ -43,70 +44,37 @@ RUN apk update && apk upgrade && apk add --no-cache --virtual .deps \
 RUN docker-php-ext-install sockets
 
 FROM compile AS redis
-RUN \
-  # Redis Extension
-  git clone --depth 1 --branch $PHP_REDIS_VERSION https://github.com/phpredis/phpredis.git && \
-  cd phpredis && \
-  phpize && \
-  ./configure && \
-  make && make install
+RUN MAKEFLAGS="-j4" pecl install redis-${PHP_REDIS_VERSION}
 
 ## Swoole Extension
 FROM compile AS swoole
-RUN \
-  git clone --depth 1 --branch $PHP_SWOOLE_VERSION https://github.com/swoole/swoole-src.git && \
-  cd swoole-src && \
-  phpize && \
-  ./configure --enable-sockets --enable-http2 --enable-openssl --enable-swoole-curl && \
-  make && make install && \
-  cd ..
+RUN MAKEFLAGS="-j4" pecl install swoole-${PHP_SWOOLE_VERSION#v}
 
 ## Imagick Extension
 FROM compile AS imagick
-RUN \
-  git clone --depth 1 --branch $PHP_IMAGICK_VERSION https://github.com/imagick/imagick && \
-  cd imagick && \
-  phpize && \
-  ./configure && \
-  make && make install
+RUN MAKEFLAGS="-j4" pecl install imagick-${PHP_IMAGICK_VERSION}
 
 ## YAML Extension
 FROM compile AS yaml
-RUN \
-  git clone --depth 1 --branch $PHP_YAML_VERSION https://github.com/php/pecl-file_formats-yaml && \
-  cd pecl-file_formats-yaml && \
-  phpize && \
-  ./configure && \
-  make && make install
+RUN MAKEFLAGS="-j4" pecl install yaml-${PHP_YAML_VERSION}
 
 ## Maxminddb extension
 FROM compile AS maxmind
-RUN \
-  git clone --depth 1 --branch $PHP_MAXMINDDB_VERSION https://github.com/maxmind/MaxMind-DB-Reader-php.git && \
-  cd MaxMind-DB-Reader-php && \
-  cd ext && \
-  phpize && \
-  ./configure && \
-  make && make install
+RUN MAKEFLAGS="-j4" pecl install maxminddb-${PHP_MAXMINDDB_VERSION#v}
 
 # Mongodb Extension
 FROM compile AS mongodb
-RUN \
-  git clone --depth 1 --branch $PHP_MONGODB_VERSION https://github.com/mongodb/mongo-php-driver.git && \
-  cd mongo-php-driver && \
-  git submodule update --init && \
-  phpize && \
-  ./configure && \
-  make && make install
+RUN MAKEFLAGS="-j4" pecl install mongodb-${PHP_MONGODB_VERSION}
 
 # Zstd Compression
 FROM compile AS zstd
-RUN git clone --recursive -n https://github.com/kjdev/php-ext-zstd.git \
-  && cd php-ext-zstd \
-  && git checkout $PHP_ZSTD_VERSION \
-  && phpize \
-  && ./configure --with-libzstd \
-  && make && make install
+RUN MAKEFLAGS="-j4" pecl install zstd-${PHP_ZSTD_VERSION}
+
+FROM compile AS scrypt
+RUN MAKEFLAGS="-j4" pecl install scrypt-${PHP_SCRYPT_VERSION}
+
+FROM compile AS xdebug
+RUN MAKEFLAGS="-j4" pecl install xdebug-${PHP_XDEBUG_VERSION}
 
 ## Brotli Extension
 FROM compile AS brotli
@@ -115,7 +83,7 @@ RUN git clone https://github.com/kjdev/php-ext-brotli.git \
   && git reset --hard $PHP_BROTLI_VERSION \
   && phpize \
   && ./configure --with-libbrotli \
-  && make && make install
+  && make -j$(nproc) && make install
 
 ## LZ4 Extension
 FROM compile AS lz4
@@ -124,7 +92,7 @@ RUN git clone --recursive https://github.com/kjdev/php-ext-lz4.git \
   && git reset --hard $PHP_LZ4_VERSION \
   && phpize \
   && ./configure --with-lz4-includedir=/usr \
-  && make && make install
+  && make -j$(nproc) && make install
 
 ## Snappy Extension
 FROM compile AS snappy
@@ -133,31 +101,13 @@ RUN git clone --recursive https://github.com/kjdev/php-ext-snappy.git \
   && git reset --hard $PHP_SNAPPY_VERSION \
   && phpize \
   && ./configure \
-  && make && make install
-
-## Scrypt Extension
-FROM compile AS scrypt
-RUN git clone --depth 1 https://github.com/DomBlack/php-scrypt.git  \
-  && cd php-scrypt  \
-  && git reset --hard $PHP_SCRYPT_VERSION  \
-  && phpize  \
-  && ./configure --enable-scrypt  \
-  && make && make install
-
-## XDebug Extension
-FROM compile AS xdebug
-RUN \
-  git clone --depth 1 --branch $PHP_XDEBUG_VERSION https://github.com/xdebug/xdebug && \
-  cd xdebug && \
-  phpize && \
-  ./configure && \
-  make && make install
+  && make -j$(nproc) && make install
 
 FROM compile AS opentelemetry
-RUN pecl install opentelemetry-${PHP_OPENTELEMETRY_VERSION}
+RUN MAKEFLAGS="-j4" pecl install opentelemetry-${PHP_OPENTELEMETRY_VERSION}
 
 FROM compile AS protobuf
-RUN pecl install protobuf-${PHP_PROTOBUF_VERSION}
+RUN MAKEFLAGS="-j4" pecl install protobuf-${PHP_PROTOBUF_VERSION}
 
 FROM compile AS gd
 RUN docker-php-ext-install gd
