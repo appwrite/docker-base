@@ -2,6 +2,8 @@ ARG BASEIMAGE="php:8.4.11-cli-alpine3.22"
 
 FROM $BASEIMAGE AS compile
 
+ARG MAKEFLAGS="-j4"
+
 ENV PHP_REDIS_VERSION="6.2.0" \
     PHP_SWOOLE_VERSION="v6.0.2" \
     PHP_IMAGICK_VERSION="3.8.0" \
@@ -40,7 +42,7 @@ RUN apk update && apk upgrade && apk add --no-cache --virtual .deps \
   lz4-dev \
   curl-dev
 
-ENV MAKEFLAGS="-j$(nproc)"
+ENV MAKEFLAGS=${MAKEFLAGS}
 
 RUN docker-php-ext-install sockets
 
