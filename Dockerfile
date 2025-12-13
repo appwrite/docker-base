@@ -2,8 +2,6 @@ ARG BASEIMAGE="php:8.4.11-cli-alpine3.22"
 
 FROM $BASEIMAGE AS compile
 
-ARG MAKEFLAGS="-j4"
-
 ENV PHP_REDIS_VERSION="6.2.0" \
     PHP_SWOOLE_VERSION="v6.0.2" \
     PHP_IMAGICK_VERSION="3.8.0" \
@@ -17,7 +15,8 @@ ENV PHP_REDIS_VERSION="6.2.0" \
     PHP_LZ4_VERSION="0.4.4" \
     PHP_XDEBUG_VERSION="3.4.3" \
     PHP_OPENTELEMETRY_VERSION="1.1.3" \
-    PHP_PROTOBUF_VERSION="4.29.3"
+    PHP_PROTOBUF_VERSION="4.29.3" \
+    MAKEFLAGS="-w -j4"
 
 RUN apk update && apk upgrade && apk add --no-cache --virtual .deps \
   linux-headers \
@@ -41,8 +40,6 @@ RUN apk update && apk upgrade && apk add --no-cache --virtual .deps \
   brotli-dev \
   lz4-dev \
   curl-dev
-
-ENV MAKEFLAGS=${MAKEFLAGS}
 
 RUN docker-php-ext-install sockets
 
