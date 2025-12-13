@@ -40,6 +40,8 @@ RUN apk update && apk upgrade && apk add --no-cache --virtual .deps \
   lz4-dev \
   curl-dev
 
+ENV MAKEFLAGS="-j$(nproc)"
+
 RUN docker-php-ext-install sockets
 
 FROM compile AS redis
