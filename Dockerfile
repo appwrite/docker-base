@@ -226,6 +226,7 @@ COPY --from=zstd /usr/local/lib/php/extensions/no-debug-non-zts-20240924/zstd.so
 COPY --from=brotli /usr/local/lib/php/extensions/no-debug-non-zts-20240924/brotli.so /usr/local/lib/php/extensions/no-debug-non-zts-20240924/
 COPY --from=lz4 /usr/local/lib/php/extensions/no-debug-non-zts-20240924/lz4.so /usr/local/lib/php/extensions/no-debug-non-zts-20240924/
 COPY --from=snappy /usr/local/lib/php/extensions/no-debug-non-zts-20240924/snappy.so /usr/local/lib/php/extensions/no-debug-non-zts-20240924/
+COPY --from=xdebug /usr/local/lib/php/extensions/no-debug-non-zts-20240924/xdebug.so /usr/local/lib/php/extensions/no-debug-non-zts-20240924/
 COPY --from=opentelemetry /usr/local/lib/php/extensions/no-debug-non-zts-20240924/opentelemetry.so /usr/local/lib/php/extensions/no-debug-non-zts-20240924/
 COPY --from=protobuf /usr/local/lib/php/extensions/no-debug-non-zts-20240924/protobuf.so /usr/local/lib/php/extensions/no-debug-non-zts-20240924/
 COPY --from=gd /usr/local/lib/php/extensions/no-debug-non-zts-20240924/gd.so /usr/local/lib/php/extensions/no-debug-non-zts-20240924/
