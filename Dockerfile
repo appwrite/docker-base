@@ -185,27 +185,26 @@ RUN \
   && apk add --no-cache \
   libstdc++ \
   rsync \
-  brotli-dev \
-  lz4-dev \
-  yaml-dev \
+  brotli-libs \
+  lz4-libs \
+  yaml \
   imagemagick \
-  imagemagick-dev \
-  libjpeg-turbo-dev \
-  jpeg-dev \
-  libjxl-dev \
+  libjpeg-turbo \
+  libjxl \
   libavif \
   libheif \
   libwebp \
   imagemagick-heic \
-  zlib-dev \
-  libpng-dev \
-  libmaxminddb-dev \
+  zlib \
+  libpng \
+  libmaxminddb \
   certbot \
   docker-cli \
   libgomp \
   git \
   zip \
   libpq \
+  icu-libs \
   && docker-php-ext-install sockets pdo_mysql pdo_pgsql intl \
   && apk del .deps \
   && rm -rf /var/cache/apk/*

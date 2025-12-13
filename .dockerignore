@@ -1,0 +1,29 @@
+# Git files
+.git
+.gitignore
+.gitattributes
+.github
+
+# Documentation
+README.md
+LICENSE
+*.md
+docs
+
+# CI/CD
+.gitlab-ci.yml
+.travis.yml
+.circleci
+tests.yaml
+
+# IDE
+.idea
+.vscode
+.DS_Store
+
+# Temporary files
+*.log
+*.tmp
+*.swp
+*.swo
+*~
