@@ -1,5 +1,26 @@
 ARG BASEIMAGE="php:8.4.11-cli-alpine3.22"
 
+# Update max buffer length for /bin/sh, to allow paste larger than 2k characters
+FROM $BASEIMAGE AS busybox
+
+ENV BUSYBOX_VERSION="1.37.0" \
+    MAX_PASTE_LENGTH="65536"
+
+RUN apk add --no-cache openssl-dev gcc perl musl-dev make linux-headers wget
+
+RUN wget https://busybox.net/downloads/busybox-${BUSYBOX_VERSION}.tar.bz2 && \
+    tar xf busybox-${BUSYBOX_VERSION}.tar.bz2 && \
+    mv busybox-${BUSYBOX_VERSION} busybox
+
+WORKDIR /busybox
+
+RUN make defconfig && \
+    sed -i 's/CONFIG_FEATURE_EDITING_MAX_LEN=.*/CONFIG_FEATURE_EDITING_MAX_LEN=8192/' .config && \
+    sed -i 's/CONFIG_TC=y/CONFIG_TC=n/' .config && \
+    yes "" | make oldconfig
+
+RUN make -j$(nproc)
+    
 FROM $BASEIMAGE AS compile
 
 ENV PHP_REDIS_VERSION="6.2.0" \
@@ -210,6 +231,7 @@ RUN \
 
 WORKDIR /usr/src/code
 
+COPY --from=busybox /busybox/busybox /bin/busybox
 COPY --from=swoole /usr/local/lib/php/extensions/no-debug-non-zts-20240924/swoole.so /usr/local/lib/php/extensions/no-debug-non-zts-20240924/
 COPY --from=redis /usr/local/lib/php/extensions/no-debug-non-zts-20240924/redis.so /usr/local/lib/php/extensions/no-debug-non-zts-20240924/
 COPY --from=imagick /usr/local/lib/php/extensions/no-debug-non-zts-20240924/imagick.so /usr/local/lib/php/extensions/no-debug-non-zts-20240924/
