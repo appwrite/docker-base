@@ -3,10 +3,10 @@ ARG BASEIMAGE="php:8.4.11-cli-alpine3.22"
 # Update max buffer length for /bin/sh, to allow paste larger than 2k characters
 FROM $BASEIMAGE AS busybox
 
-ENV BUSYBOX_VERSION="1.37.0" \
+ENV BUSYBOX_VERSION="1.36.1" \
     MAX_PASTE_LENGTH="65536"
 
-RUN apk add --no-cache openssl-dev gcc perl musl-dev make linux-headers wget
+RUN apk add --no-cache busybox-extras build-base openssl-dev gcc perl musl-dev make linux-headers wget
 
 RUN wget https://busybox.net/downloads/busybox-${BUSYBOX_VERSION}.tar.bz2 && \
     tar xf busybox-${BUSYBOX_VERSION}.tar.bz2 && \
@@ -16,7 +16,6 @@ WORKDIR /busybox
 
 RUN make defconfig && \
     sed -i 's/CONFIG_FEATURE_EDITING_MAX_LEN=.*/CONFIG_FEATURE_EDITING_MAX_LEN=8192/' .config && \
-    sed -i 's/CONFIG_TC=y/CONFIG_TC=n/' .config && \
     yes "" | make oldconfig
 
 RUN make -j$(nproc)
