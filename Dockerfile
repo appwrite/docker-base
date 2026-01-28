@@ -211,11 +211,18 @@ RUN \
   libgomp \
   git \
   zip \
+  libcap \
   && docker-php-ext-install sockets pdo_mysql pdo_pgsql intl \
   && apk del .deps \
   && rm -rf /var/cache/apk/*
 
+# Set capability on PHP binary to allow binding to privileged ports (< 1024) as non-root
+RUN setcap 'cap_net_bind_service=+ep' /usr/local/bin/php
+
 WORKDIR /usr/src/code
+
+# Ensure working directory is owned by non-root user
+RUN chown www-data:www-data /usr/src/code
 
 COPY --from=swoole /usr/local/lib/php/extensions/no-debug-non-zts-20230831/swoole.so /usr/local/lib/php/extensions/no-debug-non-zts-20230831/
 COPY --from=redis /usr/local/lib/php/extensions/no-debug-non-zts-20230831/redis.so /usr/local/lib/php/extensions/no-debug-non-zts-20230831/
@@ -236,6 +243,12 @@ COPY --from=gd /usr/local/lib/php/extensions/no-debug-non-zts-20230831/gd.so /us
 # Enable Extensions
 RUN docker-php-ext-enable swoole redis imagick yaml maxminddb scrypt zstd brotli lz4 snappy opentelemetry protobuf gd mongodb
 
+# Ensure extensions directory is readable
+RUN chmod -R 755 /usr/local/lib/php/extensions/
+
 EXPOSE 80
+
+# Switch to non-root user
+USER www-data
 
 CMD [ "tail", "-f", "/dev/null" ]
