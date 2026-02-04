@@ -12,11 +12,11 @@ commandTests:
   - name: 'Certbot command'
     command: "certbot"
     args: ["--version"]
-    expectedOutput: ["certbot 4.*"]
+    expectedOutput: ["certbot 5.*"]
   - name: 'Docker command'
     command: "docker"
     args: ["--version"]
-    expectedOutput: ["Docker version 28.*"]
+    expectedOutput: ["Docker version 29.*"]
   - name: 'Docker Compose command'
     command: "docker"
     args: ["compose", "version"]
