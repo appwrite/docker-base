@@ -1,11 +1,11 @@
-ARG BASEIMAGE="php:8.4.17-cli-alpine3.23"
+ARG BASEIMAGE="php:8.4.18-cli-alpine3.23"
 
 FROM $BASEIMAGE AS compile
 
 ENV PHP_REDIS_VERSION="6.3.0" \
-    PHP_SWOOLE_VERSION="v6.1.6" \
+    PHP_SWOOLE_VERSION="v6.1.7" \
     PHP_IMAGICK_VERSION="3.8.1" \
-    PHP_MONGODB_VERSION="2.1.7" \
+    PHP_MONGODB_VERSION="2.2.1" \
     PHP_YAML_VERSION="2.3.0" \
     PHP_MAXMINDDB_VERSION="v1.13.1" \
     PHP_SCRYPT_VERSION="2.0.1" \
@@ -13,9 +13,9 @@ ENV PHP_REDIS_VERSION="6.3.0" \
     PHP_BROTLI_VERSION="0.18.3" \
     PHP_SNAPPY_VERSION="0.2.3" \
     PHP_LZ4_VERSION="0.6.0" \
-    PHP_XDEBUG_VERSION="3.5.0" \
+    PHP_XDEBUG_VERSION="3.5.1" \
     PHP_OPENTELEMETRY_VERSION="1.2.1" \
-    PHP_PROTOBUF_VERSION="4.33.5"
+    PHP_PROTOBUF_VERSION="5.34.0"
 
 RUN apk update && apk upgrade && apk add --no-cache --virtual .deps \
   linux-headers \
