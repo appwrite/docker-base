@@ -4,7 +4,7 @@ commandTests:
   - name: 'Imagemagick command'
     command: "magick"
     args: ["--version"]
-    expectedOutput: [".*ImageMagick 7.1.*"]
+    expectedOutput: [".*ImageMagick 7.1.2.15"]
   - name: 'rsync command'
     command: "rsync"
     args: ["--version"]
