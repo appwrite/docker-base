@@ -1,4 +1,4 @@
 .idea
 *.logs
 NOTES*.md
-trivy-image-results.json
+trivy-*-results.json

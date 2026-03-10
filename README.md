@@ -45,13 +45,13 @@ docker buildx build --tag appwrite/base:latest .
 Multi-arch building.
 
 ```shell
-docker buildx build --platform linux/amd64,linux/arm64/v8,linux/ppc64le --tag appwrite/base:latest .
+docker buildx build --platform linux/amd64,linux/arm64/v8,linux/ppc64le --push --tag appwrite/base:latest .
 ```
 
 ## Scan
 
 ```shell
-trivy image appwrite/base:latest
+trivy image --format json --pkg-types  os,library --severity  CRITICAL,HIGH --output trivy-image-results.json appwrite/base:latest
 ```
 
 ## Test

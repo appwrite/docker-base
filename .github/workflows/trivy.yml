@@ -3,7 +3,7 @@
 # separate terms of service, privacy policy, and support
 # documentation.
 
-name: trivy
+name: Scheduled Trivy Vulnerability Scanning
 
 on:
   push:
