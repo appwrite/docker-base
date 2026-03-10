@@ -84,3 +84,4 @@ docker push appwrite/base:latest | tee "push-$(date +%s).log"
 ## Copyright and license
 
 The MIT License (MIT) [http://www.opensource.org/licenses/mit-license.php](http://www.opensource.org/licenses/mit-license.php)
+
