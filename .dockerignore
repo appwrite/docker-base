@@ -1,0 +1,5 @@
+.git*
+*.md
+*test*.*
+Dockerfile
+LICENSE

@@ -79,7 +79,7 @@ RUN \
   ./configure && \
   make && make install
 
-## Maxminddb extension
+## Maxminddb Extension
 FROM compile AS maxmind
 RUN \
   git clone --depth 1 --branch $PHP_MAXMINDDB_VERSION https://github.com/maxmind/MaxMind-DB-Reader-php.git && \
