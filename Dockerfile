@@ -1,22 +1,21 @@
-ARG BASEIMAGE="php:8.5.3-cli-alpine3.23"
+ARG BASEIMAGE="php:8.4.18-cli-alpine3.23"
 
 FROM $BASEIMAGE AS compile
 
-ENV \
-    PHP_BROTLI_VERSION="0.18.3" \
-    PHP_IMAGICK_VERSION="3.8.1" \
-    PHP_LZ4_VERSION="0.6.0" \
-    PHP_MAXMINDDB_VERSION="v1.13.1" \
-    PHP_MONGODB_VERSION="2.2.1" \
-    PHP_OPENTELEMETRY_VERSION="1.2.1" \
-    PHP_PROTOBUF_VERSION="5.34.0" \
-    PHP_REDIS_VERSION="6.3.0" \
-    PHP_SCRYPT_VERSION="2.0.1" \
-    PHP_SNAPPY_VERSION="0.2.3" \
+ENV PHP_REDIS_VERSION="6.3.0" \
     PHP_SWOOLE_VERSION="v6.1.7" \
-    PHP_XDEBUG_VERSION="3.5.1" \
+    PHP_IMAGICK_VERSION="3.8.1" \
+    PHP_MONGODB_VERSION="2.2.1" \
     PHP_YAML_VERSION="2.3.0" \
-    PHP_ZSTD_VERSION="0.15.2"
+    PHP_MAXMINDDB_VERSION="v1.13.1" \
+    PHP_SCRYPT_VERSION="2.0.1" \
+    PHP_ZSTD_VERSION="0.15.2" \
+    PHP_BROTLI_VERSION="0.18.3" \
+    PHP_SNAPPY_VERSION="0.2.3" \
+    PHP_LZ4_VERSION="0.6.0" \
+    PHP_XDEBUG_VERSION="3.5.1" \
+    PHP_OPENTELEMETRY_VERSION="1.2.1" \
+    PHP_PROTOBUF_VERSION="5.34.0"
 
 RUN apk update && apk upgrade && apk add --no-cache --virtual .deps \
   linux-headers \
@@ -80,7 +79,7 @@ RUN \
   ./configure && \
   make && make install
 
-## Maxminddb extension
+## Maxminddb Extension
 FROM compile AS maxmind
 RUN \
   git clone --depth 1 --branch $PHP_MAXMINDDB_VERSION https://github.com/maxmind/MaxMind-DB-Reader-php.git && \
