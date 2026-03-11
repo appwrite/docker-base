@@ -210,21 +210,25 @@ RUN \
 
 WORKDIR /usr/src/code
 
-COPY --from=swoole /usr/local/lib/php/extensions/no-debug-non-zts-20240924/swoole.so /usr/local/lib/php/extensions/no-debug-non-zts-20240924/
-COPY --from=redis /usr/local/lib/php/extensions/no-debug-non-zts-20240924/redis.so /usr/local/lib/php/extensions/no-debug-non-zts-20240924/
-COPY --from=imagick /usr/local/lib/php/extensions/no-debug-non-zts-20240924/imagick.so /usr/local/lib/php/extensions/no-debug-non-zts-20240924/
-COPY --from=yaml /usr/local/lib/php/extensions/no-debug-non-zts-20240924/yaml.so /usr/local/lib/php/extensions/no-debug-non-zts-20240924/
-COPY --from=maxmind /usr/local/lib/php/extensions/no-debug-non-zts-20240924/maxminddb.so /usr/local/lib/php/extensions/no-debug-non-zts-20240924/
-COPY --from=scrypt /usr/local/lib/php/extensions/no-debug-non-zts-20240924/scrypt.so /usr/local/lib/php/extensions/no-debug-non-zts-20240924/
-COPY --from=zstd /usr/local/lib/php/extensions/no-debug-non-zts-20240924/zstd.so /usr/local/lib/php/extensions/no-debug-non-zts-20240924/
+RUN chmod +x /usr/local/lib/php/extensions/no-debug-non-zts-20240924/*.so
+
+RUN ls -lah /usr/local/lib/php/extensions/no-debug-non-zts-20240924
+
 COPY --from=brotli /usr/local/lib/php/extensions/no-debug-non-zts-20240924/brotli.so /usr/local/lib/php/extensions/no-debug-non-zts-20240924/
+COPY --from=gd /usr/local/lib/php/extensions/no-debug-non-zts-20240924/gd.so /usr/local/lib/php/extensions/no-debug-non-zts-20240924/
+COPY --from=imagick /usr/local/lib/php/extensions/no-debug-non-zts-20240924/imagick.so /usr/local/lib/php/extensions/no-debug-non-zts-20240924/
 COPY --from=lz4 /usr/local/lib/php/extensions/no-debug-non-zts-20240924/lz4.so /usr/local/lib/php/extensions/no-debug-non-zts-20240924/
-COPY --from=snappy /usr/local/lib/php/extensions/no-debug-non-zts-20240924/snappy.so /usr/local/lib/php/extensions/no-debug-non-zts-20240924/
-COPY --from=xdebug /usr/local/lib/php/extensions/no-debug-non-zts-20240924/xdebug.so /usr/local/lib/php/extensions/no-debug-non-zts-20240924/
+COPY --from=maxmind /usr/local/lib/php/extensions/no-debug-non-zts-20240924/maxminddb.so /usr/local/lib/php/extensions/no-debug-non-zts-20240924/
+COPY --from=mongodb /usr/local/lib/php/extensions/no-debug-non-zts-20240924/mongodb.so /usr/local/lib/php/extensions/no-debug-non-zts-20240924/
 COPY --from=opentelemetry /usr/local/lib/php/extensions/no-debug-non-zts-20240924/opentelemetry.so /usr/local/lib/php/extensions/no-debug-non-zts-20240924/
 COPY --from=protobuf /usr/local/lib/php/extensions/no-debug-non-zts-20240924/protobuf.so /usr/local/lib/php/extensions/no-debug-non-zts-20240924/
-COPY --from=gd /usr/local/lib/php/extensions/no-debug-non-zts-20240924/gd.so /usr/local/lib/php/extensions/no-debug-non-zts-20240924/
-COPY --from=mongodb /usr/local/lib/php/extensions/no-debug-non-zts-20240924/mongodb.so /usr/local/lib/php/extensions/no-debug-non-zts-20240924/
+COPY --from=redis /usr/local/lib/php/extensions/no-debug-non-zts-20240924/redis.so /usr/local/lib/php/extensions/no-debug-non-zts-20240924/
+COPY --from=scrypt /usr/local/lib/php/extensions/no-debug-non-zts-20240924/scrypt.so /usr/local/lib/php/extensions/no-debug-non-zts-20240924/
+COPY --from=snappy /usr/local/lib/php/extensions/no-debug-non-zts-20240924/snappy.so /usr/local/lib/php/extensions/no-debug-non-zts-20240924/
+COPY --from=swoole /usr/local/lib/php/extensions/no-debug-non-zts-20240924/swoole.so /usr/local/lib/php/extensions/no-debug-non-zts-20240924/
+COPY --from=xdebug /usr/local/lib/php/extensions/no-debug-non-zts-20240924/xdebug.so /usr/local/lib/php/extensions/no-debug-non-zts-20240924/
+COPY --from=yaml /usr/local/lib/php/extensions/no-debug-non-zts-20240924/yaml.so /usr/local/lib/php/extensions/no-debug-non-zts-20240924/
+COPY --from=zstd /usr/local/lib/php/extensions/no-debug-non-zts-20240924/zstd.so /usr/local/lib/php/extensions/no-debug-non-zts-20240924/
 
 # Enable Extensions
 RUN docker-php-ext-enable swoole redis imagick yaml maxminddb scrypt zstd brotli lz4 snappy opentelemetry protobuf gd mongodb
