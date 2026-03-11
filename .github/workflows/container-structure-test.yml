@@ -8,7 +8,7 @@ env:
   TAG: ${{ github.event.release.tag_name }}
 
 jobs:
-  build:
+  container_structure_test:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout the repo

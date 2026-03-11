@@ -8,7 +8,6 @@ permissions:
 env:
   IMAGE_NAME: appwrite/base
   REGISTRY: docker.io
-  TAG: ${{ github.event.release.tag_name }}
 
 # https://github.blog/changelog/2025-01-16-linux-arm64-hosted-runners-now-available-for-free-in-public-repositories-public-preview/
 # https://learn.arm.com/learning-paths/cross-platform/github-arm-runners/actions/
@@ -41,7 +40,7 @@ jobs:
         run: |
           docker image push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{matrix.arch}}
 
-  manifest_build_and_push:
+  manifest_build_and_push_on_feature:
     if: github.ref != 'refs/heads/main'
     needs: container_build_and_push
     runs-on: ubuntu-latest
@@ -54,8 +53,34 @@ jobs:
 
       - name: Create manifest
         run: |
-            docker manifest create ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }} ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:amd64 ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:arm64
+            docker manifest create \
+              ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.SHA }} \
+              ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:amd64 \
+              ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:arm64
 
       - name: Push manifest
         run: |
             docker manifest push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.SHA }}
+
+
+  manifest_build_and_push_on_main:
+    if: github.ref == 'refs/heads/main'
+    needs: container_build_and_push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Login to DockerHub
+        uses: docker/login-action@v4
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Create manifest
+        run: |
+            docker manifest create \
+              ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.event.release.tag_name }} \
+              ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:amd64 \
+              ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:arm64
+
+      - name: Push manifest
+        run: |
+            docker manifest push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.event.release.tag_name }}
