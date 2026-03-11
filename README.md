@@ -10,7 +10,7 @@
 
 ## Getting Started
 
-These instructions will cover usage information to help your run Appwrite's base docker container.
+This project contains Appwrite's PHP base container image.
 
 ### NOTE
 
@@ -37,8 +37,8 @@ In order to run this container you'll need the Docker runtime installed.
 ## Build
 
 ```shell
-time docker build --tag appwrite/base:latest . | tee "build-$(date +%s).log"
-# tee "build-$(date +%s).log"  0.00s user 0.04s system 0% cpu 51.225 total
+time docker-buildx build --no-cache --tag appwrite/base:latest . | tee "build-$(date +%s).log"
+# tee "build-$(date +%s).log"  0.00s user 0.01s system 0% cpu 4:20.31 total
 ```
 
 ## Scan
