@@ -11,3 +11,4 @@
 - use Swoole base image
 - xdebug as separate image `appwrite/base-xdebug`
 - docker-buildx takes a VERY long time when building off-architecture (arm64 on a x86 host) vua QEMUimage a host. We want to build targeting arm using an ARM host
+- push job should require all tests to pass which shoudl require build to successed. Reduce duplication of steps across jobs

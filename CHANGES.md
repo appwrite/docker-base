@@ -28,3 +28,5 @@
 ### Miscellaneous
 
 ### Removed
+
+* Multi-arch builds due to slow build times, the trade off is improved build times
