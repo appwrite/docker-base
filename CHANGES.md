@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## Version 0.2.0
+## Version 0.11.0
 
 ### Add
 
@@ -19,6 +19,7 @@
 * Dockerfile compile and final stage system packages aligned
 * ImageMagick version bumped to 7.1.2.15, tests.yaml aligned to ensure new version
 * PHP version bumped to 8.5.3
+* Refactory multi-arch build process to prevent cross-arch builds requiring long wait times
 * Swoole version bumped to 6.2.0
 
 ### Fixes
@@ -29,4 +30,4 @@
 
 ### Removed
 
-* Multi-arch builds due to slow build times, the trade off is improved build times
+* Github action to Setup QEMU as GitHub now provides native ARM runners

@@ -10,13 +10,22 @@ env:
   REGISTRY: docker.io
   TAG: ${{ github.event.release.tag_name }}
 
+# https://github.blog/changelog/2025-01-16-linux-arm64-hosted-runners-now-available-for-free-in-public-repositories-public-preview/
+# https://learn.arm.com/learning-paths/cross-platform/github-arm-runners/actions/
 jobs:
-  build_sha:
+  container_build_and_push:
     if: github.ref != 'refs/heads/main'
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            arch: amd64
+          - os: ubuntu-24.04-arm
+            arch: arm64
     steps:
       - name: Checkout the repo
-        uses: actions/checkout@v6.0.2
+        uses: actions/checkout@v6
 
       - name: Login to DockerHub
         uses: docker/login-action@v4
@@ -26,29 +35,27 @@ jobs:
 
       - name: Build an image from Dockerfile
         run: |
-          docker image build -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} .
+          docker image build --tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{matrix.arch}} .
 
       - name: Push an image
         run: |
-          docker image push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          docker image push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{matrix.arch}}
 
-  build_release:
-    if: github.ref == 'refs/heads/main'
+  manifest_build_and_push:
+    if: github.ref != 'refs/heads/main'
+    needs: container_build_and_push
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout the repo
-        uses: actions/checkout@v6.0.2
-
       - name: Login to DockerHub
         uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build an image from Dockerfile
+      - name: Create manifest
         run: |
-          docker image build -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} .
+            docker manifest create ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }} ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:amd64 ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:arm64
 
-      - name: Push an image
+      - name: Push manifest
         run: |
-          docker image push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.TAG }}
+            docker manifest push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.SHA }}
