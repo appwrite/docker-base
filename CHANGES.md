@@ -7,7 +7,7 @@
 * .dockerignore
 * .github/workflows/pr-scan.yml to scan all commit pushes for vulnerabilities
 * base_image and php_build_date to containber labels
-* CHANGELOG.md
+* container image build action to publish image using commit sha
 
 ### Change
 

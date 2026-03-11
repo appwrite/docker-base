@@ -1,6 +1,13 @@
-name: PR Security Scan
+name: Scheduled Trivy Scan
 
-on: push
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    # The branches below must be a subset of the branches above
+    branches: [ "main" ]
+  schedule:
+    - cron: '43 11 * * 6'
 
 permissions:
   contents: read

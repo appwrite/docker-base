@@ -1,4 +1,4 @@
-name: Test container structure
+name: Container Structure Test
 
 on: [pull_request]
 
@@ -14,7 +14,7 @@ jobs:
       - name: Checkout the repo
         uses: actions/checkout@v6.0.2
 
-      - name: Setup container structure test
+      - name: Setup container-structure-test
         run: |
           curl -LO https://storage.googleapis.com/container-structure-test/latest/container-structure-test-linux-amd64
           chmod +x container-structure-test-linux-amd64
