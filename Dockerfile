@@ -1,9 +1,9 @@
-ARG BASEIMAGE="php:8.4.18-cli-alpine3.23"
+ARG BASEIMAGE="php:8.5.3-cli-alpine3.23"
 
 FROM $BASEIMAGE AS compile
 
 ENV PHP_REDIS_VERSION="6.3.0" \
-    PHP_SWOOLE_VERSION="v6.1.7" \
+    PHP_SWOOLE_VERSION="6.2.0" \
     PHP_IMAGICK_VERSION="3.8.1" \
     PHP_MONGODB_VERSION="2.2.1" \
     PHP_YAML_VERSION="2.3.0" \
@@ -54,7 +54,7 @@ RUN \
 ## Swoole Extension
 FROM compile AS swoole
 RUN \
-  git clone --depth 1 --branch $PHP_SWOOLE_VERSION https://github.com/swoole/swoole-src.git && \
+  git clone --depth 1 --branch v$PHP_SWOOLE_VERSION https://github.com/swoole/swoole-src.git && \
   cd swoole-src && \
   phpize && \
   ./configure --enable-sockets --enable-http2 --enable-openssl --enable-swoole-curl && \

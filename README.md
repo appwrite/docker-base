@@ -71,6 +71,8 @@ docker run appwrite/base:latest php -m| tee "run-$(date +%s).log"
 
 ## Push
 
+Note: Build of the image and push to the registry shoudl be handle by automation.
+
 ```bash
 docker push appwrite/base:latest | tee "push-$(date +%s).log"
 ```
