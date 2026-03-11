@@ -9,3 +9,4 @@
 - changelog aligning with appwrite/appwrite
 - DOCKER_BUILDKIT=1 + buildx to parallel build the PHP extensions
 - audit system packages in Dockerfile -> final
+- capture build logs via ` | tee "build-$(date +%s).log"`

@@ -3,20 +3,21 @@ ARG PHP_BUILD_DATE="20250925"
 
 FROM $BASE_IMAGE AS compile
 
-ENV PHP_REDIS_VERSION="6.3.0" \
-    PHP_SWOOLE_VERSION="6.2.0" \
-    PHP_IMAGICK_VERSION="3.8.1" \
-    PHP_MONGODB_VERSION="2.2.1" \
-    PHP_YAML_VERSION="2.3.0" \
-    PHP_MAXMINDDB_VERSION="v1.13.1" \
-    PHP_SCRYPT_VERSION="2.0.1" \
-    PHP_ZSTD_VERSION="0.15.2" \
+ENV \
     PHP_BROTLI_VERSION="0.18.3" \
-    PHP_SNAPPY_VERSION="0.2.3" \
+    PHP_IMAGICK_VERSION="3.8.1" \
     PHP_LZ4_VERSION="0.6.0" \
-    PHP_XDEBUG_VERSION="3.5.1" \
+    PHP_MAXMINDDB_VERSION="v1.13.1" \
+    PHP_MONGODB_VERSION="2.2.1" \
     PHP_OPENTELEMETRY_VERSION="1.2.1" \
-    PHP_PROTOBUF_VERSION="5.34.0"
+    PHP_PROTOBUF_VERSION="5.34.0" \
+    PHP_REDIS_VERSION="6.3.0" \
+    PHP_SCRYPT_VERSION="2.0.1" \
+    PHP_SNAPPY_VERSION="0.2.3" \
+    PHP_SWOOLE_VERSION="6.2.0" \
+    PHP_XDEBUG_VERSION="3.5.1" \
+    PHP_YAML_VERSION="2.3.0" \
+    PHP_ZSTD_VERSION="0.15.2"
 
 RUN \
   apk update && \
@@ -57,11 +58,11 @@ RUN \
     zlib-dev \
     zstd-dev
 
-# compile from source instals
+# compile from source instals (least desirable method)
 
+# Redis Extension
 FROM compile AS redis
 RUN \
-  # Redis Extension
   git clone --depth 1 --branch $PHP_REDIS_VERSION https://github.com/phpredis/phpredis.git && \
   cd phpredis && \
   phpize && \
@@ -70,8 +71,9 @@ RUN \
 
 ## Swoole Extension
 FROM compile AS swoole
+RUN docker-php-ext-install sockets
 RUN \
-  git clone --depth 1 --branch $PHP_SWOOLE_VERSION https://github.com/swoole/swoole-src.git && \
+  git clone --depth 1 --branch "v$PHP_SWOOLE_VERSION" https://github.com/swoole/swoole-src.git && \
   cd swoole-src && \
   phpize && \
   ./configure --enable-sockets --enable-http2 --enable-openssl --enable-swoole-curl && \
@@ -170,7 +172,7 @@ RUN \
   ./configure && \
   make && make install
 
-# PHP PECL installs
+# PHP PECL installs (acceptable method)
 
 FROM compile AS opentelemetry
 RUN pecl install opentelemetry-${PHP_OPENTELEMETRY_VERSION}
@@ -178,26 +180,9 @@ RUN pecl install opentelemetry-${PHP_OPENTELEMETRY_VERSION}
 FROM compile AS protobuf
 RUN pecl install protobuf-${PHP_PROTOBUF_VERSION}
 
-# docker-php-extensions installs
-
-FROM compile AS gd
-RUN docker-php-ext-install gd
-
-FROM compile AS sockets
-RUN docker-php-ext-install sockets
-
-FROM compile AS pdo_mysql
-RUN docker-php-ext-install pdo pdo_mysql
-
-FROM compile AS pdo_pgsql
-RUN docker-php-ext-install pdo pdo_pgsql
-
-FROM compile AS intl
-RUN docker-php-ext-install intl
-
 FROM $BASE_IMAGE AS final
 
-# PAss in ARGS to use as label values and path components
+# Pass in ARGS to use as label values and path components
 
 ARG BASE_IMAGE
 ARG PHP_BUILD_DATE
@@ -249,23 +234,27 @@ RUN \
   && apk del .deps \
   && rm -rf /var/cache/apk/*
 
+# extension installer (prefered method)
+
+RUN docker-php-ext-install \
+  gd \
+  intl \
+  pdo_mysql \
+  pdo_pgsql \
+  sockets
+
 WORKDIR /usr/src/code
 
 COPY --from=brotli /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/brotli.so /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/
-COPY --from=gd /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/gd.so /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/
 COPY --from=imagick /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/imagick.so /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/
-COPY --from=intl /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/intl.so /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/
 COPY --from=lz4 /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/lz4.so /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/
 COPY --from=maxmind /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/maxminddb.so /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/
 COPY --from=mongodb /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/mongodb.so /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/
 COPY --from=opentelemetry /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/opentelemetry.so /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/
-COPY --from=pdo_mysql /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/pdo_mysql.so /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/
-COPY --from=pdo_pgsql /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/pdo_pgsql.so /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/
 COPY --from=protobuf /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/protobuf.so /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/
 COPY --from=redis /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/redis.so /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/
 COPY --from=scrypt /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/scrypt.so /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/
 COPY --from=snappy /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/snappy.so /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/
-COPY --from=sockets /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/sockets.so /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/
 COPY --from=swoole /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/swoole.so /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/
 COPY --from=xdebug /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/xdebug.so /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/
 COPY --from=yaml /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/yaml.so /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/

@@ -37,8 +37,7 @@ In order to run this container you'll need the Docker runtime installed.
 ## Build
 
 ```shell
-time docker-buildx build --no-cache --tag appwrite/base:latest . | tee "build-$(date +%s).log"
-# tee "build-$(date +%s).log"  0.00s user 0.01s system 0% cpu 4:20.31 total
+time docker-buildx build --no-cache --tag appwrite/base:latest .
 ```
 
 ## Scan
