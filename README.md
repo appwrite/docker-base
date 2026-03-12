@@ -37,27 +37,34 @@ In order to run this container you'll need the Docker runtime installed.
 ## Build
 
 ```shell
-time docker-buildx build --no-cache --tag appwrite/base:latest .
+docker-buildx build --no-cache --tag appwrite/base:latest .
+# exit code 0
 ```
 
 ## Scan
 
 ```shell
-trivy image --format json --pkg-types  os,library --severity  CRITICAL,HIGH --output trivy-image-results.json appwrite/base:latest | tee "scan-$(date +%s).log"
+trivy image --format json --pkg-types  os,library --severity  CRITICAL,HIGH --output trivy-image-results.json appwrite/base:latest
 # success is a zero exit code
 ```
 
 ## Test
 
 ```bash
-container-structure-test test --config tests.yaml --image appwrite/base:latest | tee "test-$(date +%s).log"
+container-structure-test test --config tests.yaml --image appwrite/base:latest
 # PASS
+CI=true dive appwrite/base:latest
+# Results:
+#   PASS: highestUserWastedPercent
+#   PASS: highestWastedBytes
+#   PASS: lowestEfficiency
+# Result:PASS [Total:3] [Passed:3] [Failed:0] [Warn:0] [Skipped:0]
 ```
 
 ## Run
 
 ```shell
-docker run appwrite/base:latest php -m| tee "run-$(date +%s).log"
+docker run appwrite/base:latest php -m
 # ...
 # yaml
 # Zend OPcache

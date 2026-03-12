@@ -1,5 +1,5 @@
 schemaVersion: '2.0.0'
-  
+
 commandTests:
   - name: 'Imagemagick command'
     command: "magick"
@@ -75,6 +75,11 @@ commandTests:
       - yaml
       - zlib
       - zstd
+  - name: 'PHP version'
+    command: "php"
+    args: ["-v"]
+    expectedOutput:
+      - "PHP 8.5.3 (cli)*"
   - name: 'ImageMagick supported formats'
     command: "php"
     args: ["-i"]
@@ -85,6 +90,11 @@ commandTests:
     args: ["-r", 'print(\Normalizer::FORM_D);']
     expectedOutput:
       - "4"
+  - name: 'Swoole version'
+    command: "php"
+    args: ["--re", "swoole"]
+    expectedOutput:
+      - ".*version 6.2.0.*"
   - name: 'ZIP'
     command: "zip"
     args: ["-v"]

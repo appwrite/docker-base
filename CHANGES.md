@@ -1,13 +1,18 @@
 # CHANGELOG
 
-## Version 0.11.0
+## Version 1.1.0
 
 ### Add
 
 * .dockerignore
 * .github/workflows/pr-scan.yml to scan all commit pushes for vulnerabilities
+* .github/workflows/lifecycle-policy.yml to prune sha tagged images excluding the most recent 7
 * base_image and php_build_date to containber labels
 * container image build action to publish image using commit sha
+* container-structure-test to check PHP version (currently set to 8.5.3)
+* container-structure-test to check swoole version (currently set to 6.2.0)
+* SECURITY.md to align with appwrite/appwrite
+* 
 
 ### Change
 
@@ -17,6 +22,7 @@
 * Better noted and organized the different build processes for PHP extensions
 * Date component of PHP extension shared objects directory now a build argument
 * Dockerfile compile and final stage system packages aligned
+* Github action runners pinned to Ubuntu 24.04
 * ImageMagick version bumped to 7.1.2.15, tests.yaml aligned to ensure new version
 * PHP version bumped to 8.5.3
 * Refactory multi-arch build process to prevent cross-arch builds requiring long wait times

@@ -1,0 +1,21 @@
+name: Dive Test
+
+on: [pull_request]
+
+jobs:
+  dive:
+    runs-on: ubuntu-latest
+    name: Analyze image efficiency
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6.0.2
+
+      - name: Build an image from Dockerfile
+        run: |
+          docker image build -t appwrite/docker-base:${{ github.sha }} .
+
+      - name: Dive
+        uses: yuichielectric/dive-action@0.0.4
+        with:
+          github-token: ${{ secrets.GH_TOKEN }}
+          image: appwrite/docker-base:${{ github.sha }}

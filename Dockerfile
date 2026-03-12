@@ -14,7 +14,6 @@ ENV \
     PHP_REDIS_VERSION="6.3.0" \
     PHP_SCRYPT_VERSION="2.0.1" \
     PHP_SNAPPY_VERSION="0.2.3" \
-    PHP_SWOOLE_VERSION="6.2.0" \
     PHP_XDEBUG_VERSION="3.5.1" \
     PHP_YAML_VERSION="2.3.0" \
     PHP_ZSTD_VERSION="0.15.2"
@@ -68,17 +67,6 @@ RUN \
   phpize && \
   ./configure && \
   make && make install
-
-## Swoole Extension
-FROM compile AS swoole
-RUN docker-php-ext-install sockets
-RUN \
-  git clone --depth 1 --branch "v$PHP_SWOOLE_VERSION" https://github.com/swoole/swoole-src.git && \
-  cd swoole-src && \
-  phpize && \
-  ./configure --enable-sockets --enable-http2 --enable-openssl --enable-swoole-curl && \
-  make && make install && \
-  cd ..
 
 ## Imagick Extension
 FROM compile AS imagick
@@ -180,7 +168,9 @@ RUN pecl install opentelemetry-${PHP_OPENTELEMETRY_VERSION}
 FROM compile AS protobuf
 RUN pecl install protobuf-${PHP_PROTOBUF_VERSION}
 
-FROM $BASE_IMAGE AS final
+# FROM $BASE_IMAGE AS final
+FROM "phpswoole/swoole:php8.5-alpine" AS final
+
 
 # Pass in ARGS to use as label values and path components
 
@@ -255,7 +245,6 @@ COPY --from=protobuf /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_D
 COPY --from=redis /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/redis.so /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/
 COPY --from=scrypt /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/scrypt.so /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/
 COPY --from=snappy /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/snappy.so /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/
-COPY --from=swoole /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/swoole.so /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/
 COPY --from=xdebug /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/xdebug.so /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/
 COPY --from=yaml /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/yaml.so /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/
 COPY --from=zstd /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/zstd.so /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/
@@ -273,7 +262,6 @@ RUN docker-php-ext-enable \
   redis \
   scrypt \
   snappy \
-  swoole \
   yaml \
   zstd
 
