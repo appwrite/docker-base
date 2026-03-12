@@ -1,17 +1,19 @@
+# https://github.com/aquasecurity/trivy-action
 name: Push Trivy Scan
 
 on: push
 
 permissions:
-  contents: read
+  contents: read # for actions/checkout to fetch code
+  security-events: write # for github/codeql-action/upload-sarif to upload SARIF results
+  actions: read # only required for a private repository by github/codeql-action/upload-sarif to get the Action run status
+
+env:
+  IMAGE_NAME: appwrite/base
+  REGISTRY: docker.io
 
 jobs:
   trivy:
-    permissions:
-      contents: read # for actions/checkout to fetch code
-      security-events: write # for github/codeql-action/upload-sarif to upload SARIF results
-      actions: read # only required for a private repository by github/codeql-action/upload-sarif to get the Action run status
-    name: Build
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout code
@@ -19,18 +21,18 @@ jobs:
 
       - name: Build an image from Dockerfile
         run: |
-          docker image build -t appwrite/docker-base:${{ github.sha }} .
+          docker image build --tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} .
 
-      - name: Run Trivy vulnerability scanner
+      - name: Run Trivy vulnerability scanner (sarif report)
         uses: aquasecurity/trivy-action@0.35.0
         with:
-          image-ref: 'appwrite/docker-base:${{ github.sha }}'
-          format: 'template'
-          template: '@/contrib/sarif.tpl'
-          output: 'trivy-results.sarif'
+          format: 'sarif'
+          image-ref: '${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}'
+          output: 'trivy-image-results.sarif'
           severity: 'CRITICAL,HIGH'
 
-      - name: Upload Trivy scan results to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@v4.32.6
+      # https://github.com/github/codeql-action/blob/main/upload-sarif/action.yml
+      - name: Upload Trivy scan results
+        uses: github/codeql-action/upload-sarif@v4
         with:
-          sarif_file: 'trivy-results.sarif'
+          sarif_file: '.'

@@ -37,7 +37,7 @@ In order to run this container you'll need the Docker runtime installed.
 ## Build
 
 ```shell
-docker-buildx build --no-cache --tag appwrite/base:latest .
+docker build --no-cache --tag appwrite/base:latest .
 # exit code 0
 ```
 
@@ -77,7 +77,7 @@ docker run appwrite/base:latest php -m
 
 ## Push
 
-Note: Build of the image and push to the registry shoudl be handle by automation.
+Pushing a built image to a repository should be handle by automation.
 
 ```bash
 docker push appwrite/base:latest | tee "push-$(date +%s).log"

@@ -34,11 +34,11 @@ jobs:
 
       - name: Build an image from Dockerfile
         run: |
-          docker image build --tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{matrix.arch}} .
+          docker image build --tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}-${{matrix.arch}} .
 
       - name: Push an image
         run: |
-          docker image push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{matrix.arch}}
+          docker image push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}-${{matrix.arch}}
 
   manifest_build_and_push_on_feature:
     if: github.ref != 'refs/heads/main'
@@ -54,13 +54,13 @@ jobs:
       - name: Create manifest
         run: |
             docker manifest create \
-              ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.SHA }} \
-              ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:amd64 \
-              ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:arm64
+              ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} \
+              ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}-amd64 \
+              ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}-arm64
 
       - name: Push manifest
         run: |
-            docker manifest push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.SHA }}
+            docker manifest push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
 
 
   manifest_build_and_push_on_main:
@@ -78,8 +78,8 @@ jobs:
         run: |
             docker manifest create \
               ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.event.release.tag_name }} \
-              ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:amd64 \
-              ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:arm64
+              ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}-amd64 \
+              ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}-arm64
 
       - name: Push manifest
         run: |

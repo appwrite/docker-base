@@ -1,11 +1,14 @@
+# https://github.com/marketplace/actions/container-structure-test-action
 name: Container Structure Test
 
-on: [pull_request]
+on: push
+
+permissions:
+  contents: read
 
 env:
-  REGISTRY: docker.io
   IMAGE_NAME: appwrite/base
-  TAG: ${{ github.event.release.tag_name }}
+  REGISTRY: docker.io
 
 jobs:
   structure_test:
@@ -14,13 +17,12 @@ jobs:
       - name: Checkout the repo
         uses: actions/checkout@v6.0.2
 
-      - name: Setup container-structure-test
+      - name: Build an image from Dockerfile
         run: |
-          curl -LO https://storage.googleapis.com/container-structure-test/latest/container-structure-test-linux-amd64
-          chmod +x container-structure-test-linux-amd64
-          sudo mv container-structure-test-linux-amd64 /usr/local/bin/container-structure-test
+          docker image build --tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} .
 
-      - name: Run container structure test
-        run: |
-          docker build -t appwrite-base-test .
-          container-structure-test test --image appwrite-base-test --config tests.yaml
+      - name: Run container structure tests
+        uses: plexsystems/container-structure-test-action@v0.1.0
+        with:
+          image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          config: tests.yaml

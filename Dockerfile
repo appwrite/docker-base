@@ -1,4 +1,4 @@
-ARG BASE_IMAGE="php:8.5.3-cli-alpine3.23"
+ARG BASE_IMAGE="phpswoole/swoole:php8.5-alpine"
 ARG PHP_BUILD_DATE="20250925"
 
 FROM $BASE_IMAGE AS compile
@@ -168,9 +168,7 @@ RUN pecl install opentelemetry-${PHP_OPENTELEMETRY_VERSION}
 FROM compile AS protobuf
 RUN pecl install protobuf-${PHP_PROTOBUF_VERSION}
 
-# FROM $BASE_IMAGE AS final
-FROM "phpswoole/swoole:php8.5-alpine" AS final
-
+FROM $BASE_IMAGE AS final
 
 # Pass in ARGS to use as label values and path components
 

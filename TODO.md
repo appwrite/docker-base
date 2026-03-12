@@ -1,9 +1,6 @@
 # TODO
 
-- [add dive analysis to project](https://github.com/marketplace/actions/dive-action)
-- audit system packages in Dockerfile -> final
-- can we get pre-compiled extensions *.so / extensions
-- install gd and run stage should be separate
-- use Swoole base image
-- xdebug as separate image `appwrite/base-xdebug`
-- push job should require all tests to pass which should require build to successed. Reduce duplication of steps across jobs
+- can we get pre-compiled extensions *.so / extensions?
+- xdebug as separate image `appwrite/base:XYZ-xdebug`
+- Github action should only build the image once, cache it, the use it downstream. No need to build it in every job
+  - https://stackoverflow.com/questions/75632970/how-to-use-docker-build-in-next-step-of-github-actions-after-build-step

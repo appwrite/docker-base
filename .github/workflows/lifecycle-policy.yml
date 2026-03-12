@@ -1,35 +1,36 @@
-# # https://github.com/marketplace/actions/delete-package-versions
-# # Ignore SemVer tags (proper releases)
-# # Keep 7 sha tagged images (ordred by publish datetime)
+# https://github.com/marketplace/actions/delete-package-versions
+# Ignore SemVer tags (proper releases)
+# Keep 7 sha tagged images (ordred by publish datetime)
 
-# name: Container Lifecycle Policy
+name: Container Lifecycle Policy
 
-# on:
-#   schedule:
-#     - cron: '30 9 * * *'
+on:
+  schedule:
+    - cron: '30 9 * * *'
 
-# permissions:
-#   contents: read
+permissions:
+  contents: read
 
-# env:
-#   IMAGE_NAME: appwrite/base
-#   REGISTRY: docker.io
+env:
+  IMAGE_NAME: appwrite/base
+  REGISTRY: docker.io
 
-# jobs:
-#   prune_sha_tagged_images:
-#     runs-on: ubuntu-24.04
-#     steps:
-#       - name: Login to DockerHub
-#         uses: docker/login-action@v4
-#         with:
-#           username: ${{ secrets.DOCKERHUB_USERNAME }}
-#           password: ${{ secrets.DOCKERHUB_TOKEN }}
+jobs:
+  prune_sha_tagged_images:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Login to DockerHub
+        uses: docker/login-action@v4
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-#       # https://github.com/marketplace/actions/delete-package-versions#delete-oldest-x-number-of-versions-while-ignoring-particular-package-versions
-#       # Ignore SemVer tagged images https://ihateregex.io/expr/semver/
-#       - uses: actions/delete-package-versions@v5
-#         with: 
-#           ignore-versions: '^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$'
-#           min-versions-to-keep: 7
-#           package-name: 'base'
-#           package-type: 'container'
+      # TODO pull all the images in the registry before running this. Be sure we have a backup
+      # # https://github.com/marketplace/actions/delete-package-versions#delete-oldest-x-number-of-versions-while-ignoring-particular-package-versions
+      # # Ignore SemVer tagged images https://ihateregex.io/expr/semver/
+      # - uses: actions/delete-package-versions@v5
+      #   with: 
+      #     ignore-versions: '^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$'
+      #     min-versions-to-keep: 7
+      #     package-name: 'base'
+      #     package-type: 'container'
