@@ -1,7 +1,14 @@
 # https://github.com/aquasecurity/trivy-action
-name: Push Trivy Scan
+name: Trivy Scan
 
-on: push
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    # The branches below must be a subset of the branches above
+    branches: [ "main" ]
+  schedule:
+    - cron: '43 11 * * 6'
 
 permissions:
   contents: read # for actions/checkout to fetch code
@@ -13,7 +20,7 @@ env:
   REGISTRY: docker.io
 
 jobs:
-  trivy:
+  scheduled_trivy:
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout code

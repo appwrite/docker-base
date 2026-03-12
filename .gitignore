@@ -1,4 +1,1 @@
 .idea
-*.log
-NOTES*.md
-trivy-*-results.json

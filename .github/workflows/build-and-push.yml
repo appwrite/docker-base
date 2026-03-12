@@ -1,6 +1,9 @@
 name: Build and Push
 
-on: push
+on: 
+  push:
+  release:
+    types: [published]
 
 permissions:
   contents: read
@@ -13,7 +16,6 @@ env:
 # https://learn.arm.com/learning-paths/cross-platform/github-arm-runners/actions/
 jobs:
   build_and_push:
-    if: github.ref != 'refs/heads/main'
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:

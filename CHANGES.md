@@ -6,7 +6,6 @@
 
 * .dockerignore
 * .github/workflows/pr-scan.yml to scan all commit pushes for vulnerabilities
-* .github/workflows/lifecycle-policy.yml to prune sha tagged images excluding the most recent 7
 * base_image and php_build_date to container labels
 * container image build action to publish image using commit sha
 * container-structure-test to check PHP version (currently set to 8.5.3)
@@ -16,7 +15,6 @@
 ### Change
 
 * .github/*.yml steps updated to latest versions
-* .gitignore now includes log and scanning output rules
 * Better document use of `docker buildx ...` for local builds
 * Better noted and organized the different build processes for PHP extensions
 * Date component of PHP extension shared objects directory now a build argument
@@ -36,4 +34,5 @@
 
 ### Removed
 
+* Build tools from final stage of Dockerfile
 * Github action to Setup QEMU as GitHub now provides native ARM runners
