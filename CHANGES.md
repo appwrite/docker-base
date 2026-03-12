@@ -18,13 +18,13 @@
 * Better document use of `docker buildx ...` for local builds
 * Better noted and organized the different build processes for PHP extensions
 * Date component of PHP extension shared objects directory now a build argument
+* Dockerfile base now based on `phpswoole/swoole:php8.5-alpine`
 * Dockerfile compile and final stage system packages aligned
-* Github action for container-structure-test now uses a marketplace action
-* Github action runners pinned to Ubuntu 24.04
-* ImageMagick version bumped to 7.1.2.15, tests.yaml aligned to ensure new version
-* PHP version bumped to 8.5.3
+* GitHub action for container-structure-test now uses a marketplace action
+* GitHub action runners pinned to Ubuntu 24.04
+* ImageMagick version bumped to 7.1.2.15 via APK
+* PHP version bumped to 8.5
 * Refactored multi-arch build process to prevent cross-arch builds requiring long wait times
-* Swoole version bumped to 6.2.0
 
 ### Fixes
 
@@ -35,4 +35,4 @@
 ### Removed
 
 * Build tools from final stage of Dockerfile
-* Github action to Setup QEMU as GitHub now provides native ARM runners
+* GitHub action to Setup QEMU as GitHub now provides native ARM runners

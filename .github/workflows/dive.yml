@@ -23,4 +23,5 @@ jobs:
       - name: Dive
         uses: yuichielectric/dive-action@0.0.4
         with:
+          config-file: ${{ github.workspace }}/.dive-ci.yml
           image: '${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}'

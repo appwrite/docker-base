@@ -21,8 +21,8 @@ ENV \
 RUN \
   apk update && \
   apk upgrade && \
-  apk add --no-cache --virtual .deps && \
-  apk add --no-cache \
+  apk add --no-cache --virtual .deps \
+    && apk add --no-cache \
     autoconf \
     automake \
     brotli-dev \
@@ -185,7 +185,8 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && \
 RUN \
   apk update && \
   apk upgrade && \
-  apk add --no-cache \
+  apk add --no-cache --virtual .deps \
+    && apk add --no-cache \
     autoconf \
     automake \
     brotli-dev \
