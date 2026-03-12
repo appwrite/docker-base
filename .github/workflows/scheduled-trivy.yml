@@ -29,12 +29,11 @@ jobs:
         run: |
           docker image build --tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} .
 
-      - name: Run Trivy vulnerability scanner
+      - name: Run Trivy vulnerability scanner (sarif report)
         uses: aquasecurity/trivy-action@0.35.0
         with:
-          image-ref: 'appwrite/docker-base:${{ github.sha }}'
-          format: 'template'
-          template: '@/contrib/sarif.tpl'
+          format: 'sarif'
+          image-ref: '${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}'
           output: 'trivy-image-results.sarif'
           severity: 'CRITICAL,HIGH'
 
