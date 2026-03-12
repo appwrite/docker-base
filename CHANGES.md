@@ -7,7 +7,7 @@
 * .dockerignore
 * .github/workflows/pr-scan.yml to scan all commit pushes for vulnerabilities
 * .github/workflows/lifecycle-policy.yml to prune sha tagged images excluding the most recent 7
-* base_image and php_build_date to containber labels
+* base_image and php_build_date to container labels
 * container image build action to publish image using commit sha
 * container-structure-test to check PHP version (currently set to 8.5.3)
 * container-structure-test to check swoole version (currently set to 6.2.0)
