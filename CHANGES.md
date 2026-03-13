@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## Version 1.1.1
+
+### Fix
+
+* .github/workflows/build-and-push.yml manifest_build_and_push_on_feature no longer wrongs on tag creation
+* .github/workflows/build-and-push.yml manifest_build_and_push_on_tag now correctly builds on tag creation
+
 ## Version 1.1.0
 
 ### Add
@@ -26,13 +33,13 @@
 * PHP version bumped to 8.5
 * Refactored multi-arch build process to prevent cross-arch builds requiring long wait times
 
-### Fixes
+### Fix
 
 * README.md usage instructions more detailed
 
 ### Miscellaneous
 
-### Removed
+### Remove
 
 * Build tools from final stage of Dockerfile
 * GitHub action to Setup QEMU as GitHub now provides native ARM runners
