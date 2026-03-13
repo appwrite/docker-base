@@ -1,0 +1,27 @@
+name: Dive Test
+
+on: push
+
+permissions:
+  contents: read
+
+env:
+  IMAGE_NAME: appwrite/base
+  REGISTRY: docker.io
+
+jobs:
+  dive:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6.0.2
+
+      - name: Build an image from Dockerfile
+        run: |
+          docker image build --tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} .
+
+      - name: Dive
+        uses: yuichielectric/dive-action@0.0.4
+        with:
+          config-file: ${{ github.workspace }}/.dive-ci.yml
+          image: '${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}'

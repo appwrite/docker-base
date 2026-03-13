@@ -1,0 +1,28 @@
+# https://github.com/marketplace/actions/container-structure-test-action
+name: Container Structure Test
+
+on: push
+
+permissions:
+  contents: read
+
+env:
+  IMAGE_NAME: appwrite/base
+  REGISTRY: docker.io
+
+jobs:
+  structure_test:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout the repo
+        uses: actions/checkout@v6.0.2
+
+      - name: Build an image from Dockerfile
+        run: |
+          docker image build --tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} .
+
+      - name: Run container structure tests
+        uses: plexsystems/container-structure-test-action@v0.1.0
+        with:
+          image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          config: tests.yaml

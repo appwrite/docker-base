@@ -1,60 +1,86 @@
 # Docker Base
 
+[![Build Status](https://img.shields.io/travis/com/appwrite/docker-base?style=flat-square)](https://travis-ci.com/appwrite/docker-base)
 [![Discord](https://img.shields.io/discord/564160730845151244?label=discord&style=flat-square)](https://appwrite.io/discord)
 [![Docker Pulls](https://img.shields.io/docker/pulls/appwrite/base?color=f02e65&style=flat-square)](https://hub.docker.com/r/appwrite/base)
-[![Build Status](https://img.shields.io/travis/com/appwrite/docker-base?style=flat-square)](https://travis-ci.com/appwrite/docker-base)
-[![Twitter Account](https://img.shields.io/twitter/follow/appwrite?color=00acee&label=twitter&style=flat-square)](https://twitter.com/appwrite)
 [![Follow Appwrite on StackShare](https://img.shields.io/badge/follow%20on-stackshare-blue?style=flat-square)](https://stackshare.io/appwrite)
+[![Twitter Account](https://img.shields.io/twitter/follow/appwrite?color=00acee&label=twitter&style=flat-square)](https://twitter.com/appwrite)
 
 [Appwrite](https://appwrite.io) base docker image with applications and extensions built and installed.
 
 ## Getting Started
 
-These instructions will cover usage information to help your run Appwrite's base docker container.
+This project contains Appwrite's PHP base container image.
 
-### Prerequisites
+### NOTE
 
-In order to run this container you'll need docker installed.
+* For example usage `latest` is stated in the commands. The Appwrite team recommends using pinned version releases outside of development.
+* We use `Docker` but you may use any compatible container runtime in its place.
 
-* [Windows](https://docs.docker.com/windows/started)
-* [OS X](https://docs.docker.com/mac/started/)
+## Prerequisites
+
+In order to run this container you'll need the Docker runtime installed.
+
+**Docker**
+
 * [Linux](https://docs.docker.com/linux/started/)
+* [OS X](https://docs.docker.com/mac/started/)
+* [Windows](https://docs.docker.com/windows/started)
 
-### Usage
+* [Docker buildx](https://github.com/docker/buildx)
+
+**Optional**
+
+* [GoogleContainerTools/container-structure-test](https://github.com/GoogleContainerTools/container-structure-test) for testing
+* [Trivy](https://trivy.dev/) for CVE scanning
+
+## Build
 
 ```shell
-docker run appwrite/base
+docker build --no-cache --tag appwrite/base:latest .
+# exit code 0
 ```
 
-### Testing
+## Scan
 
-We use [Container Structure Test](https://github.com/GoogleContainerTools/container-structure-test) to run test for the docker image. In order to run test first install Container strucutre test using the following command.
+```shell
+trivy image --format json --pkg-types  os,library --severity  CRITICAL,HIGH --output trivy-image-results.json appwrite/base:latest
+# success is a zero exit code
+```
+
+## Test
 
 ```bash
-curl -LO https://storage.googleapis.com/container-structure-test/latest/container-structure-test-linux-amd64 && chmod +x container-structure-test-linux-amd64 && sudo mv container-structure-test-linux-amd64 /usr/local/bin/container-structure-test
+container-structure-test test --config tests.yaml --image appwrite/base:latest
+# PASS
+CI=true dive --confog .dive-ci.yml appwrite/base:latest
+# Results:
+#   PASS: highestUserWastedPercent
+#   PASS: highestWastedBytes
+#   PASS: lowestEfficiency
+# Result:PASS [Total:3] [Passed:3] [Failed:0] [Warn:0] [Skipped:0]
 ```
 
-### Run Test
+## Run
 
-First build and tag the docker image and then run the test using the configuration file.
+```shell
+docker run appwrite/base:latest php -m
+# ...
+# yaml
+# Zend OPcache
+# zlib
+# zstd
+# 
+# [Zend Modules]
+# Zend OPcache
+```
+
+## Push
+
+Pushing a built image to a repository should be handle by automation.
 
 ```bash
-docker build -t appwrite-base-test .
-container-structure-test test --config tests.yaml --image appwrite-base-test
-```
-
-### Build
-
-```bash
-docker build --tag appwrite/base:1.0.0 .
-
-docker push appwrite/base:1.0.0
-```
-
-Multi-arch build (using [buildx](https://github.com/docker/buildx)):
-
-```
-docker buildx build --platform linux/amd64,linux/arm64/v8,linux/ppc64le --tag appwrite/base:1.0.0 --push .
+docker push appwrite/base:latest | tee "push-$(date +%s).log"
 ```
 
 ## Find Us

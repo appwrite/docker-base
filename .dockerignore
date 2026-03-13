@@ -1,0 +1,6 @@
+.git*
+*.md
+*test*.*
+Dockerfile
+LICENSE
+trivy-*.json
