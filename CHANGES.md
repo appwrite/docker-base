@@ -4,7 +4,7 @@
 
 ### Fix
 
-* .github/workflows/build-and-push.yml manifest_build_and_push_on_feature no longer wrongs on tag creation
+* .github/workflows/build-and-push.yml manifest_build_and_push_on_feature no longer triggers on tag creation
 * .github/workflows/build-and-push.yml manifest_build_and_push_on_tag now correctly builds on tag creation
 
 ## Version 1.1.0
