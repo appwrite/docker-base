@@ -2,6 +2,17 @@
 
 ## Version 1.1.1
 
+### Add
+
+* XDebug optional build variant — build with `--target xdebug`
+
+### Change
+
+* Final image now uses runtime-only packages (no `-dev` packages or build tools)
+* PHP extension `.so` files stripped of debug symbols to reduce size
+* PHP extensions compiled in isolated build stages and copied into final image
+* `core-extensions` build stage compiles gd, intl, pdo_mysql, pdo_pgsql, sockets
+
 ### Fix
 
 * .github/workflows/build-and-push.yml manifest_build_and_push_on_feature no longer triggers on tag creation
