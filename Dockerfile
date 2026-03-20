@@ -14,46 +14,32 @@ ENV \
     PHP_REDIS_VERSION="6.3.0" \
     PHP_SCRYPT_VERSION="2.0.1" \
     PHP_SNAPPY_VERSION="0.2.3" \
-    PHP_XDEBUG_VERSION="3.5.1" \
     PHP_YAML_VERSION="2.3.0" \
     PHP_ZSTD_VERSION="0.15.2"
 
 RUN \
   apk update && \
   apk upgrade && \
-  apk add --no-cache --virtual .deps \
-    && apk add --no-cache \
+  apk add --no-cache \
     autoconf \
     automake \
     brotli-dev \
-    certbot \
     curl-dev \
-    docker-cli \
-    docker-cli-compose \
     g++ \
     gcc \
     git \
-    imagemagick \
     imagemagick-dev \
-    imagemagick-heic \
-    jpeg-dev \
-    libavif \
-    libgomp \
-    libheif \
+    icu-dev \
     libjpeg-turbo-dev \
     libjxl-dev \
     libmaxminddb-dev \
     libpng-dev \
-    libstdc++ \
-    libwebp \
     linux-headers \
     lz4-dev \
     make \
     openssl-dev \
     postgresql-dev \
-    rsync \
     yaml-dev \
-    zip \
     zlib-dev \
     zstd-dev
 
@@ -66,7 +52,8 @@ RUN \
   cd phpredis && \
   phpize && \
   ./configure && \
-  make && make install
+  make && make install && \
+  strip $(php-config --extension-dir)/redis.so
 
 ## Imagick Extension
 FROM compile AS imagick
@@ -75,7 +62,8 @@ RUN \
   cd imagick && \
   phpize && \
   ./configure && \
-  make && make install
+  make && make install && \
+  strip $(php-config --extension-dir)/imagick.so
 
 ## YAML Extension
 FROM compile AS yaml
@@ -84,7 +72,8 @@ RUN \
   cd pecl-file_formats-yaml && \
   phpize && \
   ./configure && \
-  make && make install
+  make && make install && \
+  strip $(php-config --extension-dir)/yaml.so
 
 ## Maxminddb Extension
 FROM compile AS maxmind
@@ -94,7 +83,8 @@ RUN \
   cd ext && \
   phpize && \
   ./configure && \
-  make && make install
+  make && make install && \
+  strip $(php-config --extension-dir)/maxminddb.so
 
 # Mongodb Extension
 FROM compile AS mongodb
@@ -104,7 +94,8 @@ RUN \
   git submodule update --init && \
   phpize && \
   ./configure && \
-  make && make install
+  make && make install && \
+  strip $(php-config --extension-dir)/mongodb.so
 
 # Zstd Compression
 FROM compile AS zstd
@@ -113,7 +104,8 @@ RUN git clone --recursive -n https://github.com/kjdev/php-ext-zstd.git \
   && git checkout $PHP_ZSTD_VERSION \
   && phpize \
   && ./configure --with-libzstd \
-  && make && make install
+  && make && make install \
+  && strip $(php-config --extension-dir)/zstd.so
 
 ## Brotli Extension
 FROM compile AS brotli
@@ -122,7 +114,8 @@ RUN git clone https://github.com/kjdev/php-ext-brotli.git \
   && git reset --hard $PHP_BROTLI_VERSION \
   && phpize \
   && ./configure --with-libbrotli \
-  && make && make install
+  && make && make install \
+  && strip $(php-config --extension-dir)/brotli.so
 
 ## LZ4 Extension
 FROM compile AS lz4
@@ -131,7 +124,8 @@ RUN git clone --recursive https://github.com/kjdev/php-ext-lz4.git \
   && git reset --hard $PHP_LZ4_VERSION \
   && phpize \
   && ./configure --with-lz4-includedir=/usr \
-  && make && make install
+  && make && make install \
+  && strip $(php-config --extension-dir)/lz4.so
 
 ## Snappy Extension
 FROM compile AS snappy
@@ -140,7 +134,8 @@ RUN git clone --recursive https://github.com/kjdev/php-ext-snappy.git \
   && git reset --hard $PHP_SNAPPY_VERSION \
   && phpize \
   && ./configure \
-  && make && make install
+  && make && make install \
+  && strip $(php-config --extension-dir)/snappy.so
 
 ## Scrypt Extension
 FROM compile AS scrypt
@@ -149,24 +144,28 @@ RUN git clone --depth 1 https://github.com/DomBlack/php-scrypt.git  \
   && git reset --hard $PHP_SCRYPT_VERSION  \
   && phpize  \
   && ./configure --enable-scrypt  \
-  && make && make install
-
-## XDebug Extension
-FROM compile AS xdebug
-RUN \
-  git clone --depth 1 --branch $PHP_XDEBUG_VERSION https://github.com/xdebug/xdebug && \
-  cd xdebug && \
-  phpize && \
-  ./configure && \
-  make && make install
+  && make && make install \
+  && strip $(php-config --extension-dir)/scrypt.so
 
 # PHP PECL installs (acceptable method)
 
 FROM compile AS opentelemetry
-RUN pecl install opentelemetry-${PHP_OPENTELEMETRY_VERSION}
+RUN pecl install opentelemetry-${PHP_OPENTELEMETRY_VERSION} && \
+    strip $(php-config --extension-dir)/opentelemetry.so
 
 FROM compile AS protobuf
-RUN pecl install protobuf-${PHP_PROTOBUF_VERSION}
+RUN pecl install protobuf-${PHP_PROTOBUF_VERSION} && \
+    strip $(php-config --extension-dir)/protobuf.so
+
+# Core PHP extensions compiled in build stage
+FROM compile AS core-extensions
+RUN docker-php-ext-install gd intl pdo_mysql pdo_pgsql sockets && \
+    strip \
+      $(php-config --extension-dir)/gd.so \
+      $(php-config --extension-dir)/intl.so \
+      $(php-config --extension-dir)/pdo_mysql.so \
+      $(php-config --extension-dir)/pdo_pgsql.so \
+      $(php-config --extension-dir)/sockets.so
 
 FROM $BASE_IMAGE AS final
 
@@ -180,59 +179,39 @@ LABEL maintainer="team@appwrite.io"
 LABEL php_build_date=$PHP_BUILD_DATE
 
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && \
-  echo $TZ > /etc/timezone
-
-RUN \
-  apk update && \
-  apk upgrade && \
-  apk add --no-cache --virtual .deps \
-    && apk add --no-cache \
-    autoconf \
-    automake \
-    brotli-dev \
+  echo $TZ > /etc/timezone && \
+  apk add --no-cache \
+    brotli \
     certbot \
-    curl-dev \
     docker-cli \
     docker-cli-compose \
-    g++ \
-    gcc \
-    git \
+    icu-libs \
     imagemagick \
-    imagemagick-dev \
     imagemagick-heic \
-    jpeg-dev \
     libavif \
     libgomp \
     libheif \
-    libjpeg-turbo-dev \
-    libjxl-dev \
-    libmaxminddb-dev \
-    libpng-dev \
+    libjpeg-turbo \
+    libjxl \
+    libmaxminddb \
+    libpng \
+    libpq \
     libstdc++ \
     libwebp \
-    linux-headers \
-    lz4-dev \
-    make \
-    openssl-dev \
-    postgresql-dev \
+    lz4-libs \
     rsync \
-    yaml-dev \
+    yaml \
     zip \
-    zstd-dev \
-  && apk del .deps \
+    zstd-libs \
   && rm -rf /var/cache/apk/*
-
-# extension installer (prefered method)
-
-RUN docker-php-ext-install \
-  gd \
-  intl \
-  pdo_mysql \
-  pdo_pgsql \
-  sockets
 
 WORKDIR /usr/src/code
 
+COPY --from=core-extensions /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/gd.so /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/
+COPY --from=core-extensions /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/intl.so /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/
+COPY --from=core-extensions /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/pdo_mysql.so /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/
+COPY --from=core-extensions /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/pdo_pgsql.so /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/
+COPY --from=core-extensions /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/sockets.so /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/
 COPY --from=brotli /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/brotli.so /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/
 COPY --from=imagick /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/imagick.so /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/
 COPY --from=lz4 /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/lz4.so /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/
@@ -243,7 +222,6 @@ COPY --from=protobuf /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_D
 COPY --from=redis /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/redis.so /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/
 COPY --from=scrypt /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/scrypt.so /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/
 COPY --from=snappy /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/snappy.so /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/
-COPY --from=xdebug /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/xdebug.so /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/
 COPY --from=yaml /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/yaml.so /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/
 COPY --from=zstd /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/zstd.so /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/
 
@@ -252,17 +230,42 @@ RUN docker-php-ext-enable \
   brotli \
   gd \
   imagick \
+  intl \
   lz4 \
   maxminddb \
   mongodb \
   opentelemetry \
+  pdo_mysql \
+  pdo_pgsql \
   protobuf \
   redis \
   scrypt \
   snappy \
+  sockets \
   yaml \
   zstd
 
 EXPOSE 80
 
 CMD [ "tail", "-f", "/dev/null" ]
+
+# XDebug variant — build with: docker build --target xdebug -t appwrite/base:XYZ-xdebug .
+FROM compile AS xdebug-build
+
+ENV PHP_XDEBUG_VERSION="3.5.1"
+
+RUN \
+  git clone --depth 1 --branch $PHP_XDEBUG_VERSION https://github.com/xdebug/xdebug && \
+  cd xdebug && \
+  phpize && \
+  ./configure && \
+  make && make install && \
+  strip $(php-config --extension-dir)/xdebug.so
+
+FROM final AS xdebug
+
+ARG PHP_BUILD_DATE
+
+COPY --from=xdebug-build /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/xdebug.so /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/
+
+RUN docker-php-ext-enable xdebug

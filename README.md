@@ -53,7 +53,7 @@ trivy image --format json --pkg-types  os,library --severity  CRITICAL,HIGH --ou
 ```bash
 container-structure-test test --config tests.yaml --image appwrite/base:latest
 # PASS
-CI=true dive --confog .dive-ci.yml appwrite/base:latest
+CI=true dive --config .dive-ci.yml appwrite/base:latest
 # Results:
 #   PASS: highestUserWastedPercent
 #   PASS: highestWastedBytes

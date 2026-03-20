@@ -79,7 +79,7 @@ commandTests:
     command: "php"
     args: ["-v"]
     expectedOutput:
-      - "PHP 8.5.3 (cli)*"
+      - "PHP 8.5.4 (cli)*"
   - name: 'ImageMagick supported formats'
     command: "php"
     args: ["-i"]
