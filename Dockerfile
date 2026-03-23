@@ -28,10 +28,13 @@ RUN \
     g++ \
     gcc \
     git \
+    freetype-dev \
     imagemagick-dev \
     icu-dev \
+    libavif-dev \
     libjpeg-turbo-dev \
     libjxl-dev \
+    libwebp-dev \
     libmaxminddb-dev \
     libpng-dev \
     linux-headers \
@@ -159,7 +162,12 @@ RUN pecl install protobuf-${PHP_PROTOBUF_VERSION} && \
 
 # Core PHP extensions compiled in build stage
 FROM compile AS core-extensions
-RUN docker-php-ext-install gd intl pdo_mysql pdo_pgsql sockets && \
+RUN docker-php-ext-configure gd \
+      --with-avif \
+      --with-freetype \
+      --with-jpeg \
+      --with-webp && \
+    docker-php-ext-install gd intl pdo_mysql pdo_pgsql sockets && \
     strip \
       $(php-config --extension-dir)/gd.so \
       $(php-config --extension-dir)/intl.so \
@@ -183,6 +191,7 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && \
   apk add --no-cache \
     brotli \
     certbot \
+    freetype \
     docker-cli \
     docker-cli-compose \
     icu-libs \

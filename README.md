@@ -37,7 +37,11 @@ In order to run this container you'll need the Docker runtime installed.
 ## Build
 
 ```shell
+# Default (production) image
 docker build --no-cache --tag appwrite/base:latest .
+
+# XDebug variant
+docker build --no-cache --target xdebug --tag appwrite/base:latest-xdebug .
 # exit code 0
 ```
 

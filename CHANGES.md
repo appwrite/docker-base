@@ -1,17 +1,20 @@
 # CHANGELOG
 
-## Version 1.1.1
+## Version 1.2.0
 
 ### Add
 
+* container-structure-test checks for PHP GD supported formats
+* PHP GD compiled with AVIF, FreeType, JPEG, PNG, and WebP support
 * XDebug optional build variant — build with `--target xdebug`
 
 ### Change
 
+* `core-extensions` build stage compiles gd, intl, pdo_mysql, pdo_pgsql, sockets
 * Final image now uses runtime-only packages (no `-dev` packages or build tools)
 * PHP extension `.so` files stripped of debug symbols to reduce size
 * PHP extensions compiled in isolated build stages and copied into final image
-* `core-extensions` build stage compiles gd, intl, pdo_mysql, pdo_pgsql, sockets
+* PHP version bumped to 8.5.4
 
 ### Fix
 
