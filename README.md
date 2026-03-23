@@ -55,7 +55,12 @@ trivy image --format json --pkg-types  os,library --severity  CRITICAL,HIGH --ou
 ## Test
 
 ```bash
+# Production image
 container-structure-test test --config tests.yaml --image appwrite/base:latest
+# PASS
+
+# XDebug variant
+container-structure-test test --config tests-xdebug.yaml --image appwrite/base:latest-xdebug
 # PASS
 CI=true dive --config .dive-ci.yml appwrite/base:latest
 # Results:

@@ -6,6 +6,7 @@
 
 * container-structure-test checks for PHP GD supported formats
 * PHP GD compiled with AVIF, FreeType, JPEG, PNG, and WebP support
+* tests-xdebug.yaml for testing the XDebug variant
 * XDebug optional build variant — build with `--target xdebug`
 
 ### Change
