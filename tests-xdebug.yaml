@@ -1,0 +1,8 @@
+schemaVersion: '2.0.0'
+
+commandTests:
+  - name: 'PHP modules'
+    command: "php"
+    args: ["-m"]
+    expectedOutput:
+      - xdebug

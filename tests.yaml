@@ -75,11 +75,20 @@ commandTests:
       - yaml
       - zlib
       - zstd
+  - name: 'PHP GD supported formats'
+    command: "php"
+    args: ["-i"]
+    expectedOutput:
+      - "AVIF Support => enabled"
+      - "FreeType Support => enabled"
+      - "JPEG Support => enabled"
+      - "PNG Support => enabled"
+      - "WebP Support => enabled"
   - name: 'PHP version'
     command: "php"
     args: ["-v"]
     expectedOutput:
-      - "PHP 8.5.3 (cli)*"
+      - "PHP 8.5.4 (cli)*"
   - name: 'ImageMagick supported formats'
     command: "php"
     args: ["-i"]

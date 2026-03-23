@@ -37,7 +37,11 @@ In order to run this container you'll need the Docker runtime installed.
 ## Build
 
 ```shell
+# Default (production) image
 docker build --no-cache --tag appwrite/base:latest .
+
+# XDebug variant
+docker build --no-cache --target xdebug --tag appwrite/base:latest-xdebug .
 # exit code 0
 ```
 
@@ -51,9 +55,14 @@ trivy image --format json --pkg-types  os,library --severity  CRITICAL,HIGH --ou
 ## Test
 
 ```bash
+# Production image
 container-structure-test test --config tests.yaml --image appwrite/base:latest
 # PASS
-CI=true dive --confog .dive-ci.yml appwrite/base:latest
+
+# XDebug variant
+container-structure-test test --config tests-xdebug.yaml --image appwrite/base:latest-xdebug
+# PASS
+CI=true dive --config .dive-ci.yml appwrite/base:latest
 # Results:
 #   PASS: highestUserWastedPercent
 #   PASS: highestWastedBytes
