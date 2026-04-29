@@ -10,6 +10,11 @@
 
 * container-structure-test for `git` command
 
+### Change
+
+* `tests.yaml` PHP assertion bumped to 8.5.5 (upstream `phpswoole/swoole:php8.5-alpine` update)
+* `tests.yaml` Swoole assertion bumped to 6.2.1
+
 ## Version 1.2.0
 
 ### Add
