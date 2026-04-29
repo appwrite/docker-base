@@ -194,6 +194,7 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && \
     freetype \
     docker-cli \
     docker-cli-compose \
+    git \
     icu-libs \
     imagemagick \
     imagemagick-heic \
