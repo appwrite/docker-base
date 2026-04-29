@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## Version 1.2.1
+
+### Fix
+
+* Restore `git` in final image — unintentionally dropped from runtime apk install in 1.2.0; required by VCS-dependent services
+
+### Add
+
+* container-structure-test for `git` command
+
 ## Version 1.2.0
 
 ### Add

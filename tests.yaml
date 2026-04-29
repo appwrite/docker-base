@@ -21,6 +21,10 @@ commandTests:
     command: "docker"
     args: ["compose", "version"]
     expectedOutput: ["Docker Compose version v.*"]
+  - name: 'Git command'
+    command: "git"
+    args: ["--version"]
+    expectedOutput: ["git version 2.*"]
   - name: 'PHP modules'
     command: "php"
     args: ["-m"]
