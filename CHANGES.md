@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## Version 1.2.2
+
+### Remove
+
+* PHP `opentelemetry` extension — its observer hooks override `zend_execute_ex` and disable opcache JIT on PHP 8.5
+
 ## Version 1.2.1
 
 ### Fix

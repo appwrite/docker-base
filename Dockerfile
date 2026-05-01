@@ -9,7 +9,6 @@ ENV \
     PHP_LZ4_VERSION="0.6.0" \
     PHP_MAXMINDDB_VERSION="v1.13.1" \
     PHP_MONGODB_VERSION="2.2.1" \
-    PHP_OPENTELEMETRY_VERSION="1.2.1" \
     PHP_PROTOBUF_VERSION="5.34.0" \
     PHP_REDIS_VERSION="6.3.0" \
     PHP_SCRYPT_VERSION="2.0.1" \
@@ -152,10 +151,6 @@ RUN git clone --depth 1 https://github.com/DomBlack/php-scrypt.git  \
 
 # PHP PECL installs (acceptable method)
 
-FROM compile AS opentelemetry
-RUN pecl install opentelemetry-${PHP_OPENTELEMETRY_VERSION} && \
-    strip $(php-config --extension-dir)/opentelemetry.so
-
 FROM compile AS protobuf
 RUN pecl install protobuf-${PHP_PROTOBUF_VERSION} && \
     strip $(php-config --extension-dir)/protobuf.so
@@ -227,7 +222,6 @@ COPY --from=imagick /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DA
 COPY --from=lz4 /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/lz4.so /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/
 COPY --from=maxmind /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/maxminddb.so /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/
 COPY --from=mongodb /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/mongodb.so /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/
-COPY --from=opentelemetry /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/opentelemetry.so /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/
 COPY --from=protobuf /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/protobuf.so /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/
 COPY --from=redis /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/redis.so /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/
 COPY --from=scrypt /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/scrypt.so /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/
@@ -244,7 +238,6 @@ RUN docker-php-ext-enable \
   lz4 \
   maxminddb \
   mongodb \
-  opentelemetry \
   pdo_mysql \
   pdo_pgsql \
   protobuf \
