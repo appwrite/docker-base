@@ -1,4 +1,4 @@
-ARG BASE_IMAGE="phpswoole/swoole:php8.5-alpine"
+ARG BASE_IMAGE="phpswoole/swoole:6.2-php8.5-alpine"
 ARG PHP_BUILD_DATE="20250925"
 
 FROM $BASE_IMAGE AS compile

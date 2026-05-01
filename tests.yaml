@@ -107,7 +107,7 @@ commandTests:
     command: "php"
     args: ["--re", "swoole"]
     expectedOutput:
-      - ".*version 6.2.1.*"
+      - ".*version 6\\.2\\.\\d+.*"
   - name: 'ZIP'
     command: "zip"
     args: ["-v"]
