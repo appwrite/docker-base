@@ -91,7 +91,7 @@ commandTests:
     command: "php"
     args: ["-v"]
     expectedOutput:
-      - "PHP 8.5.5 (cli)*"
+      - "PHP 8.5.4 (cli)*"
   - name: 'ImageMagick supported formats'
     command: "php"
     args: ["-i"]
@@ -106,7 +106,7 @@ commandTests:
     command: "php"
     args: ["--re", "swoole"]
     expectedOutput:
-      - ".*version 6.2.1.*"
+      - ".*version 6.2.0.*"
   - name: 'ZIP'
     command: "zip"
     args: ["-v"]
