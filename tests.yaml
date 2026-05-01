@@ -49,7 +49,6 @@ commandTests:
       - mbstring
       - mysqlnd
       - openssl
-      - opentelemetry
       - pcre
       - PDO
       - pdo_mysql
