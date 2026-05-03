@@ -1,5 +1,22 @@
 # CHANGELOG
 
+## Version 1.3.1
+
+### Fix
+
+* Run `apk upgrade` in the final image to pull patched `musl` and `xz-libs` — resolves CVE-2025-26519 (musl `qsort` stack corruption), the musl `iconv` GB18030 DoS, and the `xz` index-decoding buffer overflow (CVE-2026-34743, fixed in `xz-libs` 5.8.3-r0). The compile stage already ran `apk upgrade`, but the runtime stage didn't, so the published image was shipping unpatched libs from the base.
+
+## Version 1.3.0
+
+### Change
+
+* Pin Swoole base image to `phpswoole/swoole:6.2.0-php8.5-alpine` (released 6.2.0, was previously tracking nightly `php8.5-alpine`) for reproducible builds
+* `tests.yaml` PHP assertion bumped to 8.5.4 and Swoole assertion pinned to 6.2.0 to match the pinned base
+
+### Fix
+
+* Manifest workflow tag reference — `manifest_build_and_push_on_tag` now uses `github.ref_name` instead of `github.event.release.tag_name`, which is empty on plain tag-push events and broke the `1.2.2` tag run with `docker manifest create: invalid reference format`
+
 ## Version 1.2.2
 
 ### Remove

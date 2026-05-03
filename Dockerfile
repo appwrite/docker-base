@@ -183,6 +183,8 @@ LABEL php_build_date=$PHP_BUILD_DATE
 
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && \
   echo $TZ > /etc/timezone && \
+  apk update && \
+  apk upgrade --no-cache && \
   apk add --no-cache \
     brotli \
     certbot \
