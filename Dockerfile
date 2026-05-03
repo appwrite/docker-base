@@ -43,7 +43,6 @@ RUN \
     make \
     openssl-dev \
     postgresql-dev \
-    sqlite-dev \
     yaml-dev \
     zlib-dev \
     zstd-dev && \
@@ -201,7 +200,6 @@ RUN \
     --enable-sockets \
     --enable-swoole-curl \
     --enable-swoole-pgsql \
-    --enable-swoole-sqlite \
     --enable-zstd \
     --with-openssl-dir=/usr && \
   make -j"$(nproc)" && make install && \
@@ -239,7 +237,6 @@ RUN apk update && \
     libwebp \
     lz4-libs \
     rsync \
-    sqlite-libs \
     yaml \
     zip \
     zstd-libs \
