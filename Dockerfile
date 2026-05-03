@@ -1,5 +1,6 @@
-ARG BASE_IMAGE="phpswoole/swoole:6.2.0-php8.5-alpine"
-ARG PHP_BUILD_DATE="20250925"
+# Pin php:8.5-alpine by multi-arch index digest. Bump with:
+#   docker buildx imagetools inspect php:8.5-alpine | head -2
+ARG BASE_IMAGE="php:8.5-alpine@sha256:dccc3abcf3d37a6bb081477a66ed4344716784a6ef5107625ae6ba9ec52df778"
 
 FROM $BASE_IMAGE AS compile
 
@@ -13,16 +14,17 @@ ENV \
     PHP_REDIS_VERSION="6.3.0" \
     PHP_SCRYPT_VERSION="2.0.1" \
     PHP_SNAPPY_VERSION="0.2.3" \
+    PHP_SWOOLE_VERSION="v6.2.0" \
     PHP_YAML_VERSION="2.3.0" \
     PHP_ZSTD_VERSION="0.15.2"
 
 RUN \
   apk update && \
-  apk upgrade && \
   apk add --no-cache \
     autoconf \
     automake \
     brotli-dev \
+    c-ares-dev \
     curl-dev \
     g++ \
     gcc \
@@ -43,41 +45,43 @@ RUN \
     postgresql-dev \
     yaml-dev \
     zlib-dev \
-    zstd-dev
+    zstd-dev && \
+  mkdir -p /artifacts && \
+  docker-php-ext-install -j"$(nproc)" sockets
 
-# compile from source instals (least desirable method)
+# Each builder stage emits a stripped .so to /artifacts/<name>.so so the
+# final image doesn't need to know PHP's module-API date directory.
 
-# Redis Extension
 FROM compile AS redis
 RUN \
   git clone --depth 1 --branch $PHP_REDIS_VERSION https://github.com/phpredis/phpredis.git && \
   cd phpredis && \
   phpize && \
   ./configure && \
-  make && make install && \
-  strip $(php-config --extension-dir)/redis.so
+  make -j"$(nproc)" && make install && \
+  cp $(php-config --extension-dir)/redis.so /artifacts/ && \
+  strip /artifacts/redis.so
 
-## Imagick Extension
 FROM compile AS imagick
 RUN \
   git clone --depth 1 --branch $PHP_IMAGICK_VERSION https://github.com/imagick/imagick && \
   cd imagick && \
   phpize && \
   ./configure && \
-  make && make install && \
-  strip $(php-config --extension-dir)/imagick.so
+  make -j"$(nproc)" && make install && \
+  cp $(php-config --extension-dir)/imagick.so /artifacts/ && \
+  strip /artifacts/imagick.so
 
-## YAML Extension
 FROM compile AS yaml
 RUN \
   git clone --depth 1 --branch $PHP_YAML_VERSION https://github.com/php/pecl-file_formats-yaml && \
   cd pecl-file_formats-yaml && \
   phpize && \
   ./configure && \
-  make && make install && \
-  strip $(php-config --extension-dir)/yaml.so
+  make -j"$(nproc)" && make install && \
+  cp $(php-config --extension-dir)/yaml.so /artifacts/ && \
+  strip /artifacts/yaml.so
 
-## Maxminddb Extension
 FROM compile AS maxmind
 RUN \
   git clone --depth 1 --branch $PHP_MAXMINDDB_VERSION https://github.com/maxmind/MaxMind-DB-Reader-php.git && \
@@ -85,10 +89,10 @@ RUN \
   cd ext && \
   phpize && \
   ./configure && \
-  make && make install && \
-  strip $(php-config --extension-dir)/maxminddb.so
+  make -j"$(nproc)" && make install && \
+  cp $(php-config --extension-dir)/maxminddb.so /artifacts/ && \
+  strip /artifacts/maxminddb.so
 
-# Mongodb Extension
 FROM compile AS mongodb
 RUN \
   git clone --depth 1 --branch $PHP_MONGODB_VERSION https://github.com/mongodb/mongo-php-driver.git && \
@@ -96,97 +100,123 @@ RUN \
   git submodule update --init && \
   phpize && \
   ./configure && \
-  make && make install && \
-  strip $(php-config --extension-dir)/mongodb.so
+  make -j"$(nproc)" && make install && \
+  cp $(php-config --extension-dir)/mongodb.so /artifacts/ && \
+  strip /artifacts/mongodb.so
 
-# Zstd Compression
 FROM compile AS zstd
-RUN git clone --recursive -n https://github.com/kjdev/php-ext-zstd.git \
-  && cd php-ext-zstd \
-  && git checkout $PHP_ZSTD_VERSION \
-  && phpize \
-  && ./configure --with-libzstd \
-  && make && make install \
-  && strip $(php-config --extension-dir)/zstd.so
+RUN \
+  git clone --recursive https://github.com/kjdev/php-ext-zstd.git && \
+  cd php-ext-zstd && \
+  git reset --hard $PHP_ZSTD_VERSION && \
+  phpize && \
+  ./configure --with-libzstd && \
+  make -j"$(nproc)" && make install && \
+  cp $(php-config --extension-dir)/zstd.so /artifacts/ && \
+  strip /artifacts/zstd.so
 
-## Brotli Extension
 FROM compile AS brotli
-RUN git clone https://github.com/kjdev/php-ext-brotli.git \
-  && cd php-ext-brotli \
-  && git reset --hard $PHP_BROTLI_VERSION \
-  && phpize \
-  && ./configure --with-libbrotli \
-  && make && make install \
-  && strip $(php-config --extension-dir)/brotli.so
+RUN \
+  git clone https://github.com/kjdev/php-ext-brotli.git && \
+  cd php-ext-brotli && \
+  git reset --hard $PHP_BROTLI_VERSION && \
+  phpize && \
+  ./configure --with-libbrotli && \
+  make -j"$(nproc)" && make install && \
+  cp $(php-config --extension-dir)/brotli.so /artifacts/ && \
+  strip /artifacts/brotli.so
 
-## LZ4 Extension
 FROM compile AS lz4
-RUN git clone --recursive https://github.com/kjdev/php-ext-lz4.git \
-  && cd php-ext-lz4 \
-  && git reset --hard $PHP_LZ4_VERSION \
-  && phpize \
-  && ./configure --with-lz4-includedir=/usr \
-  && make && make install \
-  && strip $(php-config --extension-dir)/lz4.so
+RUN \
+  git clone --recursive https://github.com/kjdev/php-ext-lz4.git && \
+  cd php-ext-lz4 && \
+  git reset --hard $PHP_LZ4_VERSION && \
+  phpize && \
+  ./configure --with-lz4-includedir=/usr && \
+  make -j"$(nproc)" && make install && \
+  cp $(php-config --extension-dir)/lz4.so /artifacts/ && \
+  strip /artifacts/lz4.so
 
-## Snappy Extension
 FROM compile AS snappy
-RUN git clone --recursive https://github.com/kjdev/php-ext-snappy.git \
-  && cd php-ext-snappy \
-  && git reset --hard $PHP_SNAPPY_VERSION \
-  && phpize \
-  && ./configure \
-  && make && make install \
-  && strip $(php-config --extension-dir)/snappy.so
+RUN \
+  git clone --recursive https://github.com/kjdev/php-ext-snappy.git && \
+  cd php-ext-snappy && \
+  git reset --hard $PHP_SNAPPY_VERSION && \
+  phpize && \
+  ./configure && \
+  make -j"$(nproc)" && make install && \
+  cp $(php-config --extension-dir)/snappy.so /artifacts/ && \
+  strip /artifacts/snappy.so
 
-## Scrypt Extension
 FROM compile AS scrypt
-RUN git clone --depth 1 https://github.com/DomBlack/php-scrypt.git  \
-  && cd php-scrypt  \
-  && git reset --hard $PHP_SCRYPT_VERSION  \
-  && phpize  \
-  && ./configure --enable-scrypt  \
-  && make && make install \
-  && strip $(php-config --extension-dir)/scrypt.so
-
-# PHP PECL installs (acceptable method)
+RUN \
+  git clone https://github.com/DomBlack/php-scrypt.git && \
+  cd php-scrypt && \
+  git reset --hard $PHP_SCRYPT_VERSION && \
+  phpize && \
+  ./configure --enable-scrypt && \
+  make -j"$(nproc)" && make install && \
+  cp $(php-config --extension-dir)/scrypt.so /artifacts/ && \
+  strip /artifacts/scrypt.so
 
 FROM compile AS protobuf
-RUN pecl install protobuf-${PHP_PROTOBUF_VERSION} && \
-    strip $(php-config --extension-dir)/protobuf.so
+RUN MAKEFLAGS="-j$(nproc)" pecl install protobuf-${PHP_PROTOBUF_VERSION} && \
+    cp $(php-config --extension-dir)/protobuf.so /artifacts/ && \
+    strip /artifacts/protobuf.so
 
-# Core PHP extensions compiled in build stage
 FROM compile AS core-extensions
 RUN docker-php-ext-configure gd \
       --with-avif \
       --with-freetype \
       --with-jpeg \
       --with-webp && \
-    docker-php-ext-install gd intl pdo_mysql pdo_pgsql sockets && \
-    strip \
+    docker-php-ext-install -j"$(nproc)" gd intl pdo_mysql pdo_pgsql && \
+    cp \
       $(php-config --extension-dir)/gd.so \
       $(php-config --extension-dir)/intl.so \
       $(php-config --extension-dir)/pdo_mysql.so \
       $(php-config --extension-dir)/pdo_pgsql.so \
-      $(php-config --extension-dir)/sockets.so
+      $(php-config --extension-dir)/sockets.so \
+      /artifacts/ && \
+    strip \
+      /artifacts/gd.so \
+      /artifacts/intl.so \
+      /artifacts/pdo_mysql.so \
+      /artifacts/pdo_pgsql.so \
+      /artifacts/sockets.so
+
+# Built without --enable-swoole-stdext: stdext registers user opcode
+# handlers, which makes opcache's JIT refuse to enable in downstream images.
+FROM compile AS swoole
+RUN \
+  git clone --depth 1 --branch $PHP_SWOOLE_VERSION https://github.com/swoole/swoole-src.git && \
+  cd swoole-src && \
+  phpize && \
+  ./configure \
+    --enable-brotli \
+    --enable-cares \
+    --enable-mysqlnd \
+    --enable-openssl \
+    --enable-sockets \
+    --enable-swoole-curl \
+    --enable-swoole-pgsql \
+    --enable-zstd \
+    --with-openssl-dir=/usr && \
+  make -j"$(nproc)" && make install && \
+  cp $(php-config --extension-dir)/swoole.so /artifacts/ && \
+  strip /artifacts/swoole.so
 
 FROM $BASE_IMAGE AS final
 
-# Pass in ARGS to use as label values and path components
-
 ARG BASE_IMAGE
-ARG PHP_BUILD_DATE
 
 LABEL base_image=$BASE_IMAGE
 LABEL maintainer="team@appwrite.io"
-LABEL php_build_date=$PHP_BUILD_DATE
 
-RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && \
-  echo $TZ > /etc/timezone && \
-  apk update && \
-  apk upgrade --no-cache && \
+RUN apk update && \
   apk add --no-cache \
     brotli \
+    c-ares \
     certbot \
     freetype \
     docker-cli \
@@ -214,41 +244,40 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && \
 
 WORKDIR /usr/src/code
 
-COPY --from=core-extensions /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/gd.so /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/
-COPY --from=core-extensions /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/intl.so /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/
-COPY --from=core-extensions /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/pdo_mysql.so /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/
-COPY --from=core-extensions /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/pdo_pgsql.so /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/
-COPY --from=core-extensions /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/sockets.so /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/
-COPY --from=brotli /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/brotli.so /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/
-COPY --from=imagick /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/imagick.so /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/
-COPY --from=lz4 /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/lz4.so /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/
-COPY --from=maxmind /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/maxminddb.so /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/
-COPY --from=mongodb /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/mongodb.so /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/
-COPY --from=protobuf /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/protobuf.so /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/
-COPY --from=redis /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/redis.so /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/
-COPY --from=scrypt /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/scrypt.so /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/
-COPY --from=snappy /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/snappy.so /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/
-COPY --from=yaml /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/yaml.so /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/
-COPY --from=zstd /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/zstd.so /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/
+COPY --from=core-extensions /artifacts/ /tmp/exts/
+COPY --from=brotli   /artifacts/ /tmp/exts/
+COPY --from=imagick  /artifacts/ /tmp/exts/
+COPY --from=lz4      /artifacts/ /tmp/exts/
+COPY --from=maxmind  /artifacts/ /tmp/exts/
+COPY --from=mongodb  /artifacts/ /tmp/exts/
+COPY --from=protobuf /artifacts/ /tmp/exts/
+COPY --from=redis    /artifacts/ /tmp/exts/
+COPY --from=scrypt   /artifacts/ /tmp/exts/
+COPY --from=snappy   /artifacts/ /tmp/exts/
+COPY --from=swoole   /artifacts/ /tmp/exts/
+COPY --from=yaml     /artifacts/ /tmp/exts/
+COPY --from=zstd     /artifacts/ /tmp/exts/
 
-# Enable Extensions
-RUN docker-php-ext-enable \
-  brotli \
-  gd \
-  imagick \
-  intl \
-  lz4 \
-  maxminddb \
-  mongodb \
-  pdo_mysql \
-  pdo_pgsql \
-  protobuf \
-  redis \
-  scrypt \
-  snappy \
-  sockets \
-  yaml \
-  zstd
+RUN cp /tmp/exts/*.so $(php-config --extension-dir)/ && \
+    rm -rf /tmp/exts && \
+    docker-php-ext-enable \
+      brotli \
+      gd \
+      imagick \
+      intl \
+      lz4 \
+      maxminddb \
+      mongodb \
+      pdo_mysql \
+      pdo_pgsql \
+      protobuf \
+      redis \
+      scrypt \
+      snappy \
+      sockets \
+      swoole \
+      yaml \
+      zstd
 
 EXPOSE 80
 
@@ -264,13 +293,14 @@ RUN \
   cd xdebug && \
   phpize && \
   ./configure && \
-  make && make install && \
-  strip $(php-config --extension-dir)/xdebug.so
+  make -j"$(nproc)" && make install && \
+  cp $(php-config --extension-dir)/xdebug.so /artifacts/ && \
+  strip /artifacts/xdebug.so
 
 FROM final AS xdebug
 
-ARG PHP_BUILD_DATE
+COPY --from=xdebug-build /artifacts/xdebug.so /tmp/
 
-COPY --from=xdebug-build /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/xdebug.so /usr/local/lib/php/extensions/no-debug-non-zts-$PHP_BUILD_DATE/
-
-RUN docker-php-ext-enable xdebug
+RUN cp /tmp/xdebug.so $(php-config --extension-dir)/ && \
+    rm /tmp/xdebug.so && \
+    docker-php-ext-enable xdebug
