@@ -20,6 +20,7 @@ ENV \
 
 RUN \
   apk update && \
+  apk upgrade --no-cache && \
   apk add --no-cache \
     autoconf \
     automake \
@@ -214,6 +215,7 @@ LABEL base_image=$BASE_IMAGE
 LABEL maintainer="team@appwrite.io"
 
 RUN apk update && \
+  apk upgrade --no-cache && \
   apk add --no-cache \
     brotli \
     c-ares \
