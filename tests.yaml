@@ -97,6 +97,14 @@ commandTests:
     args: ["-i"]
     expectedOutput:
       - "ImageMagick supported formats .*WEBP.*"
+  - name: 'ImageMagick hardened policy loaded'
+    command: "identify"
+    args: ["-list", "policy"]
+    expectedOutput:
+      - "name: width"
+      - "name: height"
+      - "name: disk"
+      - "50KP"
   - name: 'PHP intl'
     command: "php"
     args: ["-r", 'print(\Normalizer::FORM_D);']

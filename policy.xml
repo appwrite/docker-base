@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE policymap [
+<!ELEMENT policymap (policy)*>
+<!ATTLIST policymap xmlns CDATA #FIXED "">
+<!ELEMENT policy EMPTY>
+<!ATTLIST policy xmlns CDATA #FIXED "">
+<!ATTLIST policy domain NMTOKEN #REQUIRED>
+<!ATTLIST policy name NMTOKEN #IMPLIED>
+<!ATTLIST policy pattern CDATA #IMPLIED>
+<!ATTLIST policy rights NMTOKEN #IMPLIED>
+<!ATTLIST policy stealth NMTOKEN #IMPLIED>
+<!ATTLIST policy value CDATA #IMPLIED>
+]>
+<!--
+  Hardened ImageMagick security policy for Appwrite.
+
+  Bounds the resources a single decode may consume so a crafted image (small
+  on disk, enormous when decoded - an "image bomb") cannot exhaust memory or
+  fill the disk and take down the container or its neighbours.
+
+  Only width, height and disk raise an exception when exceeded, so they are the
+  real guards: width/height reject oversized dimensions before the raster is
+  allocated, and disk caps the pixel-cache spill. memory/map/area merely change
+  when the cache moves to disk. All values are tunable.
+
+  Preview inputs are limited to JPEG, PNG, HEIC, WEBP and GIF (output adds
+  AVIF), so the delegate coders disabled below are never used and only add risk.
+  Validate changes with https://imagemagick-secevaluator.doyensec.com/.
+-->
+<policymap>
+  <policy domain="Undefined" rights="none"/>
+
+  <!-- Hard limits: exceeding these throws an exception and stops processing.
+       disk is the real DoS control - it caps the pixel-cache spill so a bomb
+       cannot fill the volume. width/height are only fast-fail backstops against
+       absurd dimensions, set well above any real camera (a 200MP phone sensor
+       is ~16320px on its long side) so legitimate photos are never rejected.
+       ImageMagick here is Q16-HDRI (16 bytes/pixel), so a 150MP photo needs
+       ~2.4GB of cache - hence the 4GiB disk headroom. -->
+  <policy domain="resource" name="width" value="50KP"/>
+  <policy domain="resource" name="height" value="50KP"/>
+  <policy domain="resource" name="disk" value="4GiB"/>
+  <policy domain="resource" name="list-length" value="128"/>
+  <policy domain="resource" name="time" value="120"/>
+
+  <!-- Soft limits: control when the pixel cache spills to memory-mapped disk.
+       area is generous enough to keep large phone photos in the mem/map path. -->
+  <policy domain="resource" name="memory" value="256MiB"/>
+  <policy domain="resource" name="map" value="512MiB"/>
+  <policy domain="resource" name="area" value="512MP"/>
+  <policy domain="resource" name="file" value="768"/>
+  <policy domain="resource" name="thread" value="2"/>
+
+  <!-- Cap a single allocation request (guards against a malicious header
+       claiming a huge buffer); generous so large legitimate photos decode. -->
+  <policy domain="system" name="max-memory-request" value="512MiB"/>
+
+  <!-- Disable coders/delegates Appwrite never uses for previews; these are the
+       classic ImageMagick RCE/SSRF vectors. -->
+  <policy domain="delegate" rights="none" pattern="HTTPS"/>
+  <policy domain="delegate" rights="none" pattern="HTTP"/>
+  <policy domain="coder" rights="none" pattern="{PS,PS2,PS3,EPS,EPI,EPT,EPSF,EPSI,PDF,XPS}"/>
+  <policy domain="coder" rights="none" pattern="{MSL,MVG,SVG,SVGZ,MSVG,TEXT,LABEL,CAPTION}"/>
+  <policy domain="coder" rights="none" pattern="{URL,FTP,EPHEMERAL,MPEG,MPG}"/>
+
+  <!-- SVG is an SSRF/XXE vector (its renderer resolves external hrefs and
+       entities) and is never a preview input. The module deny also closes the
+       delegate route (e.g. rsvg), which a plain coder deny does not. -->
+  <policy domain="module" rights="none" pattern="{SVG,MSVG,SVGZ}"/>
+
+  <!-- Block indirect reads (e.g. @file, caption:@file) that can leak local files. -->
+  <policy domain="path" rights="none" pattern="@*"/>
+</policymap>
