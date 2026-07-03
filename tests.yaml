@@ -104,7 +104,7 @@ commandTests:
       - "name: width"
       - "name: height"
       - "name: disk"
-      - "16KP"
+      - "50KP"
   - name: 'PHP intl'
     command: "php"
     args: ["-r", 'print(\Normalizer::FORM_D);']

@@ -254,7 +254,7 @@ RUN set -eux; \
     POLICY_DIR="$(identify -list configure | awk '/^CONFIGURE_PATH/ {print $2}' | cut -d: -f1)"; \
     cp /tmp/policy.xml "${POLICY_DIR%/}/policy.xml"; \
     rm /tmp/policy.xml; \
-    identify -list policy | grep -q '16KP'
+    identify -list policy | grep -q '50KP'
 
 WORKDIR /usr/src/code
 

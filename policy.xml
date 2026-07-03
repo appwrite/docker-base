@@ -30,22 +30,30 @@
 <policymap>
   <policy domain="Undefined" rights="none"/>
 
-  <!-- Hard limits: exceeding these throws an exception and stops processing. -->
-  <policy domain="resource" name="width" value="16KP"/>
-  <policy domain="resource" name="height" value="16KP"/>
-  <policy domain="resource" name="disk" value="1GiB"/>
+  <!-- Hard limits: exceeding these throws an exception and stops processing.
+       disk is the real DoS control - it caps the pixel-cache spill so a bomb
+       cannot fill the volume. width/height are only fast-fail backstops against
+       absurd dimensions, set well above any real camera (a 200MP phone sensor
+       is ~16320px on its long side) so legitimate photos are never rejected.
+       ImageMagick here is Q16-HDRI (16 bytes/pixel), so a 150MP photo needs
+       ~2.4GB of cache - hence the 4GiB disk headroom. -->
+  <policy domain="resource" name="width" value="50KP"/>
+  <policy domain="resource" name="height" value="50KP"/>
+  <policy domain="resource" name="disk" value="4GiB"/>
   <policy domain="resource" name="list-length" value="128"/>
-  <policy domain="resource" name="time" value="60"/>
+  <policy domain="resource" name="time" value="120"/>
 
-  <!-- Soft limits: control when the pixel cache spills to memory-mapped disk. -->
+  <!-- Soft limits: control when the pixel cache spills to memory-mapped disk.
+       area is generous enough to keep large phone photos in the mem/map path. -->
   <policy domain="resource" name="memory" value="256MiB"/>
   <policy domain="resource" name="map" value="512MiB"/>
-  <policy domain="resource" name="area" value="128MP"/>
+  <policy domain="resource" name="area" value="512MP"/>
   <policy domain="resource" name="file" value="768"/>
   <policy domain="resource" name="thread" value="2"/>
 
-  <!-- Cap a single allocation request. -->
-  <policy domain="system" name="max-memory-request" value="256MiB"/>
+  <!-- Cap a single allocation request (guards against a malicious header
+       claiming a huge buffer); generous so large legitimate photos decode. -->
+  <policy domain="system" name="max-memory-request" value="512MiB"/>
 
   <!-- Disable coders/delegates Appwrite never uses for previews; these are the
        classic ImageMagick RCE/SSRF vectors. -->
