@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## Version 1.3.2
+
+### Security
+
+* Ship a hardened ImageMagick `policy.xml` in the final image to mitigate image-decompression-bomb DoS via the Appwrite storage/avatars preview pipeline. A crafted image (small on disk, huge dimensions) previously decoded unbounded, spilling ImageMagick's pixel cache to disk and filling the volume — killing MongoDB or the container. The policy caps `width`/`height` (16KP, hard reject before raster allocation) and `disk` (1GiB spill limit), sets `memory`/`map`/`area`/`thread` limits, and disables delegate coders never used for previews (PS/EPS/PDF/XPS/MSL/MVG/HTTP/etc.). Installed into ImageMagick's configure dir (discovered at build time); the build fails if the policy does not load. Added a `tests.yaml` assertion verifying the policy is active.
+
 ## Version 1.3.1
 
 ### Fix

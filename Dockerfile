@@ -244,6 +244,18 @@ RUN apk update && \
     zstd-libs \
   && rm -rf /var/cache/apk/*
 
+# Hardened ImageMagick policy — bounds per-decode width/height/disk so a crafted
+# "image bomb" (small on disk, enormous when decoded) cannot exhaust memory or
+# fill the disk and take down the container or its neighbours. Installed into
+# ImageMagick's configure dir, discovered at build time so it survives package
+# path changes; the build fails loudly if the policy does not load.
+COPY policy.xml /tmp/policy.xml
+RUN set -eux; \
+    POLICY_DIR="$(identify -list configure | awk '/^CONFIGURE_PATH/ {print $2}')"; \
+    cp /tmp/policy.xml "${POLICY_DIR}policy.xml"; \
+    rm /tmp/policy.xml; \
+    identify -list policy | grep -q '16KP'
+
 WORKDIR /usr/src/code
 
 COPY --from=core-extensions /artifacts/ /tmp/exts/
