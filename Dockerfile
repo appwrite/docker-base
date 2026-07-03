@@ -251,8 +251,8 @@ RUN apk update && \
 # path changes; the build fails loudly if the policy does not load.
 COPY policy.xml /tmp/policy.xml
 RUN set -eux; \
-    POLICY_DIR="$(identify -list configure | awk '/^CONFIGURE_PATH/ {print $2}')"; \
-    cp /tmp/policy.xml "${POLICY_DIR}policy.xml"; \
+    POLICY_DIR="$(identify -list configure | awk '/^CONFIGURE_PATH/ {print $2}' | cut -d: -f1)"; \
+    cp /tmp/policy.xml "${POLICY_DIR%/}/policy.xml"; \
     rm /tmp/policy.xml; \
     identify -list policy | grep -q '16KP'
 

@@ -52,8 +52,13 @@
   <policy domain="delegate" rights="none" pattern="HTTPS"/>
   <policy domain="delegate" rights="none" pattern="HTTP"/>
   <policy domain="coder" rights="none" pattern="{PS,PS2,PS3,EPS,EPI,EPT,EPSF,EPSI,PDF,XPS}"/>
-  <policy domain="coder" rights="none" pattern="{MSL,MVG,TEXT,LABEL,CAPTION}"/>
+  <policy domain="coder" rights="none" pattern="{MSL,MVG,SVG,SVGZ,MSVG,TEXT,LABEL,CAPTION}"/>
   <policy domain="coder" rights="none" pattern="{URL,FTP,EPHEMERAL,MPEG,MPG}"/>
+
+  <!-- SVG is an SSRF/XXE vector (its renderer resolves external hrefs and
+       entities) and is never a preview input. The module deny also closes the
+       delegate route (e.g. rsvg), which a plain coder deny does not. -->
+  <policy domain="module" rights="none" pattern="{SVG,MSVG,SVGZ}"/>
 
   <!-- Block indirect reads (e.g. @file, caption:@file) that can leak local files. -->
   <policy domain="path" rights="none" pattern="@*"/>
