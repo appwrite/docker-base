@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace DockerBase\Automation;
 
+use DockerBase\Automation\Pull\Payload;
 use InvalidArgumentException;
 
 final readonly class Application
@@ -18,7 +19,7 @@ final readonly class Application
      *
      * @return array<string, string>
      */
-    public function execute(array $arguments): array
+    public function execute(array $arguments, string $input = ''): array
     {
         if ($arguments === []) {
             throw new InvalidArgumentException(
@@ -33,6 +34,17 @@ final readonly class Application
 
         return match ([$operation, count($values)]) {
             ['recover', 0] => $this->recover(),
+            ['validate-pull', 3] => Payload::validate(
+                $input,
+                $values[0],
+                $values[1],
+                $values[2],
+            ),
+            ['wait-checks', 3] => $this->checks(
+                $values[0],
+                $values[1],
+                $values[2],
+            ),
             ['merge', 3] => [
                 'head' => $this->orchestrator->merge(
                     $this->integer($values[0]),
@@ -101,6 +113,19 @@ final readonly class Application
     private function wait(string $tag, string $target): array
     {
         $this->orchestrator->wait($tag, $target);
+
+        return [];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function checks(
+        string $branch,
+        string $head,
+        string $created,
+    ): array {
+        $this->orchestrator->checks($branch, $head, $created);
 
         return [];
     }

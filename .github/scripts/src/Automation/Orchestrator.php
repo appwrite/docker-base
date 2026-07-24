@@ -6,6 +6,7 @@ namespace DockerBase\Automation;
 
 use DateTimeImmutable;
 use DateTimeZone;
+use InvalidArgumentException;
 use RuntimeException;
 
 final readonly class Orchestrator
@@ -18,6 +19,16 @@ final readonly class Orchestrator
     private const int TIMEOUT = 7200;
 
     private const int INTERVAL = 20;
+
+    /**
+     * @var list<array{string, string, string}>
+     */
+    private const array WORKFLOWS = [
+        ['build-and-push.yml', 'Build and Push', 'push'],
+        ['dive.yml', 'Dive Test', 'push'],
+        ['structure-test.yml', 'Container Structure Test', 'push'],
+        ['trivy.yml', 'Trivy Scan', 'pull_request'],
+    ];
 
     public function __construct(
         private Repository $repository,
@@ -139,6 +150,88 @@ final readonly class Orchestrator
 
             $this->sleeper->sleep(
                 min(self::INTERVAL, max($deadline->remaining($this->clock->now()), 0)),
+            );
+        }
+    }
+
+    public function checks(
+        string $branch,
+        string $head,
+        string $created,
+    ): void {
+        $boundary = DateTimeImmutable::createFromFormat(
+            '!Y-m-d\TH:i:s\Z',
+            $created,
+            new DateTimeZone('UTC'),
+        );
+        if ($boundary === false || $boundary->format('Y-m-d\TH:i:s\Z') !== $created) {
+            throw new InvalidArgumentException(
+                'Workflow boundary must be an absolute UTC timestamp',
+            );
+        }
+
+        $deadline = Deadline::after(
+            $this->clock->now(),
+            Deadline::WORKFLOW_TIMEOUT_SECONDS,
+        );
+        while (true) {
+            $now = $this->clock->now();
+            $states = [];
+            foreach (self::WORKFLOWS as [$filename, $workflow, $event]) {
+                $states[$workflow] = RunEvaluator::state(
+                    runs: $this->repository->runs(
+                        $filename,
+                        $event,
+                        $head,
+                        $branch,
+                    ),
+                    workflow: $workflow,
+                    event: $event,
+                    head: $head,
+                    branch: $branch,
+                    created: $boundary,
+                    deadline: $deadline,
+                    now: $now,
+                );
+            }
+
+            $failed = array_filter(
+                $states,
+                static fn (WorkflowState $state): bool => in_array(
+                    $state,
+                    [
+                        WorkflowState::Cancelled,
+                        WorkflowState::Failed,
+                        WorkflowState::TimedOut,
+                    ],
+                    true,
+                ),
+            );
+            if ($failed !== []) {
+                $details = [];
+                foreach ($failed as $workflow => $state) {
+                    $details[] = "{$workflow}: {$state->value}";
+                }
+
+                throw new RuntimeException(
+                    'CI did not succeed: ' . implode(', ', $details),
+                );
+            }
+            if (
+                count(array_filter(
+                    $states,
+                    static fn (WorkflowState $state): bool => $state
+                        === WorkflowState::Succeeded,
+                )) === count(self::WORKFLOWS)
+            ) {
+                return;
+            }
+
+            $this->sleeper->sleep(
+                min(
+                    self::INTERVAL,
+                    $deadline->remaining($this->clock->now()),
+                ),
             );
         }
     }

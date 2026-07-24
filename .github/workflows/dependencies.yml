@@ -29,25 +29,62 @@ jobs:
           token: ${{ github.token }}
           persist-credentials: false
 
-      - name: Run offline tests
+      - name: Preflight PHP runtime
         run: |
-          python3 -m unittest discover \
-            --start-directory .github/scripts \
-            --pattern 'test_*.py' \
-            --verbose
+          # shellcheck disable=SC2016
+          php -r '
+          if (PHP_VERSION_ID < 80300) {
+              fwrite(STDERR, "PHP 8.3 or newer is required.\n");
+              exit(1);
+          }
+          $required = [
+              "dom",
+              "filter",
+              "json",
+              "libxml",
+              "mbstring",
+              "phar",
+              "tokenizer",
+              "xml",
+              "xmlwriter",
+          ];
+          $missing = array_values(array_filter(
+              $required,
+              static fn (string $extension): bool => !extension_loaded($extension),
+          ));
+          if ($missing !== []) {
+              fwrite(
+                  STDERR,
+                  "Missing PHP extensions: " . implode(", ", $missing) . "\n",
+              );
+              exit(1);
+          }
+          '
+
+      - name: Validate Composer configuration
+        run: composer validate --strict
+
+      - name: Install Composer dependencies
+        run: composer install --no-interaction --no-progress
+
+      - name: Check Composer platform requirements
+        run: composer check-platform-reqs
+
+      - name: Verify PHP automation
+        run: composer verify
 
       - name: Recover an incomplete dependency release
         id: recover
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
-        run: python3 .github/scripts/orchestrator.py recover
+        run: php .github/scripts/bin/orchestrator.php recover
 
       - name: Update dependencies
         id: update
         if: steps.recover.outputs.pending != 'true'
         run: |
           report="${RUNNER_TEMP}/dependencies.md"
-          python3 .github/scripts/dependencies.py | tee "${report}"
+          php .github/scripts/bin/dependencies.php | tee "${report}"
           cat "${report}" >> "${GITHUB_STEP_SUMMARY}"
 
           if git diff --quiet -- Dockerfile; then
@@ -138,31 +175,10 @@ jobs:
               --json baseRefName,baseRefOid,createdAt,headRefName,headRefOid,number,state \
               --jq '.'
           )"
-          PULL="${pull}" python3 - "${branch}" "${head}" "${base}" <<'PY'
-          import json
-          import os
-          import sys
-
-          branch, head, base = sys.argv[1:]
-          pull = json.loads(os.environ['PULL'])
-          if pull['baseRefName'] != 'main':
-              raise RuntimeError('Pull request does not target main')
-          if pull['headRefName'] != branch or pull['headRefOid'] != head:
-              raise RuntimeError('Pull request does not use the pushed head')
-          if pull['baseRefOid'] != base:
-              raise RuntimeError('Pull request does not use the tested base')
-          if pull['state'] != 'OPEN':
-              raise RuntimeError('Pull request is not open')
-          PY
-
-          {
-            printf 'number=%s\n' "$(
-              PULL="${pull}" python3 -c \
-                'import json, os; print(json.loads(os.environ["PULL"])["number"])'
-            )"
-            printf 'base=%s\n' "${base}"
-            printf 'url=%s\n' "${url}"
-          } >> "${GITHUB_OUTPUT}"
+          printf '%s' "${pull}" |
+            php .github/scripts/bin/orchestrator.php validate-pull \
+              "${branch}" "${head}" "${base}"
+          printf 'url=%s\n' "${url}" >> "${GITHUB_OUTPUT}"
 
       - name: Wait for exact CI runs
         if: steps.update.outputs.changed == 'true'
@@ -172,146 +188,8 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           HEAD: ${{ steps.push.outputs.head }}
         run: |
-          python3 - <<'PY'
-          import json
-          import os
-          import subprocess
-          import sys
-          import time
-          from datetime import datetime, timedelta, timezone
-          from pathlib import Path
-
-          sys.path.insert(0, str(Path('.github/scripts').resolve()))
-
-          from automation import (
-              Deadline,
-              Run,
-              WorkflowState,
-              workflow_state,
-          )
-
-          branch = os.environ['BRANCH']
-          boundary = datetime.fromisoformat(
-              os.environ['CREATED'].replace('Z', '+00:00')
-          )
-          head = os.environ['HEAD']
-          repository = os.environ['GITHUB_REPOSITORY']
-          version = os.environ['GITHUB_API_VERSION']
-          deadline = Deadline.after(
-              datetime.now(timezone.utc),
-              timedelta(minutes=120),
-          )
-          workflows = (
-              ('build-and-push.yml', 'Build and Push', 'push'),
-              ('dive.yml', 'Dive Test', 'push'),
-              (
-                  'structure-test.yml',
-                  'Container Structure Test',
-                  'push',
-              ),
-              ('trivy.yml', 'Trivy Scan', 'pull_request'),
-          )
-          terminal_failures = {
-              WorkflowState.CANCELLED,
-              WorkflowState.FAILED,
-              WorkflowState.TIMED_OUT,
-          }
-
-          def fetch(filename: str) -> tuple[Run, ...]:
-              command = (
-                  'gh',
-                  'api',
-                  '-X',
-                  'GET',
-                  (
-                      f'repos/{repository}/actions/workflows/'
-                      f'{filename}/runs'
-                  ),
-                  '-H',
-                  f'X-GitHub-Api-Version: {version}',
-                  '-f',
-                  f'branch={branch}',
-                  '-f',
-                  f'head_sha={head}',
-                  '-f',
-                  f'created=>={os.environ["CREATED"]}',
-                  '-f',
-                  'per_page=100',
-              )
-              result = subprocess.run(
-                  command,
-                  check=True,
-                  stdout=subprocess.PIPE,
-                  text=True,
-              )
-              payload = json.loads(result.stdout)
-              return tuple(
-                  Run(
-                      identifier=item['id'],
-                      workflow=item['name'],
-                      event=item['event'],
-                      head=item['head_sha'],
-                      branch=item['head_branch'],
-                      created=datetime.fromisoformat(
-                          item['created_at'].replace('Z', '+00:00')
-                      ),
-                      attempt=item['run_attempt'],
-                      status=item['status'],
-                      conclusion=item['conclusion'],
-                  )
-                  for item in payload['workflow_runs']
-              )
-
-          previous = None
-          while True:
-              now = datetime.now(timezone.utc)
-              states = {
-                  name: workflow_state(
-                      fetch(filename),
-                      workflow=name,
-                      event=event,
-                      head=head,
-                      branch=branch,
-                      created=boundary,
-                      deadline=deadline,
-                      now=now,
-                  )
-                  for filename, name, event in workflows
-              }
-              snapshot = tuple(
-                  (name, state.value) for name, state in states.items()
-              )
-              if snapshot != previous:
-                  print(
-                      ', '.join(
-                          f'{name}: {state}' for name, state in snapshot
-                      ),
-                      flush=True,
-                  )
-                  previous = snapshot
-
-              failed = {
-                  name: state
-                  for name, state in states.items()
-                  if state in terminal_failures
-              }
-              if failed:
-                  detail = ', '.join(
-                      f'{name}: {state.value}'
-                      for name, state in failed.items()
-                  )
-                  raise RuntimeError(f'CI did not succeed: {detail}')
-              if all(
-                  state is WorkflowState.SUCCEEDED
-                  for state in states.values()
-              ):
-                  break
-
-              remaining = deadline.remaining(
-                  datetime.now(timezone.utc)
-              ).total_seconds()
-              time.sleep(min(20, max(remaining, 0)))
-          PY
+          php .github/scripts/bin/orchestrator.php wait-checks \
+            "${BRANCH}" "${HEAD}" "${CREATED}"
 
       - name: Approve pull request
         if: steps.update.outputs.changed == 'true'
@@ -333,7 +211,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
-          python3 .github/scripts/orchestrator.py merge \
+          php .github/scripts/bin/orchestrator.php merge \
             '${{ steps.pull.outputs.number }}' \
             '${{ steps.push.outputs.head }}' \
             '${{ steps.pull.outputs.base }}'
@@ -352,7 +230,7 @@ jobs:
             ${{ steps.pull.outputs.number || steps.recover.outputs.pull }}
           TAG: ${{ steps.recover.outputs.tag }}
         run: |
-          python3 .github/scripts/orchestrator.py prepare \
+          php .github/scripts/bin/orchestrator.php prepare \
             "${TAG}" "${HEAD}" "${PULL}" "${DRAFT}"
 
       - name: Wait for exact tag Build and Push run
@@ -362,7 +240,7 @@ jobs:
           HEAD: ${{ steps.release.outputs.head }}
           TAG: ${{ steps.release.outputs.tag }}
         run: |
-          python3 .github/scripts/orchestrator.py wait "${TAG}" "${HEAD}"
+          php .github/scripts/bin/orchestrator.php wait "${TAG}" "${HEAD}"
 
       - name: Verify and publish exact release
         if: steps.release.outcome == 'success'
@@ -373,5 +251,5 @@ jobs:
           PULL: ${{ steps.release.outputs.pull }}
           TAG: ${{ steps.release.outputs.tag }}
         run: |
-          python3 .github/scripts/orchestrator.py publish \
+          php .github/scripts/bin/orchestrator.php publish \
             "${TAG}" "${HEAD}" "${PULL}" "${DRAFT}"
