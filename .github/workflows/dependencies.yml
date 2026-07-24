@@ -21,7 +21,7 @@ env:
 jobs:
   update:
     runs-on: ubuntu-24.04
-    timeout-minutes: 180
+    timeout-minutes: 300
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6.1.0
@@ -36,8 +36,15 @@ jobs:
             --pattern 'test_*.py' \
             --verbose
 
+      - name: Recover an incomplete dependency release
+        id: recover
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: python3 .github/scripts/orchestrator.py recover
+
       - name: Update dependencies
         id: update
+        if: steps.recover.outputs.pending != 'true'
         run: |
           report="${RUNNER_TEMP}/dependencies.md"
           python3 .github/scripts/dependencies.py | tee "${report}"
@@ -107,6 +114,7 @@ jobs:
           head='${{ steps.push.outputs.head }}'
           body="${RUNNER_TEMP}/pull-request.md"
           {
+            echo '<!-- dependency-automation:v1 -->'
             echo 'Automated weekly dependency update.'
             echo
             cat "${RUNNER_TEMP}/dependencies.md"
@@ -123,7 +131,7 @@ jobs:
           pull="$(
             gh pr view "${url}" \
               --repo "${GITHUB_REPOSITORY}" \
-              --json baseRefName,createdAt,headRefName,headRefOid,number,state \
+              --json baseRefName,baseRefOid,createdAt,headRefName,headRefOid,number,state \
               --jq '.'
           )"
           PULL="${pull}" python3 - "${branch}" "${head}" <<'PY'
@@ -145,6 +153,10 @@ jobs:
             printf 'number=%s\n' "$(
               PULL="${pull}" python3 -c \
                 'import json, os; print(json.loads(os.environ["PULL"])["number"])'
+            )"
+            printf 'base=%s\n' "$(
+              PULL="${pull}" python3 -c \
+                'import json, os; print(json.loads(os.environ["PULL"])["baseRefOid"])'
             )"
             printf 'url=%s\n' "${url}"
           } >> "${GITHUB_OUTPUT}"
@@ -320,13 +332,14 @@ jobs:
         run: |
           number='${{ steps.pull.outputs.number }}'
           head='${{ steps.push.outputs.head }}'
+          base='${{ steps.pull.outputs.base }}'
           pull="$(
             gh pr view "${number}" \
               --repo "${GITHUB_REPOSITORY}" \
-              --json baseRefName,headRefOid,mergeable,number,reviewDecision,state \
+              --json baseRefName,baseRefOid,headRefOid,mergeable,number,reviewDecision,state \
               --jq '.'
           )"
-          PULL="${pull}" python3 - "${head}" <<'PY'
+          PULL="${pull}" python3 - "${head}" "${base}" <<'PY'
           import json
           import os
           import sys
@@ -341,7 +354,7 @@ jobs:
               validate_pull_request,
           )
 
-          expected = sys.argv[1]
+          expected_head, expected_base = sys.argv[1:]
           payload = json.loads(os.environ['PULL'])
           if payload['baseRefName'] != 'main':
               raise PullRequestUnavailableError(
@@ -357,10 +370,12 @@ jobs:
               PullRequest(
                   number=payload['number'],
                   head=payload['headRefOid'],
+                  base=payload['baseRefOid'],
                   state=payload['state'].lower(),
                   review=review,
               ),
-              expected,
+              expected_head,
+              expected_base,
           )
           if payload['mergeable'] != 'MERGEABLE':
               raise PullRequestUnavailableError(
@@ -368,19 +383,42 @@ jobs:
               )
           PY
 
-          if ! gh pr merge "${number}" \
+          gh pr merge "${number}" \
             --repo "${GITHUB_REPOSITORY}" \
             --squash \
-            --delete-branch \
-            --match-head-commit "${head}"; then
-            echo 'The merge command failed; checking the pull request state.' >&2
-          fi
+            --match-head-commit "${head}"
 
-          merged="$(
+          final="$(
             gh pr view "${number}" \
               --repo "${GITHUB_REPOSITORY}" \
-              --json mergeCommit,state \
-              --jq 'select(.state == "MERGED") | .mergeCommit.oid'
+              --json headRefOid,mergeCommit,state \
+              --jq '.'
+          )"
+          merged="$(
+            FINAL="${final}" EXPECTED="${head}" python3 - <<'PY'
+          import json
+          import os
+          import sys
+          from pathlib import Path
+
+          sys.path.insert(0, str(Path('.github/scripts').resolve()))
+
+          from automation import MergeResult
+
+          pull = json.loads(os.environ['FINAL'])
+          merge = pull.get('mergeCommit')
+          print(
+              MergeResult(
+                  head=pull['headRefOid'],
+                  state=pull['state'].lower(),
+                  commit=(
+                      str(merge['oid'])
+                      if isinstance(merge, dict)
+                      else None
+                  ),
+              ).validate(os.environ['EXPECTED'])
+          )
+          PY
           )"
           if [[ ! "${merged}" =~ ^[0-9a-f]{40,64}$ ]]; then
             echo 'Pull request did not produce a merge commit.' >&2
@@ -388,227 +426,40 @@ jobs:
           fi
           printf 'head=%s\n' "${merged}" >> "${GITHUB_OUTPUT}"
 
-      - name: Create and verify lightweight tag
-        id: tag
-        if: steps.update.outputs.changed == 'true'
+      - name: Prepare exact tag and draft release
+        id: release
+        if: >-
+          steps.update.outputs.changed == 'true' ||
+          steps.recover.outputs.pending == 'true'
         env:
+          DRAFT: ${{ steps.recover.outputs.draft }}
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
-          MERGE_HEAD: ${{ steps.merge.outputs.head }}
+          HEAD: >-
+            ${{ steps.merge.outputs.head || steps.recover.outputs.head }}
+          PULL: >-
+            ${{ steps.pull.outputs.number || steps.recover.outputs.pull }}
+          TAG: ${{ steps.recover.outputs.tag }}
         run: |
-          python3 - <<'PY'
-          import json
-          import os
-          import subprocess
-          import sys
-          from pathlib import Path
+          python3 .github/scripts/orchestrator.py prepare \
+            "${TAG}" "${HEAD}" "${PULL}" "${DRAFT}"
 
-          sys.path.insert(0, str(Path('.github/scripts').resolve()))
-
-          from automation import (
-              Tag,
-              patch_after_collision,
-              release_candidate,
-              validate_tag_target,
-          )
-
-          repository = os.environ['GITHUB_REPOSITORY']
-          version = os.environ['GITHUB_API_VERSION']
-          merge = os.environ['MERGE_HEAD']
-          header = f'X-GitHub-Api-Version: {version}'
-
-          def tags() -> tuple[str, ...]:
-              result = subprocess.run(
-                  (
-                      'gh',
-                      'api',
-                      '--paginate',
-                      '-X',
-                      'GET',
-                      (
-                          f'repos/{repository}/git/'
-                          'matching-refs/tags/'
-                      ),
-                      '-H',
-                      header,
-                      '-f',
-                      'per_page=100',
-                      '--jq',
-                      '.[].ref',
-                  ),
-                  check=True,
-                  stdout=subprocess.PIPE,
-                  text=True,
-              )
-              prefix = 'refs/tags/'
-              return tuple(
-                  line[len(prefix):]
-                  for line in result.stdout.splitlines()
-                  if line.startswith(prefix)
-              )
-
-          def create(tag: str) -> subprocess.CompletedProcess[str]:
-              return subprocess.run(
-                  (
-                      'gh',
-                      'api',
-                      '-X',
-                      'POST',
-                      f'repos/{repository}/git/refs',
-                      '-H',
-                      header,
-                      '-f',
-                      f'ref=refs/tags/{tag}',
-                      '-f',
-                      f'sha={merge}',
-                      '--silent',
-                  ),
-                  check=False,
-                  stdout=subprocess.PIPE,
-                  stderr=subprocess.PIPE,
-                  text=True,
-              )
-
-          def releases() -> tuple[str, ...]:
-              result = subprocess.run(
-                  (
-                      'gh',
-                      'api',
-                      '--paginate',
-                      '-X',
-                      'GET',
-                      f'repos/{repository}/releases',
-                      '-H',
-                      header,
-                      '-f',
-                      'per_page=100',
-                      '--jq',
-                      '.[].tag_name',
-                  ),
-                  check=True,
-                  stdout=subprocess.PIPE,
-                  text=True,
-              )
-              return tuple(result.stdout.splitlines())
-
-          def read(tag: str) -> dict[str, object] | None:
-              result = subprocess.run(
-                  (
-                      'gh',
-                      'api',
-                      '-X',
-                      'GET',
-                      f'repos/{repository}/git/ref/tags/{tag}',
-                      '-H',
-                      header,
-                  ),
-                  check=False,
-                  stdout=subprocess.PIPE,
-                  stderr=subprocess.PIPE,
-                  text=True,
-              )
-              return json.loads(result.stdout) if result.returncode == 0 else None
-
-          available = tags()
-          candidate = str(release_candidate(available, releases()))
-          while True:
-              result = create(candidate)
-              if result.returncode == 0:
-                  break
-              existing = read(candidate)
-              if existing is None:
-                  sys.stderr.write(result.stderr)
-                  raise RuntimeError(f'Failed to create tag {candidate}')
-              target = existing.get('object')
-              if (
-                  isinstance(target, dict)
-                  and target.get('type') == 'commit'
-                  and target.get('sha') == merge
-              ):
-                  break
-              print(f'Tag {candidate} collided; refreshing remote tags.')
-              available = tags()
-              candidate = str(
-                  patch_after_collision(available, candidate)
-              )
-
-          payload = read(candidate)
-          if payload is None:
-              raise RuntimeError(f'Tag {candidate} is missing after creation')
-          target = payload['object']
-          if not isinstance(target, dict) or target.get('type') != 'commit':
-              raise RuntimeError(f'Tag {candidate} is not lightweight')
-          validate_tag_target(
-              Tag(
-                  name=str(payload.get('ref', '')).removeprefix('refs/tags/'),
-                  target=str(target.get('sha')),
-              ),
-              expected_name=candidate,
-              expected_target=merge,
-          )
-          with open(os.environ['GITHUB_OUTPUT'], 'a', encoding='utf-8') as output:
-              print(f'name={candidate}', file=output)
-          PY
-
-      - name: Create and verify release
-        if: steps.update.outputs.changed == 'true'
+      - name: Wait for exact tag Build and Push run
+        if: steps.release.outcome == 'success'
         env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
-          MERGE_HEAD: ${{ steps.merge.outputs.head }}
-          TAG: ${{ steps.tag.outputs.name }}
+          GH_TOKEN: ${{ github.token }}
+          HEAD: ${{ steps.release.outputs.head }}
+          TAG: ${{ steps.release.outputs.tag }}
         run: |
-          gh release create "${TAG}" \
-            --repo "${GITHUB_REPOSITORY}" \
-            --verify-tag \
-            --target "${MERGE_HEAD}" \
-            --generate-notes \
-            --latest \
-            --fail-on-no-commits
+          python3 .github/scripts/orchestrator.py wait "${TAG}" "${HEAD}"
 
-          release="$(
-            gh api \
-              -X GET \
-              -H "X-GitHub-Api-Version: ${GITHUB_API_VERSION}" \
-              "repos/${GITHUB_REPOSITORY}/releases/tags/${TAG}"
-          )"
-          tag="$(
-            gh api \
-              -X GET \
-              -H "X-GitHub-Api-Version: ${GITHUB_API_VERSION}" \
-              "repos/${GITHUB_REPOSITORY}/git/ref/tags/${TAG}"
-          )"
-          RELEASE="${release}" TAG_REF="${tag}" python3 - <<'PY'
-          import json
-          import os
-          import sys
-          from pathlib import Path
-
-          sys.path.insert(0, str(Path('.github/scripts').resolve()))
-
-          from automation import (
-              Release,
-              Tag,
-              validate_release_target,
-              validate_tag_target,
-          )
-
-          expected_tag = os.environ['TAG']
-          expected_target = os.environ['MERGE_HEAD']
-          release = json.loads(os.environ['RELEASE'])
-          tag = json.loads(os.environ['TAG_REF'])
-          target = tag['object']
-          if not isinstance(target, dict) or target.get('type') != 'commit':
-              raise RuntimeError(f'Tag {expected_tag} is not lightweight')
-          actual_target = str(target.get('sha'))
-          validate_tag_target(
-              Tag(name=tag['ref'].removeprefix('refs/tags/'), target=actual_target),
-              expected_name=expected_tag,
-              expected_target=expected_target,
-          )
-          validate_release_target(
-              Release(tag=release['tag_name'], target=actual_target),
-              expected_tag=expected_tag,
-              expected_target=expected_target,
-          )
-          if release['draft'] or release['prerelease']:
-              raise RuntimeError('Release is not a published stable release')
-          PY
+      - name: Verify and publish exact release
+        if: steps.release.outcome == 'success'
+        env:
+          DRAFT: ${{ steps.release.outputs.draft }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          HEAD: ${{ steps.release.outputs.head }}
+          PULL: ${{ steps.release.outputs.pull }}
+          TAG: ${{ steps.release.outputs.tag }}
+        run: |
+          python3 .github/scripts/orchestrator.py publish \
+            "${TAG}" "${HEAD}" "${PULL}" "${DRAFT}"
