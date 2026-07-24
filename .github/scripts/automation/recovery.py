@@ -26,12 +26,17 @@ class Recovery:
 
     def matches(self, merge: Merge) -> bool:
         """Return whether this draft records the exact merge provenance."""
+        lines = self.body.splitlines()
         return (
             self.draft
             and not self.prerelease
-            and self.marker in self.body
-            and f'<!-- dependency-target:{merge.target} -->' in self.body
-            and f'<!-- dependency-pull:{merge.number} -->' in self.body
+            and lines.count(self.marker) == 1
+            and lines.count(
+                f'<!-- dependency-target:{merge.target} -->'
+            ) == 1
+            and lines.count(
+                f'<!-- dependency-pull:{merge.number} -->'
+            ) == 1
             and self.pull in {0, merge.number}
             and self.target == merge.target
         )
@@ -43,21 +48,26 @@ class Recovery:
         releases: Sequence[Recovery],
         merges: Sequence[Merge],
     ) -> Candidate | None:
-        """Select one qualified unpublished tag or fail closed."""
-        published = {
+        """Select one qualified unpublished merge or fail closed."""
+        released = {
             release.tag
             for release in releases
             if not release.draft
         }
-        stable_published = Version.stable(published)
+        stable_published = Version.stable(
+            release.tag
+            for release in releases
+            if not release.draft and not release.prerelease
+        )
         threshold = stable_published[-1] if stable_published else None
         candidates: list[Candidate] = []
+        targets = {tag.target for tag in tags}
 
         for tag in tags:
             version = Version.parse(tag.name)
             if (
                 version is None
-                or tag.name in published
+                or tag.name in released
                 or (threshold is not None and version <= threshold)
             ):
                 continue
@@ -89,6 +99,17 @@ class Recovery:
                 )
             )
 
+        candidates.extend(
+            Candidate(
+                tag=None,
+                target=merge.target,
+                pull=merge.number,
+                draft=None,
+            )
+            for merge in merges
+            if merge.target not in targets and merge.is_automation()
+        )
+
         unique = {
             (candidate.tag, candidate.target, candidate.pull, candidate.draft):
             candidate
@@ -96,7 +117,10 @@ class Recovery:
         }
         if len(unique) > 1:
             names = ', '.join(
-                sorted(candidate.tag for candidate in unique.values())
+                sorted(
+                    candidate.tag or f'pull request #{candidate.pull}'
+                    for candidate in unique.values()
+                )
             )
             raise RecoveryError(
                 f'Multiple dependency releases are recoverable: {names}'

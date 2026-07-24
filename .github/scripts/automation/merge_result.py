@@ -13,9 +13,10 @@ class MergeResult:
     head: str
     state: str
     commit: str | None
+    parents: tuple[str, ...]
 
-    def validate(self, expected_head: str) -> str:
-        """Require a merged result for the exact tested head."""
+    def validate(self, expected_head: str, expected_base: str) -> str:
+        """Require a squash merge of the exact tested head and base."""
         if self.head != expected_head:
             raise HeadChangedError(
                 f'Merged pull request head changed from {expected_head} '
@@ -28,5 +29,11 @@ class MergeResult:
         if self.commit is None:
             raise PullRequestUnavailableError(
                 'Pull request merge produced no commit'
+            )
+        if self.parents != (expected_base,):
+            parents = ', '.join(self.parents) or 'none'
+            raise HeadChangedError(
+                f'Merge commit parents changed from {expected_base} '
+                f'to {parents}'
             )
         return self.commit

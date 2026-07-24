@@ -74,6 +74,7 @@ jobs:
           {
             echo 'changed=true'
             printf 'branch=%s\n' "${branch}"
+            printf 'base=%s\n' "$(git rev-parse HEAD^)"
             printf 'head=%s\n' "$(git rev-parse HEAD)"
           } >> "${GITHUB_OUTPUT}"
 
@@ -112,9 +113,12 @@ jobs:
         run: |
           branch='${{ steps.push.outputs.branch }}'
           head='${{ steps.push.outputs.head }}'
+          base='${{ steps.update.outputs.base }}'
           body="${RUNNER_TEMP}/pull-request.md"
           {
             echo '<!-- dependency-automation:v1 -->'
+            printf '<!-- dependency-tested-head:%s -->\n' "${head}"
+            printf '<!-- dependency-tested-base:%s -->\n' "${base}"
             echo 'Automated weekly dependency update.'
             echo
             cat "${RUNNER_TEMP}/dependencies.md"
@@ -134,17 +138,19 @@ jobs:
               --json baseRefName,baseRefOid,createdAt,headRefName,headRefOid,number,state \
               --jq '.'
           )"
-          PULL="${pull}" python3 - "${branch}" "${head}" <<'PY'
+          PULL="${pull}" python3 - "${branch}" "${head}" "${base}" <<'PY'
           import json
           import os
           import sys
 
-          branch, head = sys.argv[1:]
+          branch, head, base = sys.argv[1:]
           pull = json.loads(os.environ['PULL'])
           if pull['baseRefName'] != 'main':
               raise RuntimeError('Pull request does not target main')
           if pull['headRefName'] != branch or pull['headRefOid'] != head:
               raise RuntimeError('Pull request does not use the pushed head')
+          if pull['baseRefOid'] != base:
+              raise RuntimeError('Pull request does not use the tested base')
           if pull['state'] != 'OPEN':
               raise RuntimeError('Pull request is not open')
           PY
@@ -154,10 +160,7 @@ jobs:
               PULL="${pull}" python3 -c \
                 'import json, os; print(json.loads(os.environ["PULL"])["number"])'
             )"
-            printf 'base=%s\n' "$(
-              PULL="${pull}" python3 -c \
-                'import json, os; print(json.loads(os.environ["PULL"])["baseRefOid"])'
-            )"
+            printf 'base=%s\n' "${base}"
             printf 'url=%s\n' "${url}"
           } >> "${GITHUB_OUTPUT}"
 
@@ -330,101 +333,10 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
-          number='${{ steps.pull.outputs.number }}'
-          head='${{ steps.push.outputs.head }}'
-          base='${{ steps.pull.outputs.base }}'
-          pull="$(
-            gh pr view "${number}" \
-              --repo "${GITHUB_REPOSITORY}" \
-              --json baseRefName,baseRefOid,headRefOid,mergeable,number,reviewDecision,state \
-              --jq '.'
-          )"
-          PULL="${pull}" python3 - "${head}" "${base}" <<'PY'
-          import json
-          import os
-          import sys
-          from pathlib import Path
-
-          sys.path.insert(0, str(Path('.github/scripts').resolve()))
-
-          from automation import (
-              PullRequest,
-              PullRequestUnavailableError,
-              ReviewDecision,
-              validate_pull_request,
-          )
-
-          expected_head, expected_base = sys.argv[1:]
-          payload = json.loads(os.environ['PULL'])
-          if payload['baseRefName'] != 'main':
-              raise PullRequestUnavailableError(
-                  'Pull request does not target main'
-              )
-          try:
-              review = ReviewDecision(payload['reviewDecision'].lower())
-          except ValueError as error:
-              raise PullRequestUnavailableError(
-                  'Pull request has no current approval'
-              ) from error
-          validate_pull_request(
-              PullRequest(
-                  number=payload['number'],
-                  head=payload['headRefOid'],
-                  base=payload['baseRefOid'],
-                  state=payload['state'].lower(),
-                  review=review,
-              ),
-              expected_head,
-              expected_base,
-          )
-          if payload['mergeable'] != 'MERGEABLE':
-              raise PullRequestUnavailableError(
-                  'Pull request is not currently mergeable'
-              )
-          PY
-
-          gh pr merge "${number}" \
-            --repo "${GITHUB_REPOSITORY}" \
-            --squash \
-            --match-head-commit "${head}"
-
-          final="$(
-            gh pr view "${number}" \
-              --repo "${GITHUB_REPOSITORY}" \
-              --json headRefOid,mergeCommit,state \
-              --jq '.'
-          )"
-          merged="$(
-            FINAL="${final}" EXPECTED="${head}" python3 - <<'PY'
-          import json
-          import os
-          import sys
-          from pathlib import Path
-
-          sys.path.insert(0, str(Path('.github/scripts').resolve()))
-
-          from automation import MergeResult
-
-          pull = json.loads(os.environ['FINAL'])
-          merge = pull.get('mergeCommit')
-          print(
-              MergeResult(
-                  head=pull['headRefOid'],
-                  state=pull['state'].lower(),
-                  commit=(
-                      str(merge['oid'])
-                      if isinstance(merge, dict)
-                      else None
-                  ),
-              ).validate(os.environ['EXPECTED'])
-          )
-          PY
-          )"
-          if [[ ! "${merged}" =~ ^[0-9a-f]{40,64}$ ]]; then
-            echo 'Pull request did not produce a merge commit.' >&2
-            exit 1
-          fi
-          printf 'head=%s\n' "${merged}" >> "${GITHUB_OUTPUT}"
+          python3 .github/scripts/orchestrator.py merge \
+            '${{ steps.pull.outputs.number }}' \
+            '${{ steps.push.outputs.head }}' \
+            '${{ steps.pull.outputs.base }}'
 
       - name: Prepare exact tag and draft release
         id: release
