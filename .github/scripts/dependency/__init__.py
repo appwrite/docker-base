@@ -1,0 +1,1 @@
+"""Dependency updater domain models."""

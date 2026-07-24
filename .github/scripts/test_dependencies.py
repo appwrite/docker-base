@@ -3,6 +3,9 @@
 
 from __future__ import annotations
 
+import ast
+import inspect
+import re
 import sys
 import tempfile
 import unittest
@@ -29,6 +32,38 @@ CURRENT: dict[str, str] = {
     'yaml': '2.3.0',
     'zstd': '0.15.2',
 }
+DECLARATIONS: tuple[tuple[str, str], ...] = (
+    ('brotli', 'PHP_BROTLI_VERSION'),
+    ('imagick', 'PHP_IMAGICK_VERSION'),
+    ('lz4', 'PHP_LZ4_VERSION'),
+    ('maxminddb', 'PHP_MAXMINDDB_VERSION'),
+    ('mongodb', 'PHP_MONGODB_VERSION'),
+    ('protobuf', 'PHP_PROTOBUF_VERSION'),
+    ('redis', 'PHP_REDIS_VERSION'),
+    ('scrypt', 'PHP_SCRYPT_VERSION'),
+    ('snappy', 'PHP_SNAPPY_VERSION'),
+    ('swoole', 'PHP_SWOOLE_VERSION'),
+    ('yaml', 'PHP_YAML_VERSION'),
+    ('zstd', 'PHP_ZSTD_VERSION'),
+)
+EXPECTED_DOCKERFILE_DECLARATIONS = frozenset(
+    (
+        'BASE_IMAGE',
+        'PHP_BROTLI_VERSION',
+        'PHP_IMAGICK_VERSION',
+        'PHP_LZ4_VERSION',
+        'PHP_MAXMINDDB_VERSION',
+        'PHP_MONGODB_VERSION',
+        'PHP_PROTOBUF_VERSION',
+        'PHP_REDIS_VERSION',
+        'PHP_SCRYPT_VERSION',
+        'PHP_SNAPPY_VERSION',
+        'PHP_SWOOLE_VERSION',
+        'PHP_XDEBUG_VERSION',
+        'PHP_YAML_VERSION',
+        'PHP_ZSTD_VERSION',
+    )
+)
 OLD_DIGEST = 'sha256:' + ('1' * 64)
 NEW_DIGEST = 'sha256:' + ('2' * 64)
 
@@ -43,16 +78,10 @@ def dockerfile() -> str:
         '',
         'ENV \\',
     ]
-    regular = tuple(
-        dependency
-        for dependency in dependencies.DEPENDENCIES
-        if dependency.name != 'xdebug'
-    )
-    for index, dependency in enumerate(regular):
-        suffix = ' \\' if index < len(regular) - 1 else ''
+    for index, (name, variable) in enumerate(DECLARATIONS):
+        suffix = ' \\' if index < len(DECLARATIONS) - 1 else ''
         lines.append(
-            f'    {dependency.variable}="{CURRENT[dependency.name]}"'
-            f'{suffix}'
+            f'    {variable}="{CURRENT[name]}"{suffix}'
         )
     lines.extend(
         (
@@ -198,6 +227,39 @@ class SourceTests(unittest.TestCase):
         with self.assertRaises(FrozenInstanceError):
             source.url = 'https://example.test/changed'
 
+    def test_domain_classes_are_in_matching_files(self) -> None:
+        classes = (
+            dependencies.Change,
+            dependencies.CommandRunner,
+            dependencies.Dependency,
+            dependencies.Fetcher,
+            dependencies.GitSource,
+            dependencies.PeclSource,
+            dependencies.Pin,
+            dependencies.Plan,
+            dependencies.UpdateError,
+            dependencies.Version,
+        )
+        for domain_class in classes:
+            with self.subTest(domain_class=domain_class.__name__):
+                path = inspect.getsourcefile(domain_class)
+                self.assertIsNotNone(path)
+                self.assertEqual(
+                    f'{domain_class.__name__}.py',
+                    Path(path).name,
+                )
+
+        path = Path(dependencies.__file__)
+        module = ast.parse(path.read_text(encoding='utf-8'))
+        self.assertEqual(
+            [],
+            [
+                node.name
+                for node in module.body
+                if isinstance(node, ast.ClassDef)
+            ],
+        )
+
 
 class VersionTests(unittest.TestCase):
     """Verify stable semantic same-major selection."""
@@ -213,6 +275,10 @@ class VersionTests(unittest.TestCase):
         )
         for spelling in (
             'V1.2.3',
+            '01.2.3',
+            '1.02.3',
+            '1.2.03',
+            'v00.0.0',
             '1.2',
             '1.2.3.4',
             'release-1.2.3',
@@ -362,6 +428,66 @@ class DockerfileTests(unittest.TestCase):
         self.assertEqual(dependencies.BASE_NAME, pins[0].name)
         self.assertEqual(OLD_DIGEST, pins[0].current)
         self.assertEqual(set(CURRENT), {pin.name for pin in pins[1:]})
+
+    def test_real_dockerfile_declarations_match_independent_contract(
+        self,
+    ) -> None:
+        path = Path(__file__).resolve().parents[2] / 'Dockerfile'
+        content = path.read_text(encoding='utf-8')
+        declaration = re.compile(
+            r'(?m)^[ \t]*(?:(?:ARG|ENV)[ \t]+)?'
+            r'((?:BASE_IMAGE|PHP_[A-Z0-9_]+_VERSION))[ \t]*='
+        )
+
+        self.assertEqual(
+            EXPECTED_DOCKERFILE_DECLARATIONS,
+            {
+                match.group(1)
+                for match in declaration.finditer(content)
+            },
+        )
+        pins = dependencies.read_pins(content)
+        self.assertEqual(
+            {dependencies.BASE_NAME, *CURRENT},
+            {pin.name for pin in pins},
+        )
+        self.assertRegex(
+            pins[0].current,
+            r'\Asha256:[0-9a-f]{64}\Z',
+        )
+
+    def test_rejects_unknown_extension_declaration(self) -> None:
+        multiline = dockerfile().replace(
+            'ENV \\\n',
+            'ENV \\\n    PHP_UNKNOWN_VERSION="1.2.3" \\\n',
+            1,
+        )
+        with self.assertRaisesRegex(
+            dependencies.UpdateError,
+            'Unknown PHP extension version declaration: '
+            'PHP_UNKNOWN_VERSION',
+        ):
+            dependencies.read_pins(multiline)
+
+        same_line = (
+            dockerfile()
+            + '\nENV PHP_second_VERSION="1.2.3" '
+            + 'PHP_THIRD_VERSION="2.3.4"\n'
+        )
+        with self.assertRaisesRegex(
+            dependencies.UpdateError,
+            'Unknown PHP extension version declarations: '
+            'PHP_THIRD_VERSION, PHP_second_VERSION',
+        ):
+            dependencies.read_pins(same_line)
+
+        argument = dockerfile() + '\nARG PHP_ARGUMENT_VERSION\n'
+        with self.assertRaisesRegex(
+            dependencies.UpdateError,
+            'Unknown PHP extension version declaration: '
+            'PHP_ARGUMENT_VERSION',
+        ):
+            dependencies.read_pins(argument)
 
     def test_rejects_missing_declaration(self) -> None:
         content = dockerfile().replace(
