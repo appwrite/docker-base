@@ -13,6 +13,19 @@ use PHPUnit\Framework\TestCase;
 final class VersionTest extends TestCase
 {
     #[Test]
+    public function test_parses_unbounded_canonical_components_as_strings(): void
+    {
+        $version = Version::parse(
+            '18446744073709551616.9223372036854775808.99999999999999999999',
+        );
+
+        self::assertNotNull($version);
+        self::assertSame('18446744073709551616', $version->major);
+        self::assertSame('9223372036854775808', $version->minor);
+        self::assertSame('99999999999999999999', $version->patch);
+    }
+
+    #[Test]
     public function test_orders_stable_versions_semantically(): void
     {
         self::assertSame(
@@ -24,6 +37,26 @@ final class VersionTest extends TestCase
                     '2.0.0',
                     '1.2.99',
                     '1.10.0',
+                ]),
+            ),
+        );
+    }
+
+    #[Test]
+    public function test_orders_adjacent_components_above_integer_range(): void
+    {
+        self::assertSame(
+            [
+                '1.18446744073709551616.0',
+                '1.18446744073709551617.0',
+                '18446744073709551616.0.0',
+            ],
+            array_map(
+                static fn (Version $version): string => (string) $version,
+                Version::stable([
+                    '18446744073709551616.0.0',
+                    '1.18446744073709551617.0',
+                    '1.18446744073709551616.0',
                 ]),
             ),
         );
@@ -62,6 +95,17 @@ final class VersionTest extends TestCase
                 '2.0.0',
                 'v9.0.0',
                 '9.0.0-rc.1',
+            ]),
+        );
+    }
+
+    #[Test]
+    public function test_next_patch_carries_without_an_integer_ceiling(): void
+    {
+        self::assertSame(
+            '1.2.100000000000000000000',
+            (string) Version::next([
+                '1.2.99999999999999999999',
             ]),
         );
     }
@@ -122,6 +166,21 @@ final class VersionTest extends TestCase
             (string) Version::afterCollision(
                 ['1.4.4', '1.4.5', '1.4.7'],
                 '1.4.5',
+            ),
+        );
+    }
+
+    #[Test]
+    public function test_recomputes_unbounded_patch_after_collision(): void
+    {
+        self::assertSame(
+            '1.4.18446744073709551618',
+            (string) Version::afterCollision(
+                [
+                    '1.4.18446744073709551616',
+                    '1.4.18446744073709551617',
+                ],
+                '1.4.18446744073709551616',
             ),
         );
     }

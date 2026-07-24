@@ -14,6 +14,7 @@ use DockerBase\Automation\Repository;
 use DockerBase\Automation\ReviewDecision;
 use DockerBase\Automation\Run;
 use DockerBase\Automation\Tag;
+use DockerBase\Automation\Version;
 use DockerBase\Command\Result;
 use DockerBase\Command\Runner;
 use JsonException;
@@ -100,39 +101,45 @@ final readonly class GitHub implements Repository
     }
 
     /**
+     * @param list<Tag> $tags
+     *
      * @return list<Recovery>
      */
     #[Override]
-    public function releases(): array
+    public function releases(array $tags): array
     {
-        $tags = $this->tags();
         $stable = [];
+        $versions = [];
         foreach ($tags as $tag) {
-            if ($this->stable($tag->name)) {
-                $stable[$tag->name] = $tag;
+            $version = Version::parse($tag->name);
+            if ($version === null) {
+                continue;
             }
+
+            $stable[$tag->name] = $tag;
+            $versions[$tag->name] = $version;
         }
 
-        $listed = $this->listedReleases();
+        $listed = array_values(
+            array_filter(
+                $this->listedReleases(),
+                static fn (Recovery $release): bool => (
+                    ! $release->draft
+                    && ! $release->prerelease
+                    && isset($versions[$release->tag])
+                ),
+            ),
+        );
         usort(
             $listed,
-            static fn (Recovery $left, Recovery $right): int => version_compare(
-                $right->tag,
-                $left->tag,
+            static fn (Recovery $left, Recovery $right): int => (
+                $versions[$right->tag]->compare($versions[$left->tag])
             ),
         );
 
         $releases = [];
         $threshold = null;
         foreach ($listed as $hint) {
-            if (
-                $hint->draft
-                || $hint->prerelease
-                || ! isset($stable[$hint->tag])
-            ) {
-                continue;
-            }
-
             $release = $this->releaseByTag($hint->tag);
             if ($release === null) {
                 continue;
@@ -140,7 +147,7 @@ final readonly class GitHub implements Repository
             $this->assertTag($release, $hint->tag);
             $releases[$release->tag] = $release;
             if (! $release->draft && ! $release->prerelease) {
-                $threshold = $release->tag;
+                $threshold = $versions[$release->tag];
                 break;
             }
         }
@@ -148,15 +155,14 @@ final readonly class GitHub implements Repository
         $candidates = array_keys($stable);
         usort(
             $candidates,
-            static fn (string $left, string $right): int => version_compare(
-                $right,
-                $left,
+            static fn (string $left, string $right): int => (
+                $versions[$right]->compare($versions[$left])
             ),
         );
         foreach ($candidates as $tag) {
             if (
                 $threshold !== null
-                && version_compare($tag, $threshold) <= 0
+                && $versions[$tag]->compare($threshold) <= 0
             ) {
                 continue;
             }
@@ -870,14 +876,6 @@ final readonly class GitHub implements Repository
                 "Release lookup for {$expected} returned {$release->tag}",
             );
         }
-    }
-
-    private function stable(string $version): bool
-    {
-        return preg_match(
-            '/^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/D',
-            $version,
-        ) === 1;
     }
 
     private function pullFromBody(string $body): int

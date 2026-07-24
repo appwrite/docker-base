@@ -4,14 +4,16 @@ declare(strict_types=1);
 
 namespace DockerBase\Command;
 
+use Override;
 use RuntimeException;
 use Throwable;
 
-final class Exception extends RuntimeException
+final class Exception extends RuntimeException implements Failure
 {
     /**
      * @param list<string> $command
      */
+    #[Override]
     public function __construct(
         public readonly array $command,
         public readonly ?Result $result = null,
