@@ -13,7 +13,7 @@ final class ResultTest extends TestCase
 {
     public function testReportsWhetherTheCommandSucceeded(): void
     {
-        self::assertTrue(new Result(0, 'output', '')->succeeded());
-        self::assertFalse(new Result(1, '', 'error')->succeeded());
+        self::assertTrue((new Result(0, 'output', ''))->succeeded());
+        self::assertFalse((new Result(1, '', 'error'))->succeeded());
     }
 }

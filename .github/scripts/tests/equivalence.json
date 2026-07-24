@@ -3,13 +3,11 @@
         "automation": 43,
         "dependency": 35,
         "adapter": 13,
-        "total": 91,
-        "status": "passed"
+        "total": 91
     },
     "deterministic": {
         "bytes": 5477,
-        "sha256": "50736031df39f38434d6c09b455aa651e886a6a79319c951b631df8a49a93a77",
-        "status": "exact"
+        "sha256": "50736031df39f38434d6c09b455aa651e886a6a79319c951b631df8a49a93a77"
     },
     "contracts": [
         {
@@ -17,728 +15,637 @@
             "php": "DockerBase\\Tests\\Unit\\Automation\\DeadlineTest::test_rejects_naive_times_and_nonpositive_timeouts",
             "group": "automation",
             "fixture": "ported automation policy vector",
-            "assertion": "same value, exception, bytes, mutation, and status contract",
-            "status": "parity"
+            "assertion": "same value, exception, bytes, mutation, and status contract"
         },
         {
             "python": "test_automation.DeadlineTest.test_uses_injected_time_and_clamps_remaining_time",
             "php": "DockerBase\\Tests\\Unit\\Automation\\DeadlineTest::test_uses_injected_time_and_clamps_remaining_time",
             "group": "automation",
             "fixture": "ported automation policy vector",
-            "assertion": "same value, exception, bytes, mutation, and status contract",
-            "status": "parity"
+            "assertion": "same value, exception, bytes, mutation, and status contract"
         },
         {
             "python": "test_automation.MergeResultTest.test_accepts_merge_for_exact_tested_head",
             "php": "DockerBase\\Tests\\Unit\\Automation\\MergeResultTest::test_accepts_merge_for_exact_tested_head",
             "group": "automation",
             "fixture": "ported automation policy vector",
-            "assertion": "same value, exception, bytes, mutation, and status contract",
-            "status": "parity"
+            "assertion": "same value, exception, bytes, mutation, and status contract"
         },
         {
             "python": "test_automation.MergeResultTest.test_rejects_a_non_squash_merge_commit",
             "php": "DockerBase\\Tests\\Unit\\Automation\\MergeResultTest::test_rejects_a_non_squash_merge_commit",
             "group": "automation",
             "fixture": "ported automation policy vector",
-            "assertion": "same value, exception, bytes, mutation, and status contract",
-            "status": "parity"
+            "assertion": "same value, exception, bytes, mutation, and status contract"
         },
         {
             "python": "test_automation.MergeResultTest.test_rejects_merge_commit_for_a_different_tested_base",
             "php": "DockerBase\\Tests\\Unit\\Automation\\MergeResultTest::test_rejects_merge_commit_for_a_different_tested_base",
             "group": "automation",
             "fixture": "ported automation policy vector",
-            "assertion": "same value, exception, bytes, mutation, and status contract",
-            "status": "parity"
+            "assertion": "same value, exception, bytes, mutation, and status contract"
         },
         {
             "python": "test_automation.MergeResultTest.test_rejects_merged_state_for_a_different_final_head",
             "php": "DockerBase\\Tests\\Unit\\Automation\\MergeResultTest::test_rejects_merged_state_for_a_different_final_head",
             "group": "automation",
             "fixture": "ported automation policy vector",
-            "assertion": "same value, exception, bytes, mutation, and status contract",
-            "status": "parity"
+            "assertion": "same value, exception, bytes, mutation, and status contract"
         },
         {
             "python": "test_automation.PullRequestTest.test_accepts_current_approved_head",
             "php": "DockerBase\\Tests\\Unit\\Automation\\PullRequestTest::test_accepts_current_approved_head",
             "group": "automation",
             "fixture": "ported automation policy vector",
-            "assertion": "same value, exception, bytes, mutation, and status contract",
-            "status": "parity"
+            "assertion": "same value, exception, bytes, mutation, and status contract"
         },
         {
             "python": "test_automation.PullRequestTest.test_rejects_changed_base_after_ci_succeeds",
             "php": "DockerBase\\Tests\\Unit\\Automation\\PullRequestTest::test_rejects_changed_base_after_ci_succeeds",
             "group": "automation",
             "fixture": "ported automation policy vector",
-            "assertion": "same value, exception, bytes, mutation, and status contract",
-            "status": "parity"
+            "assertion": "same value, exception, bytes, mutation, and status contract"
         },
         {
             "python": "test_automation.PullRequestTest.test_rejects_changed_head_even_if_currently_approved",
             "php": "DockerBase\\Tests\\Unit\\Automation\\PullRequestTest::test_rejects_changed_head_even_if_currently_approved",
             "group": "automation",
             "fixture": "ported automation policy vector",
-            "assertion": "same value, exception, bytes, mutation, and status contract",
-            "status": "parity"
+            "assertion": "same value, exception, bytes, mutation, and status contract"
         },
         {
             "python": "test_automation.PullRequestTest.test_rejects_missing_current_approval",
             "php": "DockerBase\\Tests\\Unit\\Automation\\PullRequestTest::test_rejects_missing_current_approval",
             "group": "automation",
             "fixture": "ported automation policy vector",
-            "assertion": "same value, exception, bytes, mutation, and status contract",
-            "status": "parity"
+            "assertion": "same value, exception, bytes, mutation, and status contract"
         },
         {
             "python": "test_automation.RecoveryTest.test_does_not_resume_merge_of_an_untested_base",
             "php": "DockerBase\\Tests\\Unit\\Automation\\RecoveryTest::test_does_not_resume_merge_of_an_untested_base",
             "group": "automation",
             "fixture": "ported automation policy vector",
-            "assertion": "same value, exception, bytes, mutation, and status contract",
-            "status": "parity"
+            "assertion": "same value, exception, bytes, mutation, and status contract"
         },
         {
             "python": "test_automation.RecoveryTest.test_does_not_resume_wrong_target_draft",
             "php": "DockerBase\\Tests\\Unit\\Automation\\RecoveryTest::test_does_not_resume_wrong_target_draft",
             "group": "automation",
             "fixture": "ported automation policy vector",
-            "assertion": "same value, exception, bytes, mutation, and status contract",
-            "status": "parity"
+            "assertion": "same value, exception, bytes, mutation, and status contract"
         },
         {
             "python": "test_automation.RecoveryTest.test_fails_closed_for_ambiguous_proven_untagged_merges",
             "php": "DockerBase\\Tests\\Unit\\Automation\\RecoveryTest::test_fails_closed_for_ambiguous_proven_untagged_merges",
             "group": "automation",
             "fixture": "ported automation policy vector",
-            "assertion": "same value, exception, bytes, mutation, and status contract",
-            "status": "parity"
+            "assertion": "same value, exception, bytes, mutation, and status contract"
         },
         {
             "python": "test_automation.RecoveryTest.test_fails_closed_for_multiple_recoverable_releases",
             "php": "DockerBase\\Tests\\Unit\\Automation\\RecoveryTest::test_fails_closed_for_multiple_recoverable_releases",
             "group": "automation",
             "fixture": "ported automation policy vector",
-            "assertion": "same value, exception, bytes, mutation, and status contract",
-            "status": "parity"
+            "assertion": "same value, exception, bytes, mutation, and status contract"
         },
         {
             "python": "test_automation.RecoveryTest.test_ignores_tag_for_unmarked_or_multi_file_pull_request",
             "php": "DockerBase\\Tests\\Unit\\Automation\\RecoveryTest::test_ignores_tag_for_unmarked_or_multi_file_pull_request",
             "group": "automation",
             "fixture": "ported automation policy vector",
-            "assertion": "same value, exception, bytes, mutation, and status contract",
-            "status": "parity"
+            "assertion": "same value, exception, bytes, mutation, and status contract"
         },
         {
             "python": "test_automation.RecoveryTest.test_ignores_unrelated_orphan_tag",
             "php": "DockerBase\\Tests\\Unit\\Automation\\RecoveryTest::test_ignores_unrelated_orphan_tag",
             "group": "automation",
             "fixture": "ported automation policy vector",
-            "assertion": "same value, exception, bytes, mutation, and status contract",
-            "status": "parity"
+            "assertion": "same value, exception, bytes, mutation, and status contract"
         },
         {
             "python": "test_automation.RecoveryTest.test_resumes_draft_after_publish_failure",
             "php": "DockerBase\\Tests\\Unit\\Automation\\RecoveryTest::test_resumes_draft_after_publish_failure",
             "group": "automation",
             "fixture": "ported automation policy vector",
-            "assertion": "same value, exception, bytes, mutation, and status contract",
-            "status": "parity"
+            "assertion": "same value, exception, bytes, mutation, and status contract"
         },
         {
             "python": "test_automation.RecoveryTest.test_resumes_proven_merge_when_cancelled_before_tag_creation",
             "php": "DockerBase\\Tests\\Unit\\Automation\\RecoveryTest::test_resumes_proven_merge_when_cancelled_before_tag_creation",
             "group": "automation",
             "fixture": "ported automation policy vector",
-            "assertion": "same value, exception, bytes, mutation, and status contract",
-            "status": "parity"
+            "assertion": "same value, exception, bytes, mutation, and status contract"
         },
         {
             "python": "test_automation.RecoveryTest.test_resumes_tag_when_draft_creation_failed_and_next_run_has_no_diff",
             "php": "DockerBase\\Tests\\Unit\\Automation\\RecoveryTest::test_resumes_tag_when_draft_creation_failed_and_next_run_has_no_diff",
             "group": "automation",
             "fixture": "ported automation policy vector",
-            "assertion": "same value, exception, bytes, mutation, and status contract",
-            "status": "parity"
+            "assertion": "same value, exception, bytes, mutation, and status contract"
         },
         {
             "python": "test_automation.TargetTest.test_accepts_exact_tag_and_release_targets",
             "php": "DockerBase\\Tests\\Unit\\Automation\\TargetTest::test_accepts_exact_tag_and_release_targets",
             "group": "automation",
             "fixture": "ported automation policy vector",
-            "assertion": "same value, exception, bytes, mutation, and status contract",
-            "status": "parity"
+            "assertion": "same value, exception, bytes, mutation, and status contract"
         },
         {
             "python": "test_automation.TargetTest.test_rejects_release_target_mismatch",
             "php": "DockerBase\\Tests\\Unit\\Automation\\TargetTest::test_rejects_release_target_mismatch",
             "group": "automation",
             "fixture": "ported automation policy vector",
-            "assertion": "same value, exception, bytes, mutation, and status contract",
-            "status": "parity"
+            "assertion": "same value, exception, bytes, mutation, and status contract"
         },
         {
             "python": "test_automation.TargetTest.test_rejects_tag_target_mismatch",
             "php": "DockerBase\\Tests\\Unit\\Automation\\TargetTest::test_rejects_tag_target_mismatch",
             "group": "automation",
             "fixture": "ported automation policy vector",
-            "assertion": "same value, exception, bytes, mutation, and status contract",
-            "status": "parity"
+            "assertion": "same value, exception, bytes, mutation, and status contract"
         },
         {
             "python": "test_automation.VersionTest.test_computes_new_patch_when_every_newer_tag_is_released",
             "php": "DockerBase\\Tests\\Unit\\Automation\\VersionTest::test_computes_new_patch_when_every_newer_tag_is_released",
             "group": "automation",
             "fixture": "ported automation policy vector",
-            "assertion": "same value, exception, bytes, mutation, and status contract",
-            "status": "parity"
+            "assertion": "same value, exception, bytes, mutation, and status contract"
         },
         {
             "python": "test_automation.VersionTest.test_ignores_nonstable_and_prefixed_tags",
             "php": "DockerBase\\Tests\\Unit\\Automation\\VersionTest::test_ignores_nonstable_and_prefixed_tags",
             "group": "automation",
             "fixture": "ported automation policy vector",
-            "assertion": "same value, exception, bytes, mutation, and status contract",
-            "status": "parity"
+            "assertion": "same value, exception, bytes, mutation, and status contract"
         },
         {
             "python": "test_automation.VersionTest.test_ignores_unreleased_holes_older_than_latest_release",
             "php": "DockerBase\\Tests\\Unit\\Automation\\VersionTest::test_ignores_unreleased_holes_older_than_latest_release",
             "group": "automation",
             "fixture": "ported automation policy vector",
-            "assertion": "same value, exception, bytes, mutation, and status contract",
-            "status": "parity"
+            "assertion": "same value, exception, bytes, mutation, and status contract"
         },
         {
             "python": "test_automation.VersionTest.test_latest_version_requires_a_stable_remote_tag",
             "php": "DockerBase\\Tests\\Unit\\Automation\\VersionTest::test_latest_version_requires_a_stable_remote_tag",
             "group": "automation",
             "fixture": "ported automation policy vector",
-            "assertion": "same value, exception, bytes, mutation, and status contract",
-            "status": "parity"
+            "assertion": "same value, exception, bytes, mutation, and status contract"
         },
         {
             "python": "test_automation.VersionTest.test_next_patch_uses_semantic_maximum_of_all_remote_tags",
             "php": "DockerBase\\Tests\\Unit\\Automation\\VersionTest::test_next_patch_uses_semantic_maximum_of_all_remote_tags",
             "group": "automation",
             "fixture": "ported automation policy vector",
-            "assertion": "same value, exception, bytes, mutation, and status contract",
-            "status": "parity"
+            "assertion": "same value, exception, bytes, mutation, and status contract"
         },
         {
             "python": "test_automation.VersionTest.test_orders_stable_versions_semantically",
             "php": "DockerBase\\Tests\\Unit\\Automation\\VersionTest::test_orders_stable_versions_semantically",
             "group": "automation",
             "fixture": "ported automation policy vector",
-            "assertion": "same value, exception, bytes, mutation, and status contract",
-            "status": "parity"
+            "assertion": "same value, exception, bytes, mutation, and status contract"
         },
         {
             "python": "test_automation.VersionTest.test_recomputes_after_collision_from_refreshed_remote_tags",
             "php": "DockerBase\\Tests\\Unit\\Automation\\VersionTest::test_recomputes_after_collision_from_refreshed_remote_tags",
             "group": "automation",
             "fixture": "ported automation policy vector",
-            "assertion": "same value, exception, bytes, mutation, and status contract",
-            "status": "parity"
+            "assertion": "same value, exception, bytes, mutation, and status contract"
         },
         {
             "python": "test_automation.VersionTest.test_rejects_malformed_collision_tag",
             "php": "DockerBase\\Tests\\Unit\\Automation\\VersionTest::test_rejects_malformed_collision_tag",
             "group": "automation",
             "fixture": "ported automation policy vector",
-            "assertion": "same value, exception, bytes, mutation, and status contract",
-            "status": "parity"
+            "assertion": "same value, exception, bytes, mutation, and status contract"
         },
         {
             "python": "test_automation.VersionTest.test_resumes_newest_tag_newer_than_latest_release",
             "php": "DockerBase\\Tests\\Unit\\Automation\\VersionTest::test_resumes_newest_tag_newer_than_latest_release",
             "group": "automation",
             "fixture": "ported automation policy vector",
-            "assertion": "same value, exception, bytes, mutation, and status contract",
-            "status": "parity"
+            "assertion": "same value, exception, bytes, mutation, and status contract"
         },
         {
             "python": "test_automation.WorkflowTest.test_does_not_accept_branch_run_for_tag_release",
             "php": "DockerBase\\Tests\\Unit\\Automation\\WorkflowTest::test_does_not_accept_branch_run_for_tag_release",
             "group": "automation",
             "fixture": "ported automation policy vector",
-            "assertion": "same value, exception, bytes, mutation, and status contract",
-            "status": "parity"
+            "assertion": "same value, exception, bytes, mutation, and status contract"
         },
         {
             "python": "test_automation.WorkflowTest.test_preserves_terminal_failure_after_deadline",
             "php": "DockerBase\\Tests\\Unit\\Automation\\WorkflowTest::test_preserves_terminal_failure_after_deadline",
             "group": "automation",
             "fixture": "ported automation policy vector",
-            "assertion": "same value, exception, bytes, mutation, and status contract",
-            "status": "parity"
+            "assertion": "same value, exception, bytes, mutation, and status contract"
         },
         {
             "python": "test_automation.WorkflowTest.test_reports_cancelled_run",
             "php": "DockerBase\\Tests\\Unit\\Automation\\WorkflowTest::test_reports_cancelled_run",
             "group": "automation",
             "fixture": "ported automation policy vector",
-            "assertion": "same value, exception, bytes, mutation, and status contract",
-            "status": "parity"
+            "assertion": "same value, exception, bytes, mutation, and status contract"
         },
         {
             "python": "test_automation.WorkflowTest.test_reports_failed_run",
             "php": "DockerBase\\Tests\\Unit\\Automation\\WorkflowTest::test_reports_failed_run",
             "group": "automation",
             "fixture": "ported automation policy vector",
-            "assertion": "same value, exception, bytes, mutation, and status contract",
-            "status": "parity"
+            "assertion": "same value, exception, bytes, mutation, and status contract"
         },
         {
             "python": "test_automation.WorkflowTest.test_reports_missing_run_before_deadline",
             "php": "DockerBase\\Tests\\Unit\\Automation\\WorkflowTest::test_reports_missing_run_before_deadline",
             "group": "automation",
             "fixture": "ported automation policy vector",
-            "assertion": "same value, exception, bytes, mutation, and status contract",
-            "status": "parity"
+            "assertion": "same value, exception, bytes, mutation, and status contract"
         },
         {
             "python": "test_automation.WorkflowTest.test_reports_pending_run_before_deadline",
             "php": "DockerBase\\Tests\\Unit\\Automation\\WorkflowTest::test_reports_pending_run_before_deadline",
             "group": "automation",
             "fixture": "ported automation policy vector",
-            "assertion": "same value, exception, bytes, mutation, and status contract",
-            "status": "parity"
+            "assertion": "same value, exception, bytes, mutation, and status contract"
         },
         {
             "python": "test_automation.WorkflowTest.test_reports_run_timeout_conclusion",
             "php": "DockerBase\\Tests\\Unit\\Automation\\WorkflowTest::test_reports_run_timeout_conclusion",
             "group": "automation",
             "fixture": "ported automation policy vector",
-            "assertion": "same value, exception, bytes, mutation, and status contract",
-            "status": "parity"
+            "assertion": "same value, exception, bytes, mutation, and status contract"
         },
         {
             "python": "test_automation.WorkflowTest.test_reports_successful_run",
             "php": "DockerBase\\Tests\\Unit\\Automation\\WorkflowTest::test_reports_successful_run",
             "group": "automation",
             "fixture": "ported automation policy vector",
-            "assertion": "same value, exception, bytes, mutation, and status contract",
-            "status": "parity"
+            "assertion": "same value, exception, bytes, mutation, and status contract"
         },
         {
             "python": "test_automation.WorkflowTest.test_selects_newest_run_then_newest_rerun_attempt",
             "php": "DockerBase\\Tests\\Unit\\Automation\\WorkflowTest::test_selects_newest_run_then_newest_rerun_attempt",
             "group": "automation",
             "fixture": "ported automation policy vector",
-            "assertion": "same value, exception, bytes, mutation, and status contract",
-            "status": "parity"
+            "assertion": "same value, exception, bytes, mutation, and status contract"
         },
         {
             "python": "test_automation.WorkflowTest.test_selects_only_exact_runs_at_or_after_boundary",
             "php": "DockerBase\\Tests\\Unit\\Automation\\WorkflowTest::test_selects_only_exact_runs_at_or_after_boundary",
             "group": "automation",
             "fixture": "ported automation policy vector",
-            "assertion": "same value, exception, bytes, mutation, and status contract",
-            "status": "parity"
+            "assertion": "same value, exception, bytes, mutation, and status contract"
         },
         {
             "python": "test_automation.WorkflowTest.test_times_out_missing_run_at_deadline",
             "php": "DockerBase\\Tests\\Unit\\Automation\\WorkflowTest::test_times_out_missing_run_at_deadline",
             "group": "automation",
             "fixture": "ported automation policy vector",
-            "assertion": "same value, exception, bytes, mutation, and status contract",
-            "status": "parity"
+            "assertion": "same value, exception, bytes, mutation, and status contract"
         },
         {
             "python": "test_automation.WorkflowTest.test_times_out_pending_run_at_deadline",
             "php": "DockerBase\\Tests\\Unit\\Automation\\WorkflowTest::test_times_out_pending_run_at_deadline",
             "group": "automation",
             "fixture": "ported automation policy vector",
-            "assertion": "same value, exception, bytes, mutation, and status contract",
-            "status": "parity"
+            "assertion": "same value, exception, bytes, mutation, and status contract"
         },
         {
             "python": "test_dependencies.DockerfileTests.test_dry_run_does_not_mutate_dockerfile_or_siblings",
             "php": "DockerBase\\Tests\\Unit\\Dependency\\DockerfileTest::test_dry_run_does_not_mutate_dockerfile_or_siblings",
             "group": "dependency",
             "fixture": "ported dependency discovery and Dockerfile vector",
-            "assertion": "same value, exception, bytes, mutation, and status contract",
-            "status": "parity"
+            "assertion": "same value, exception, bytes, mutation, and status contract"
         },
         {
             "python": "test_dependencies.DockerfileTests.test_injects_every_external_interaction",
             "php": "DockerBase\\Tests\\Unit\\Dependency\\DockerfileTest::test_injects_every_external_interaction",
             "group": "dependency",
             "fixture": "ported dependency discovery and Dockerfile vector",
-            "assertion": "same value, exception, bytes, mutation, and status contract",
-            "status": "parity"
+            "assertion": "same value, exception, bytes, mutation, and status contract"
         },
         {
             "python": "test_dependencies.DockerfileTests.test_noop_plan_preserves_content_exactly",
             "php": "DockerBase\\Tests\\Unit\\Dependency\\DockerfileTest::test_noop_plan_preserves_content_exactly",
             "group": "dependency",
             "fixture": "ported dependency discovery and Dockerfile vector",
-            "assertion": "same value, exception, bytes, mutation, and status contract",
-            "status": "parity"
+            "assertion": "same value, exception, bytes, mutation, and status contract"
         },
         {
             "python": "test_dependencies.DockerfileTests.test_plans_updates_without_touching_references",
             "php": "DockerBase\\Tests\\Unit\\Dependency\\DockerfileTest::test_plans_updates_without_touching_references",
             "group": "dependency",
             "fixture": "ported dependency discovery and Dockerfile vector",
-            "assertion": "same value, exception, bytes, mutation, and status contract",
-            "status": "parity"
+            "assertion": "same value, exception, bytes, mutation, and status contract"
         },
         {
             "python": "test_dependencies.DockerfileTests.test_reads_every_expected_declaration_once",
             "php": "DockerBase\\Tests\\Unit\\Dependency\\DockerfileTest::test_reads_every_expected_declaration_once",
             "group": "dependency",
             "fixture": "ported dependency discovery and Dockerfile vector",
-            "assertion": "same value, exception, bytes, mutation, and status contract",
-            "status": "parity"
+            "assertion": "same value, exception, bytes, mutation, and status contract"
         },
         {
             "python": "test_dependencies.DockerfileTests.test_real_dockerfile_declarations_match_independent_contract",
             "php": "DockerBase\\Tests\\Unit\\Dependency\\DockerfileTest::test_real_dockerfile_declarations_match_independent_contract",
             "group": "dependency",
             "fixture": "ported dependency discovery and Dockerfile vector",
-            "assertion": "same value, exception, bytes, mutation, and status contract",
-            "status": "parity"
+            "assertion": "same value, exception, bytes, mutation, and status contract"
         },
         {
             "python": "test_dependencies.DockerfileTests.test_rejects_duplicate_declaration",
             "php": "DockerBase\\Tests\\Unit\\Dependency\\DockerfileTest::test_rejects_duplicate_declaration",
             "group": "dependency",
             "fixture": "ported dependency discovery and Dockerfile vector",
-            "assertion": "same value, exception, bytes, mutation, and status contract",
-            "status": "parity"
+            "assertion": "same value, exception, bytes, mutation, and status contract"
         },
         {
             "python": "test_dependencies.DockerfileTests.test_rejects_invalid_base_digest",
             "php": "DockerBase\\Tests\\Unit\\Dependency\\DockerfileTest::test_rejects_invalid_base_digest",
             "group": "dependency",
             "fixture": "ported dependency discovery and Dockerfile vector",
-            "assertion": "same value, exception, bytes, mutation, and status contract",
-            "status": "parity"
+            "assertion": "same value, exception, bytes, mutation, and status contract"
         },
         {
             "python": "test_dependencies.DockerfileTests.test_rejects_invalid_or_ambiguous_digest_output",
             "php": "DockerBase\\Tests\\Unit\\Dependency\\DockerfileTest::test_rejects_invalid_or_ambiguous_digest_output",
             "group": "dependency",
             "fixture": "ported dependency discovery and Dockerfile vector",
-            "assertion": "same value, exception, bytes, mutation, and status contract",
-            "status": "parity"
+            "assertion": "same value, exception, bytes, mutation, and status contract"
         },
         {
             "python": "test_dependencies.DockerfileTests.test_rejects_invalid_pin_spelling",
             "php": "DockerBase\\Tests\\Unit\\Dependency\\DockerfileTest::test_rejects_invalid_pin_spelling",
             "group": "dependency",
             "fixture": "ported dependency discovery and Dockerfile vector",
-            "assertion": "same value, exception, bytes, mutation, and status contract",
-            "status": "parity"
+            "assertion": "same value, exception, bytes, mutation, and status contract"
         },
         {
             "python": "test_dependencies.DockerfileTests.test_rejects_missing_and_duplicate_base_declarations",
             "php": "DockerBase\\Tests\\Unit\\Dependency\\DockerfileTest::test_rejects_missing_and_duplicate_base_declarations",
             "group": "dependency",
             "fixture": "ported dependency discovery and Dockerfile vector",
-            "assertion": "same value, exception, bytes, mutation, and status contract",
-            "status": "parity"
+            "assertion": "same value, exception, bytes, mutation, and status contract"
         },
         {
             "python": "test_dependencies.DockerfileTests.test_rejects_missing_declaration",
             "php": "DockerBase\\Tests\\Unit\\Dependency\\DockerfileTest::test_rejects_missing_declaration",
             "group": "dependency",
             "fixture": "ported dependency discovery and Dockerfile vector",
-            "assertion": "same value, exception, bytes, mutation, and status contract",
-            "status": "parity"
+            "assertion": "same value, exception, bytes, mutation, and status contract"
         },
         {
             "python": "test_dependencies.DockerfileTests.test_rejects_non_dockerfile_target",
             "php": "DockerBase\\Tests\\Unit\\Dependency\\DockerfileTest::test_rejects_non_dockerfile_target",
             "group": "dependency",
             "fixture": "ported dependency discovery and Dockerfile vector",
-            "assertion": "same value, exception, bytes, mutation, and status contract",
-            "status": "parity"
+            "assertion": "same value, exception, bytes, mutation, and status contract"
         },
         {
             "python": "test_dependencies.DockerfileTests.test_rejects_unknown_extension_declaration",
             "php": "DockerBase\\Tests\\Unit\\Dependency\\DockerfileTest::test_rejects_unknown_extension_declaration",
             "group": "dependency",
             "fixture": "ported dependency discovery and Dockerfile vector",
-            "assertion": "same value, exception, bytes, mutation, and status contract",
-            "status": "parity"
+            "assertion": "same value, exception, bytes, mutation, and status contract"
         },
         {
             "python": "test_dependencies.DockerfileTests.test_resolves_lowercase_multiarch_digest_through_buildx",
             "php": "DockerBase\\Tests\\Unit\\Dependency\\DockerfileTest::test_resolves_lowercase_multiarch_digest_through_buildx",
             "group": "dependency",
             "fixture": "ported dependency discovery and Dockerfile vector",
-            "assertion": "same value, exception, bytes, mutation, and status contract",
-            "status": "parity"
+            "assertion": "same value, exception, bytes, mutation, and status contract"
         },
         {
             "python": "test_dependencies.DockerfileTests.test_update_mutates_only_dockerfile",
             "php": "DockerBase\\Tests\\Unit\\Dependency\\DockerfileTest::test_update_mutates_only_dockerfile",
             "group": "dependency",
             "fixture": "ported dependency discovery and Dockerfile vector",
-            "assertion": "same value, exception, bytes, mutation, and status contract",
-            "status": "parity"
+            "assertion": "same value, exception, bytes, mutation, and status contract"
         },
         {
             "python": "test_dependencies.ReleaseParsingTests.test_filters_pecl_by_stable_state_and_exact_version",
             "php": "DockerBase\\Tests\\Unit\\Dependency\\ResolverTest::test_filters_pecl_by_stable_state_and_exact_version",
             "group": "dependency",
             "fixture": "ported dependency discovery and Dockerfile vector",
-            "assertion": "same value, exception, bytes, mutation, and status contract",
-            "status": "parity"
+            "assertion": "same value, exception, bytes, mutation, and status contract"
         },
         {
             "python": "test_dependencies.ReleaseParsingTests.test_parses_only_exact_git_version_tags",
             "php": "DockerBase\\Tests\\Unit\\Dependency\\ResolverTest::test_parses_only_exact_git_version_tags",
             "group": "dependency",
             "fixture": "ported dependency discovery and Dockerfile vector",
-            "assertion": "same value, exception, bytes, mutation, and status contract",
-            "status": "parity"
+            "assertion": "same value, exception, bytes, mutation, and status contract"
         },
         {
             "python": "test_dependencies.ReleaseParsingTests.test_rejects_invalid_pecl_xml",
             "php": "DockerBase\\Tests\\Unit\\Dependency\\ResolverTest::test_rejects_invalid_pecl_xml",
             "group": "dependency",
             "fixture": "ported dependency discovery and Dockerfile vector",
-            "assertion": "same value, exception, bytes, mutation, and status contract",
-            "status": "parity"
+            "assertion": "same value, exception, bytes, mutation, and status contract"
         },
         {
             "python": "test_dependencies.ReleaseParsingTests.test_rejects_source_with_no_stable_releases",
             "php": "DockerBase\\Tests\\Unit\\Dependency\\ResolverTest::test_rejects_source_with_no_stable_releases",
             "group": "dependency",
             "fixture": "ported dependency discovery and Dockerfile vector",
-            "assertion": "same value, exception, bytes, mutation, and status contract",
-            "status": "parity"
+            "assertion": "same value, exception, bytes, mutation, and status contract"
         },
         {
             "python": "test_dependencies.ReportTests.test_renders_explicit_noop_report",
             "php": "DockerBase\\Tests\\Unit\\Dependency\\ReporterTest::test_renders_explicit_noop_report",
             "group": "dependency",
             "fixture": "ported dependency discovery and Dockerfile vector",
-            "assertion": "same value, exception, bytes, mutation, and status contract",
-            "status": "parity"
+            "assertion": "same value, exception, bytes, mutation, and status contract"
         },
         {
             "python": "test_dependencies.ReportTests.test_renders_markdown_update_report",
             "php": "DockerBase\\Tests\\Unit\\Dependency\\ReporterTest::test_renders_markdown_update_report",
             "group": "dependency",
             "fixture": "ported dependency discovery and Dockerfile vector",
-            "assertion": "same value, exception, bytes, mutation, and status contract",
-            "status": "parity"
+            "assertion": "same value, exception, bytes, mutation, and status contract"
         },
         {
             "python": "test_dependencies.SourceTests.test_defines_all_thirteen_extensions",
             "php": "DockerBase\\Tests\\Unit\\Dependency\\CatalogTest::test_defines_all_thirteen_extensions",
             "group": "dependency",
             "fixture": "ported dependency discovery and Dockerfile vector",
-            "assertion": "same value, exception, bytes, mutation, and status contract",
-            "status": "parity"
+            "assertion": "same value, exception, bytes, mutation, and status contract"
         },
         {
             "python": "test_dependencies.SourceTests.test_domain_classes_are_in_matching_files",
             "php": "DockerBase\\Tests\\Unit\\Dependency\\CatalogTest::test_domain_classes_are_in_matching_files",
             "group": "dependency",
             "fixture": "ported dependency discovery and Dockerfile vector",
-            "assertion": "same value, exception, bytes, mutation, and status contract",
-            "status": "parity"
+            "assertion": "same value, exception, bytes, mutation, and status contract"
         },
         {
             "python": "test_dependencies.SourceTests.test_source_definitions_are_immutable",
             "php": "DockerBase\\Tests\\Unit\\Dependency\\CatalogTest::test_source_definitions_are_immutable",
             "group": "dependency",
             "fixture": "ported dependency discovery and Dockerfile vector",
-            "assertion": "same value, exception, bytes, mutation, and status contract",
-            "status": "parity"
+            "assertion": "same value, exception, bytes, mutation, and status contract"
         },
         {
             "python": "test_dependencies.SourceTests.test_uses_exact_dockerfile_sources",
             "php": "DockerBase\\Tests\\Unit\\Dependency\\CatalogTest::test_uses_exact_dockerfile_sources",
             "group": "dependency",
             "fixture": "ported dependency discovery and Dockerfile vector",
-            "assertion": "same value, exception, bytes, mutation, and status contract",
-            "status": "parity"
+            "assertion": "same value, exception, bytes, mutation, and status contract"
         },
         {
             "python": "test_dependencies.VersionTests.test_ignores_higher_major",
             "php": "DockerBase\\Tests\\Unit\\Dependency\\VersionTest::test_ignores_higher_major",
             "group": "dependency",
             "fixture": "ported dependency discovery and Dockerfile vector",
-            "assertion": "same value, exception, bytes, mutation, and status contract",
-            "status": "parity"
+            "assertion": "same value, exception, bytes, mutation, and status contract"
         },
         {
             "python": "test_dependencies.VersionTests.test_ignores_prereleases",
             "php": "DockerBase\\Tests\\Unit\\Dependency\\VersionTest::test_ignores_prereleases",
             "group": "dependency",
             "fixture": "ported dependency discovery and Dockerfile vector",
-            "assertion": "same value, exception, bytes, mutation, and status contract",
-            "status": "parity"
+            "assertion": "same value, exception, bytes, mutation, and status contract"
         },
         {
             "python": "test_dependencies.VersionTests.test_never_downgrades",
             "php": "DockerBase\\Tests\\Unit\\Dependency\\VersionTest::test_never_downgrades",
             "group": "dependency",
             "fixture": "ported dependency discovery and Dockerfile vector",
-            "assertion": "same value, exception, bytes, mutation, and status contract",
-            "status": "parity"
+            "assertion": "same value, exception, bytes, mutation, and status contract"
         },
         {
             "python": "test_dependencies.VersionTests.test_parses_only_exact_stable_versions",
             "php": "DockerBase\\Tests\\Unit\\Dependency\\VersionTest::test_parses_only_exact_stable_versions",
             "group": "dependency",
             "fixture": "ported dependency discovery and Dockerfile vector",
-            "assertion": "same value, exception, bytes, mutation, and status contract",
-            "status": "parity"
+            "assertion": "same value, exception, bytes, mutation, and status contract"
         },
         {
             "python": "test_dependencies.VersionTests.test_prefers_current_prefix_for_equivalent_tags",
             "php": "DockerBase\\Tests\\Unit\\Dependency\\VersionTest::test_prefers_current_prefix_for_equivalent_tags",
             "group": "dependency",
             "fixture": "ported dependency discovery and Dockerfile vector",
-            "assertion": "same value, exception, bytes, mutation, and status contract",
-            "status": "parity"
+            "assertion": "same value, exception, bytes, mutation, and status contract"
         },
         {
             "python": "test_dependencies.VersionTests.test_preserves_selected_upstream_prefix",
             "php": "DockerBase\\Tests\\Unit\\Dependency\\VersionTest::test_preserves_selected_upstream_prefix",
             "group": "dependency",
             "fixture": "ported dependency discovery and Dockerfile vector",
-            "assertion": "same value, exception, bytes, mutation, and status contract",
-            "status": "parity"
+            "assertion": "same value, exception, bytes, mutation, and status contract"
         },
         {
             "python": "test_dependencies.VersionTests.test_rejects_invalid_current_version",
             "php": "DockerBase\\Tests\\Unit\\Dependency\\VersionTest::test_rejects_invalid_current_version",
             "group": "dependency",
             "fixture": "ported dependency discovery and Dockerfile vector",
-            "assertion": "same value, exception, bytes, mutation, and status contract",
-            "status": "parity"
+            "assertion": "same value, exception, bytes, mutation, and status contract"
         },
         {
             "python": "test_dependencies.VersionTests.test_selects_minor_and_patch_updates",
             "php": "DockerBase\\Tests\\Unit\\Dependency\\VersionTest::test_selects_minor_and_patch_updates",
             "group": "dependency",
             "fixture": "ported dependency discovery and Dockerfile vector",
-            "assertion": "same value, exception, bytes, mutation, and status contract",
-            "status": "parity"
+            "assertion": "same value, exception, bytes, mutation, and status contract"
         },
         {
             "python": "test_dependencies.VersionTests.test_selects_semantic_maximum_not_lexical_maximum",
             "php": "DockerBase\\Tests\\Unit\\Dependency\\VersionTest::test_selects_semantic_maximum_not_lexical_maximum",
             "group": "dependency",
             "fixture": "ported dependency discovery and Dockerfile vector",
-            "assertion": "same value, exception, bytes, mutation, and status contract",
-            "status": "parity"
+            "assertion": "same value, exception, bytes, mutation, and status contract"
         },
         {
             "python": "test_orchestrator.OrchestratorTest.test_accepts_nonzero_merge_only_after_exact_remote_proof",
             "php": "DockerBase\\Tests\\Unit\\Automation\\OrchestratorTest::test_accepts_nonzero_merge_only_after_exact_remote_proof",
             "group": "adapter",
             "fixture": "ported GitHub command queue vector",
-            "assertion": "same value, exception, bytes, mutation, and status contract",
-            "status": "parity"
+            "assertion": "same value, exception, bytes, mutation, and status contract"
         },
         {
             "python": "test_orchestrator.OrchestratorTest.test_does_not_publish_when_prepublication_target_changed",
             "php": "DockerBase\\Tests\\Unit\\Automation\\OrchestratorTest::test_does_not_publish_when_prepublication_target_changed",
             "group": "adapter",
             "fixture": "ported GitHub command queue vector",
-            "assertion": "same value, exception, bytes, mutation, and status contract",
-            "status": "parity"
+            "assertion": "same value, exception, bytes, mutation, and status contract"
         },
         {
             "python": "test_orchestrator.OrchestratorTest.test_exact_lookup_finds_published_release_omitted_from_list",
             "php": "DockerBase\\Tests\\Unit\\Automation\\OrchestratorTest::test_exact_lookup_finds_published_release_omitted_from_list",
             "group": "adapter",
             "fixture": "ported GitHub command queue vector",
-            "assertion": "same value, exception, bytes, mutation, and status contract",
-            "status": "parity"
+            "assertion": "same value, exception, bytes, mutation, and status contract"
         },
         {
             "python": "test_orchestrator.OrchestratorTest.test_existing_exact_draft_avoids_duplicate_create",
             "php": "DockerBase\\Tests\\Unit\\Automation\\OrchestratorTest::test_existing_exact_draft_avoids_duplicate_create",
             "group": "adapter",
             "fixture": "ported GitHub command queue vector",
-            "assertion": "same value, exception, bytes, mutation, and status contract",
-            "status": "parity"
+            "assertion": "same value, exception, bytes, mutation, and status contract"
         },
         {
             "python": "test_orchestrator.OrchestratorTest.test_existing_published_release_prevents_duplicate_draft",
             "php": "DockerBase\\Tests\\Unit\\Automation\\OrchestratorTest::test_existing_published_release_prevents_duplicate_draft",
             "group": "adapter",
             "fixture": "ported GitHub command queue vector",
-            "assertion": "same value, exception, bytes, mutation, and status contract",
-            "status": "parity"
+            "assertion": "same value, exception, bytes, mutation, and status contract"
         },
         {
             "python": "test_orchestrator.OrchestratorTest.test_finds_draft_after_release_by_tag_returns_404",
             "php": "DockerBase\\Tests\\Unit\\Automation\\OrchestratorTest::test_finds_draft_after_release_by_tag_returns_404",
             "group": "adapter",
             "fixture": "ported GitHub command queue vector",
-            "assertion": "same value, exception, bytes, mutation, and status contract",
-            "status": "parity"
+            "assertion": "same value, exception, bytes, mutation, and status contract"
         },
         {
             "python": "test_orchestrator.OrchestratorTest.test_handles_missing_release_by_tag_as_none",
             "php": "DockerBase\\Tests\\Unit\\Automation\\OrchestratorTest::test_handles_missing_release_by_tag_as_none",
             "group": "adapter",
             "fixture": "ported GitHub command queue vector",
-            "assertion": "same value, exception, bytes, mutation, and status contract",
-            "status": "parity"
+            "assertion": "same value, exception, bytes, mutation, and status contract"
         },
         {
             "python": "test_orchestrator.OrchestratorTest.test_recovers_concurrently_created_draft_after_422",
             "php": "DockerBase\\Tests\\Unit\\Automation\\OrchestratorTest::test_recovers_concurrently_created_draft_after_422",
             "group": "adapter",
             "fixture": "ported GitHub command queue vector",
-            "assertion": "same value, exception, bytes, mutation, and status contract",
-            "status": "parity"
+            "assertion": "same value, exception, bytes, mutation, and status contract"
         },
         {
             "python": "test_orchestrator.OrchestratorTest.test_recovers_merge_cancelled_before_tag_on_next_no_diff_run",
             "php": "DockerBase\\Tests\\Unit\\Automation\\OrchestratorTest::test_recovers_merge_cancelled_before_tag_on_next_no_diff_run",
             "group": "adapter",
             "fixture": "ported GitHub command queue vector",
-            "assertion": "same value, exception, bytes, mutation, and status contract",
-            "status": "parity"
+            "assertion": "same value, exception, bytes, mutation, and status contract"
         },
         {
             "python": "test_orchestrator.OrchestratorTest.test_rejects_merge_when_squash_parent_is_not_tested_base",
             "php": "DockerBase\\Tests\\Unit\\Automation\\OrchestratorTest::test_rejects_merge_when_squash_parent_is_not_tested_base",
             "group": "adapter",
             "fixture": "ported GitHub command queue vector",
-            "assertion": "same value, exception, bytes, mutation, and status contract",
-            "status": "parity"
+            "assertion": "same value, exception, bytes, mutation, and status contract"
         },
         {
             "python": "test_orchestrator.OrchestratorTest.test_rejects_nonzero_merge_without_merged_remote_state",
             "php": "DockerBase\\Tests\\Unit\\Automation\\OrchestratorTest::test_rejects_nonzero_merge_without_merged_remote_state",
             "group": "adapter",
             "fixture": "ported GitHub command queue vector",
-            "assertion": "same value, exception, bytes, mutation, and status contract",
-            "status": "parity"
+            "assertion": "same value, exception, bytes, mutation, and status contract"
         },
         {
             "python": "test_orchestrator.OrchestratorTest.test_resolves_recovery_commit_when_rest_merge_sha_is_null",
             "php": "DockerBase\\Tests\\Unit\\Automation\\OrchestratorTest::test_resolves_recovery_commit_when_rest_merge_sha_is_null",
             "group": "adapter",
             "fixture": "ported GitHub command queue vector",
-            "assertion": "same value, exception, bytes, mutation, and status contract",
-            "status": "parity"
+            "assertion": "same value, exception, bytes, mutation, and status contract"
         },
         {
             "python": "test_orchestrator.OrchestratorTest.test_returns_release_to_draft_when_postpublication_target_changed",
             "php": "DockerBase\\Tests\\Unit\\Automation\\OrchestratorTest::test_returns_release_to_draft_when_postpublication_target_changed",
             "group": "adapter",
             "fixture": "ported GitHub command queue vector",
-            "assertion": "same value, exception, bytes, mutation, and status contract",
-            "status": "parity"
+            "assertion": "same value, exception, bytes, mutation, and status contract"
         }
     ]
 }

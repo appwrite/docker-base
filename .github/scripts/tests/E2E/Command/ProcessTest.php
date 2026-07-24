@@ -15,7 +15,7 @@ final class ProcessTest extends TestCase
 {
     public function testCapturesSuccessfulOutput(): void
     {
-        $result = new Process()->run([
+        $result = (new Process())->run([
             PHP_BINARY,
             '-r',
             'fwrite(STDOUT, \'ready\');',
@@ -28,7 +28,7 @@ final class ProcessTest extends TestCase
 
     public function testReturnsAnUncheckedFailure(): void
     {
-        $result = new Process()->run(
+        $result = (new Process())->run(
             [
                 PHP_BINARY,
                 '-r',
@@ -45,7 +45,7 @@ final class ProcessTest extends TestCase
     public function testThrowsACheckedFailureWithItsResult(): void
     {
         try {
-            new Process()->run([
+            (new Process())->run([
                 PHP_BINARY,
                 '-r',
                 'fwrite(STDERR, \'failed\'); exit(9);',

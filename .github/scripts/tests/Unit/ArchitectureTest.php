@@ -36,7 +36,6 @@ final class ArchitectureTest extends TestCase
                 'dependency' => 35,
                 'adapter' => 13,
                 'total' => 91,
-                'status' => 'passed',
             ],
             $equivalence['baseline'] ?? null,
         );
@@ -44,7 +43,6 @@ final class ArchitectureTest extends TestCase
             [
                 'bytes' => 5477,
                 'sha256' => '50736031df39f38434d6c09b455aa651e886a6a79319c951b631df8a49a93a77',
-                'status' => 'exact',
             ],
             $equivalence['deterministic'] ?? null,
         );
@@ -63,10 +61,7 @@ final class ArchitectureTest extends TestCase
             $group = $this->value($contract, 'group');
             $this->value($contract, 'fixture');
             $this->value($contract, 'assertion');
-            self::assertSame(
-                'parity',
-                $this->value($contract, 'status'),
-            );
+            self::assertArrayNotHasKey('status', $contract);
 
             $python[] = $pythonContract;
             $php[] = $phpContract;
@@ -100,12 +95,6 @@ final class ArchitectureTest extends TestCase
 
     public function test_contains_no_python_implementation_or_invocation(): void
     {
-        if (getenv('DOCKER_BASE_ALLOW_PYTHON') === '1') {
-            self::addToAssertionCount(1);
-
-            return;
-        }
-
         $root = dirname(__DIR__, 4);
         $python = [];
         $iterator = new RecursiveIteratorIterator(
@@ -144,6 +133,76 @@ final class ArchitectureTest extends TestCase
             0,
             preg_match('/\bpython(?:3)?\b|<<\s*[\'"]?PY\b/i', $workflow),
         );
+    }
+
+    public function test_declares_and_preflights_required_php_extensions(): void
+    {
+        $root = dirname(__DIR__, 4);
+        $document = file_get_contents($root . '/composer.json');
+        self::assertIsString($document);
+
+        try {
+            $composer = json_decode(
+                $document,
+                true,
+                512,
+                JSON_THROW_ON_ERROR,
+            );
+        } catch (JsonException $exception) {
+            self::fail($exception->getMessage());
+        }
+        self::assertIsArray($composer);
+        $requirements = $composer['require'] ?? null;
+        self::assertIsArray($requirements);
+
+        $extensions = [];
+        foreach ($requirements as $package => $constraint) {
+            if (! is_string($package) || ! str_starts_with($package, 'ext-')) {
+                continue;
+            }
+            self::assertSame('*', $constraint);
+            $extensions[] = substr($package, strlen('ext-'));
+        }
+        sort($extensions, SORT_STRING);
+        self::assertSame(
+            [
+                'dom',
+                'filter',
+                'json',
+                'libxml',
+                'mbstring',
+                'openssl',
+                'phar',
+                'tokenizer',
+                'xml',
+                'xmlwriter',
+            ],
+            $extensions,
+        );
+
+        $workflow = file_get_contents(
+            $root . '/.github/workflows/dependencies.yml',
+        );
+        self::assertIsString($workflow);
+        self::assertSame(
+            1,
+            preg_match(
+                '/\\$required = \\[(.*?)\\];/s',
+                $workflow,
+                $matched,
+            ),
+        );
+        $preflightBlock = $matched[1] ?? null;
+        self::assertIsString($preflightBlock);
+        self::assertSame(
+            10,
+            preg_match_all(
+                '/"([a-z][a-z0-9_]*)"/',
+                $preflightBlock,
+                $preflight,
+            ),
+        );
+        self::assertSame($extensions, $preflight[1]);
     }
 
     /**

@@ -12,7 +12,7 @@ use DockerBase\Dependency\Reporter;
 use DockerBase\Dependency\Resolver;
 use DockerBase\Dependency\Selector;
 use DockerBase\Dependency\Updater;
-use InvalidArgumentException;
+use DockerBase\Dependency\UsageException;
 use PHPUnit\Framework\TestCase;
 
 final class ConsoleTest extends TestCase
@@ -48,13 +48,33 @@ final class ConsoleTest extends TestCase
 
     public function test_rejects_unknown_arguments(): void
     {
-        $this->expectException(InvalidArgumentException::class);
+        $this->expectException(UsageException::class);
         $this->expectExceptionMessage(
             "Unknown dependency updater argument '--unknown'",
         );
 
         $this->console('/tmp/Dockerfile', new Discovery())
             ->execute(['--unknown']);
+    }
+
+    public function test_renders_concise_help_without_updating(): void
+    {
+        self::assertSame(
+            Console::USAGE,
+            $this->console('/tmp/Dockerfile', new Discovery())
+                ->execute(['--help']),
+        );
+    }
+
+    public function test_rejects_help_combined_with_other_arguments(): void
+    {
+        $this->expectException(UsageException::class);
+        $this->expectExceptionMessage(
+            '--help cannot be combined with other arguments',
+        );
+
+        $this->console('/tmp/Dockerfile', new Discovery())
+            ->execute(['--help', '--dry-run']);
     }
 
     private function console(

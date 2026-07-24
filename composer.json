@@ -4,6 +4,16 @@
     "type": "project",
     "license": "MIT",
     "require": {
+        "ext-dom": "*",
+        "ext-filter": "*",
+        "ext-json": "*",
+        "ext-libxml": "*",
+        "ext-mbstring": "*",
+        "ext-openssl": "*",
+        "ext-phar": "*",
+        "ext-tokenizer": "*",
+        "ext-xml": "*",
+        "ext-xmlwriter": "*",
         "php": ">=8.3"
     },
     "require-dev": {
@@ -32,11 +42,13 @@
         "lint": "vendor/bin/pint --test",
         "format": "vendor/bin/pint",
         "check": "vendor/bin/phpstan analyse --configuration=phpstan.neon --memory-limit=1G",
-        "test": "vendor/bin/phpunit --configuration=phpunit.xml",
+        "test": "vendor/bin/phpunit --configuration=phpunit.xml --log-junit=.phpunit.results.xml",
+        "parity": "php .github/scripts/bin/parity.php .phpunit.results.xml",
         "verify": [
             "@lint",
             "@check",
-            "@test"
+            "@test",
+            "@parity"
         ]
     }
 }

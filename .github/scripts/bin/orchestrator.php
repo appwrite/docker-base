@@ -19,9 +19,13 @@ $repository = getenv('GITHUB_REPOSITORY')
     ?: throw new RuntimeException('GITHUB_REPOSITORY is required');
 $version = getenv('GITHUB_API_VERSION')
     ?: throw new RuntimeException('GITHUB_API_VERSION is required');
-$input = stream_get_contents(STDIN);
-if ($input === false) {
-    throw new RuntimeException('Unable to read standard input');
+$arguments = array_slice($argv, 1);
+$input = '';
+if (($arguments[0] ?? null) === 'validate-pull') {
+    $input = stream_get_contents(STDIN);
+    if ($input === false) {
+        throw new RuntimeException('Unable to read standard input');
+    }
 }
 
 $application = new Application(
@@ -32,7 +36,7 @@ $application = new Application(
     ),
 );
 $output = (new WorkflowOutput(
-    $application->execute(array_slice($argv, 1), $input),
+    $application->execute($arguments, $input),
 ))->render();
 
 if ($output !== '') {
