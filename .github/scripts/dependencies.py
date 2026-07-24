@@ -9,96 +9,41 @@ import subprocess
 import sys
 import urllib.request
 import xml.etree.ElementTree as ElementTree
-from collections.abc import Callable, Iterable, Sequence
-from dataclasses import dataclass
+from collections.abc import Iterable, Sequence
 from pathlib import Path
+
+from dependency.Change import Change
+from dependency.CommandRunner import CommandRunner
+from dependency.Dependency import Dependency
+from dependency.Fetcher import Fetcher
+from dependency.GitSource import GitSource
+from dependency.PeclSource import PeclSource
+from dependency.Pin import Pin
+from dependency.Plan import Plan
+from dependency.Source import Source
+from dependency.UpdateError import UpdateError
+from dependency.Version import Version
 
 
 BASE_NAME = 'php:8.5-alpine'
 BASE_PATTERN = re.compile(
     rf'{re.escape(BASE_NAME)}@(sha256:[0-9a-f]{{64}})'
 )
+DECLARATION_LINE_PATTERN = re.compile(
+    r'(?m)^[ \t]*(?:(?:ARG|ENV)[ \t]+[^\r\n]*|'
+    r'PHP_[A-Za-z0-9_]+_VERSION[^\r\n]*)$'
+)
+DECLARATION_PATTERN = re.compile(
+    r'(?<![$A-Za-z0-9_])'
+    r'(PHP_[A-Za-z0-9_]+_VERSION)'
+    r'(?=[ \t]*(?:=|$))'
+)
 DIGEST_PATTERN = re.compile(r'sha256:[0-9a-f]{64}')
-VERSION_PATTERN = re.compile(r'v?([0-9]+)\.([0-9]+)\.([0-9]+)')
+VERSION_COMPONENT = r'(0|[1-9][0-9]*)'
+VERSION_PATTERN = re.compile(
+    rf'v?{VERSION_COMPONENT}\.{VERSION_COMPONENT}\.{VERSION_COMPONENT}'
+)
 PECL_RELEASES = 'https://pecl.php.net/rest/r/protobuf/allreleases.xml'
-
-CommandRunner = Callable[[tuple[str, ...]], str]
-Fetcher = Callable[[str], bytes]
-
-
-class UpdateError(RuntimeError):
-    """Raised when dependency discovery or Dockerfile validation fails."""
-
-
-@dataclass(frozen=True, slots=True)
-class GitSource:
-    """A git repository whose exact version tags are release candidates."""
-
-    url: str
-
-
-@dataclass(frozen=True, slots=True)
-class PeclSource:
-    """A PECL stable-release feed."""
-
-    url: str
-
-
-Source = GitSource | PeclSource
-
-
-@dataclass(frozen=True, order=True, slots=True)
-class Version:
-    """A stable semantic release."""
-
-    major: int
-    minor: int
-    patch: int
-
-
-@dataclass(frozen=True, slots=True)
-class Dependency:
-    """A Dockerfile variable and its authoritative release source."""
-
-    name: str
-    variable: str
-    source: Source
-
-
-@dataclass(frozen=True, slots=True)
-class Pin:
-    """An exact declaration location in the Dockerfile."""
-
-    name: str
-    current: str
-    start: int
-    end: int
-
-
-@dataclass(frozen=True, slots=True)
-class Change:
-    """The current and selected value for one dependency."""
-
-    name: str
-    current: str
-    latest: str
-
-    @property
-    def changed(self) -> bool:
-        return self.current != self.latest
-
-
-@dataclass(frozen=True, slots=True)
-class Plan:
-    """The complete in-memory Dockerfile update."""
-
-    content: str
-    changes: tuple[Change, ...]
-
-    @property
-    def changed(self) -> bool:
-        return any(change.changed for change in self.changes)
-
 
 DEPENDENCIES: tuple[Dependency, ...] = (
     Dependency(
@@ -335,6 +280,20 @@ def discover_releases(
 
 def read_pins(content: str) -> tuple[Pin, ...]:
     """Validate and locate every expected Dockerfile declaration once."""
+
+    expected = {dependency.variable for dependency in DEPENDENCIES}
+    declared = {
+        match.group(1)
+        for line in DECLARATION_LINE_PATTERN.finditer(content)
+        for match in DECLARATION_PATTERN.finditer(line.group(0))
+    }
+    unknown = tuple(sorted(declared - expected))
+    if unknown:
+        raise UpdateError(
+            'Unknown PHP extension version '
+            f'declaration{"s" if len(unknown) != 1 else ""}: '
+            f'{", ".join(unknown)}'
+        )
 
     image_expression = re.compile(
         r'(?m)^[ \t]*ARG[ \t]+BASE_IMAGE="([^"\r\n]+)"[ \t]*$'
