@@ -4,23 +4,28 @@ declare(strict_types=1);
 
 namespace DockerBase\Automation;
 
+use Override;
 use Stringable;
 
 final readonly class Version implements Stringable
 {
+    private const string COMPONENT = '/\A(?:0|[1-9][0-9]*)\z/D';
+
     private const string PATTERN = '/\A(0|[1-9][0-9]*)\.'
         . '(0|[1-9][0-9]*)\.'
         . '(0|[1-9][0-9]*)\z/D';
 
     public function __construct(
-        public int $major,
-        public int $minor,
-        public int $patch,
+        public string $major,
+        public string $minor,
+        public string $patch,
     ) {
-        if ($major < 0 || $minor < 0 || $patch < 0) {
-            throw new VersionInvalidException(
-                'Version components cannot be negative',
-            );
+        foreach ([$major, $minor, $patch] as $component) {
+            if (preg_match(self::COMPONENT, $component) !== 1) {
+                throw new VersionInvalidException(
+                    'Version components must be canonical non-negative integers',
+                );
+            }
         }
     }
 
@@ -31,14 +36,7 @@ final readonly class Version implements Stringable
             return null;
         }
 
-        $major = self::component($matches[1]);
-        $minor = self::component($matches[2]);
-        $patch = self::component($matches[3]);
-        if ($major === null || $minor === null || $patch === null) {
-            return null;
-        }
-
-        return new self($major, $minor, $patch);
+        return new self($matches[1], $matches[2], $matches[3]);
     }
 
     /**
@@ -173,35 +171,55 @@ final readonly class Version implements Stringable
 
     public function nextPatch(): self
     {
-        if ($this->patch === PHP_INT_MAX) {
-            throw new VersionInvalidException(
-                'Patch version cannot be incremented',
-            );
-        }
-
-        return new self($this->major, $this->minor, $this->patch + 1);
+        return new self(
+            $this->major,
+            $this->minor,
+            self::increment($this->patch),
+        );
     }
 
     public function compare(self $other): int
     {
-        return [$this->major, $this->minor, $this->patch]
-            <=> [$other->major, $other->minor, $other->patch];
+        foreach ([
+            [$this->major, $other->major],
+            [$this->minor, $other->minor],
+            [$this->patch, $other->patch],
+        ] as [$current, $candidate]) {
+            $comparison = strlen($current) <=> strlen($candidate);
+            if ($comparison !== 0) {
+                return $comparison;
+            }
+
+            $comparison = strcmp($current, $candidate) <=> 0;
+            if ($comparison !== 0) {
+                return $comparison;
+            }
+        }
+
+        return 0;
     }
 
-    #[\Override]
+    #[Override]
     public function __toString(): string
     {
         return "{$this->major}.{$this->minor}.{$this->patch}";
     }
 
-    private static function component(string $value): ?int
+    private static function increment(string $value): string
     {
-        $component = filter_var(
-            $value,
-            FILTER_VALIDATE_INT,
-            ['options' => ['min_range' => 0]],
-        );
+        $incremented = $value;
+        for ($index = strlen($incremented) - 1; $index >= 0; $index--) {
+            if ($incremented[$index] === '9') {
+                $incremented[$index] = '0';
 
-        return is_int($component) ? $component : null;
+                continue;
+            }
+
+            $incremented[$index] = chr(ord($incremented[$index]) + 1);
+
+            return $incremented;
+        }
+
+        return '1' . $incremented;
     }
 }

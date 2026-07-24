@@ -90,19 +90,11 @@ final class OrchestratorTest extends TestCase
     {
         $first = str_repeat('a', 40);
         $second = str_repeat('b', 40);
+        $tags = [
+            new Tag('1.4.3', $first),
+            new Tag('1.4.4', $second),
+        ];
         $runner = new Queue([
-            $this->commandResult(
-                output: $this->pages([
-                    [
-                        'ref' => 'refs/tags/1.4.3',
-                        'object' => ['type' => 'commit', 'sha' => $first],
-                    ],
-                    [
-                        'ref' => 'refs/tags/1.4.4',
-                        'object' => ['type' => 'commit', 'sha' => $second],
-                    ],
-                ]),
-            ),
             $this->commandResult(
                 output: $this->pages([
                     $this->release(
@@ -137,7 +129,7 @@ final class OrchestratorTest extends TestCase
             ),
         ]);
 
-        $releases = $this->github($runner)->releases();
+        $releases = $this->github($runner)->releases($tags);
 
         self::assertSame(
             ['1.4.3', '1.4.4'],
@@ -149,11 +141,76 @@ final class OrchestratorTest extends TestCase
         self::assertSame(0, $runner->remaining());
         self::assertStringEndsWith(
             '/releases/tags/1.4.3',
-            $runner->commands()[2]['command'][4],
+            $runner->commands()[1]['command'][4],
         );
         self::assertStringEndsWith(
             '/releases/tags/1.4.4',
-            $runner->commands()[3]['command'][4],
+            $runner->commands()[2]['command'][4],
+        );
+        self::assertSame(
+            [],
+            array_filter(
+                $runner->commands(),
+                static fn (array $call): bool => str_contains(
+                    $call['command'][4] ?? '',
+                    '/git/matching-refs/tags/',
+                ),
+            ),
+        );
+    }
+
+    public function test_release_discovery_orders_unbounded_snapshot_semantically(): void
+    {
+        $lower = '1.18446744073709551616.0';
+        $higher = '1.18446744073709551617.0';
+        $first = str_repeat('a', 40);
+        $second = str_repeat('b', 40);
+        $runner = new Queue([
+            $this->commandResult(
+                output: $this->pages([
+                    $this->release(
+                        identifier: 9,
+                        tag: $lower,
+                        target: $first,
+                        draft: false,
+                    ),
+                    $this->release(
+                        identifier: 10,
+                        tag: $higher,
+                        target: $second,
+                        draft: false,
+                    ),
+                ]),
+            ),
+            $this->commandResult(
+                output: json_encode(
+                    $this->release(
+                        identifier: 10,
+                        tag: $higher,
+                        target: $second,
+                        draft: false,
+                    ),
+                    JSON_THROW_ON_ERROR,
+                ),
+            ),
+        ]);
+
+        $releases = $this->github($runner)->releases([
+            new Tag($lower, $first),
+            new Tag($higher, $second),
+        ]);
+
+        self::assertSame(
+            [$higher],
+            array_map(
+                static fn (Recovery $release): string => $release->tag,
+                $releases,
+            ),
+        );
+        self::assertSame(0, $runner->remaining());
+        self::assertStringEndsWith(
+            "/releases/tags/{$higher}",
+            $runner->commands()[1]['command'][4],
         );
     }
 
@@ -163,34 +220,42 @@ final class OrchestratorTest extends TestCase
         $target = str_repeat('b', 40);
         $head = str_repeat('c', 40);
         $base = str_repeat('d', 40);
-        $repository = $this->createStub(Repository::class);
-        $repository->method('tags')->willReturn([
+        $tags = [
             new Tag('1.4.4', $released),
-        ]);
-        $repository->method('releases')->willReturn([
-            new Recovery(
-                9,
-                '1.4.4',
-                $released,
-                0,
-                false,
-                false,
-                '',
-            ),
-        ]);
-        $repository->method('mergedPullRequests')->willReturn([
-            new Merge(
-                number: 75,
-                target: $target,
-                head: $head,
-                parents: [$base],
-                base: 'main',
-                branch: 'automation/dependencies-100-1',
-                body: $this->pullBody($head, $base),
-                files: ['Dockerfile'],
-                state: 'merged',
-            ),
-        ]);
+        ];
+        $repository = $this->repository();
+        $repository->expects(self::once())
+            ->method('tags')
+            ->willReturn($tags);
+        $repository->expects(self::once())
+            ->method('releases')
+            ->with(self::identicalTo($tags))
+            ->willReturn([
+                new Recovery(
+                    9,
+                    '1.4.4',
+                    $released,
+                    0,
+                    false,
+                    false,
+                    '',
+                ),
+            ]);
+        $repository->expects(self::once())
+            ->method('mergedPullRequests')
+            ->willReturn([
+                new Merge(
+                    number: 75,
+                    target: $target,
+                    head: $head,
+                    parents: [$base],
+                    base: 'main',
+                    branch: 'automation/dependencies-100-1',
+                    body: $this->pullBody($head, $base),
+                    files: ['Dockerfile'],
+                    state: 'merged',
+                ),
+            ]);
 
         $candidate = $this->orchestrator($repository)->recover();
 

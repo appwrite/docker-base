@@ -39,9 +39,11 @@ final readonly class Orchestrator
 
     public function recover(): ?Candidate
     {
+        $tags = $this->repository->tags();
+
         return RecoverySelector::select(
-            $this->repository->tags(),
-            $this->repository->releases(),
+            $tags,
+            $this->repository->releases($tags),
             $this->repository->mergedPullRequests(),
         );
     }

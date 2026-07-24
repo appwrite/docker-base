@@ -14,9 +14,11 @@ interface Repository
     public function releaseByTag(string $tag): ?Recovery;
 
     /**
+     * @param list<Tag> $tags
+     *
      * @return list<Recovery>
      */
-    public function releases(): array;
+    public function releases(array $tags): array;
 
     /**
      * @return list<Merge>
