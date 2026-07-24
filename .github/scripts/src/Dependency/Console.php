@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace DockerBase\Dependency;
 
+use Throwable;
+use Utopia\CLI\CLI;
+
 final readonly class Console
 {
     public const string USAGE = 'Usage: dependencies.php [--dry-run] [--dockerfile PATH]';
@@ -29,44 +32,48 @@ final readonly class Console
             );
         }
 
-        $dockerfile = $this->dockerfile;
-        $dryRun = false;
-
+        $normalized = ['dependencies.php', 'update'];
         for ($index = 0; $index < count($arguments); ++$index) {
             $argument = $arguments[$index];
             if ($argument === '--dry-run') {
-                $dryRun = true;
-
-                continue;
-            }
-            if ($argument === '--dockerfile') {
-                $dockerfile = $arguments[++$index] ?? '';
-                if ($dockerfile === '') {
-                    throw new UsageException(
-                        '--dockerfile requires a path',
-                    );
+                $normalized[] = '--dry-run=true';
+            } elseif ($argument === '--dockerfile') {
+                $path = $arguments[++$index] ?? '';
+                if ($path === '') {
+                    throw new UsageException('--dockerfile requires a path');
                 }
-
-                continue;
-            }
-            if (str_starts_with($argument, '--dockerfile=')) {
-                $dockerfile = substr($argument, strlen('--dockerfile='));
-                if ($dockerfile === '') {
-                    throw new UsageException(
-                        '--dockerfile requires a path',
-                    );
+                $normalized[] = '--dockerfile=' . $path;
+            } elseif (str_starts_with($argument, '--dockerfile=')) {
+                $path = substr($argument, strlen('--dockerfile='));
+                if ($path === '') {
+                    throw new UsageException('--dockerfile requires a path');
                 }
-
-                continue;
+                $normalized[] = $argument;
+            } else {
+                throw new UsageException("Unknown dependency updater argument '{$argument}'");
             }
-
-            throw new UsageException(
-                "Unknown dependency updater argument '{$argument}'",
-            );
         }
 
-        return $this->reporter->render(
-            $this->updater->update($dockerfile, $dryRun),
-        );
+        $cli = new CLI(args: $normalized);
+        $result = '';
+        $failure = null;
+        $cli->task('update')->action(function () use ($cli, &$result): void {
+            $args = $cli->getArgs();
+            $dockerfile = is_string($args['dockerfile'] ?? null)
+                ? $args['dockerfile']
+                : $this->dockerfile;
+            $dryRun = ($args['dry-run'] ?? 'false') === 'true';
+            $result = $this->reporter->render($this->updater->update($dockerfile, $dryRun));
+        });
+        $cli->error()->action(function () use ($cli, &$failure): void {
+            $failure = $cli->getResource('error');
+        });
+        $cli->run();
+
+        if ($failure instanceof Throwable) {
+            throw $failure;
+        }
+
+        return $result;
     }
 }
