@@ -14,7 +14,9 @@
         "ext-tokenizer": "*",
         "ext-xml": "*",
         "ext-xmlwriter": "*",
-        "php": ">=8.3"
+        "php": ">=8.3",
+        "utopia-php/cli": "0.*",
+        "utopia-php/console": "0.2.*"
     },
     "require-dev": {
         "laravel/pint": "1.*",
