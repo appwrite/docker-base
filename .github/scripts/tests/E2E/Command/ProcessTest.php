@@ -78,4 +78,54 @@ final class ProcessTest extends TestCase
 
         self::assertSame('present|absent', $result->output);
     }
+
+    public function testHonorsAndRestoresWorkingDirectoryWithoutExplicitEnvironment(): void
+    {
+        $directory = sys_get_temp_dir();
+        $workingDirectory = getcwd();
+        if ($workingDirectory === false) {
+            self::fail('Unable to determine the current working directory');
+        }
+
+        $result = (new Process($directory))->run([
+            PHP_BINARY,
+            '-r',
+            'echo getcwd();',
+        ]);
+
+        self::assertSame(realpath($directory), $result->output);
+        self::assertSame($workingDirectory, getcwd());
+    }
+
+    public function testRestoresWorkingDirectoryWhenCommandFails(): void
+    {
+        $directory = sys_get_temp_dir();
+        $workingDirectory = getcwd();
+        if ($workingDirectory === false) {
+            self::fail('Unable to determine the current working directory');
+        }
+
+        try {
+            (new Process($directory))->run([
+                PHP_BINARY,
+                '-r',
+                'exit(11);',
+            ]);
+            self::fail('A checked command failure must throw');
+        } catch (Exception $exception) {
+            self::assertSame(11, $exception->result?->code);
+        }
+
+        self::assertSame($workingDirectory, getcwd());
+    }
+
+    public function testRejectsAnInvalidWorkingDirectory(): void
+    {
+        $directory = sys_get_temp_dir() . '/docker-base-missing-directory';
+
+        $this->expectException(Exception::class);
+        $this->expectExceptionMessage("Unable to start command in directory: {$directory}");
+
+        (new Process($directory))->run([PHP_BINARY, '-r', 'echo "ready";']);
+    }
 }

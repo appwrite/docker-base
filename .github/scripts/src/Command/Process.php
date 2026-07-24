@@ -22,14 +22,11 @@ final readonly class Process implements Runner
             throw new Exception($command, message: 'A command must contain non-empty arguments');
         }
 
-        if ($this->environment !== null) {
+        if ($this->environment !== null || $this->directory !== null) {
             return $this->runWithEnvironment($command, $check);
         }
 
-        $stdout = '';
-        $stderr = '';
-        $code = Console::execute($command, '', $stdout, $stderr);
-        $result = new Result($code, $stdout, $stderr);
+        $result = $this->executeConsole($command);
         if ($check && ! $result->succeeded()) {
             throw new Exception($command, $result);
         }
@@ -38,8 +35,22 @@ final readonly class Process implements Runner
     }
 
     /** @param list<string> $command */
+    private function executeConsole(array $command): Result
+    {
+        $stdout = '';
+        $stderr = '';
+        $code = Console::execute($command, '', $stdout, $stderr);
+
+        return new Result($code, $stdout, $stderr);
+    }
+
+    /** @param list<string> $command */
     private function runWithEnvironment(array $command, bool $check): Result
     {
+        if ($this->directory !== null && ! is_dir($this->directory)) {
+            throw new Exception($command, message: "Unable to start command in directory: {$this->directory}");
+        }
+
         $input = tmpfile();
         $output = tmpfile();
         $error = tmpfile();
@@ -56,7 +67,10 @@ final readonly class Process implements Runner
             $pipes = [];
             $process = proc_open($command, [0 => $input, 1 => $output, 2 => $error], $pipes, $this->directory, $this->environment, ['bypass_shell' => true]);
             if (! is_resource($process)) {
-                throw new Exception($command, message: 'Unable to start command');
+                $message = $this->directory === null
+                    ? 'Unable to start command'
+                    : "Unable to start command in directory: {$this->directory}";
+                throw new Exception($command, message: $message);
             }
             $code = proc_close($process);
             rewind($output);
