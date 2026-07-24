@@ -61,4 +61,21 @@ final class ProcessTest extends TestCase
             self::assertSame('failed', $result->error);
         }
     }
+
+    public function testExplicitEnvironmentReplacesInheritedEnvironment(): void
+    {
+        putenv('DOCKER_BASE_INHERITED_SENTINEL=should-not-leak');
+
+        try {
+            $result = (new Process(environment: ['DOCKER_BASE_MARKER' => 'present']))->run([
+                PHP_BINARY,
+                '-r',
+                'echo getenv("DOCKER_BASE_MARKER") . "|" . (getenv("DOCKER_BASE_INHERITED_SENTINEL") ?: "absent");',
+            ]);
+        } finally {
+            putenv('DOCKER_BASE_INHERITED_SENTINEL');
+        }
+
+        self::assertSame('present|absent', $result->output);
+    }
 }
