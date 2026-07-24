@@ -1,1 +1,4 @@
 .idea
+/.phpstan-cache/
+/.phpunit.cache/
+/vendor/
