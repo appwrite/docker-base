@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace DockerBase\Tests\Unit\Automation;
 
+use DateTimeImmutable;
 use DockerBase\Automation\Clock;
 use DockerBase\Automation\HeadChangedException;
 use DockerBase\Automation\Merge;
@@ -16,6 +17,7 @@ use DockerBase\Automation\Recovery;
 use DockerBase\Automation\Repository;
 use DockerBase\Automation\Repository\GitHub;
 use DockerBase\Automation\ReviewDecision;
+use DockerBase\Automation\Run;
 use DockerBase\Automation\Sleeper;
 use DockerBase\Automation\Tag;
 use DockerBase\Automation\TargetMismatchException;
@@ -161,7 +163,7 @@ final class OrchestratorTest extends TestCase
         $target = str_repeat('b', 40);
         $head = str_repeat('c', 40);
         $base = str_repeat('d', 40);
-        $repository = $this->repository();
+        $repository = $this->createStub(Repository::class);
         $repository->method('tags')->willReturn([
             new Tag('1.4.4', $released),
         ]);
@@ -523,6 +525,88 @@ final class OrchestratorTest extends TestCase
             $target,
             75,
             10,
+        );
+    }
+
+    public function test_waits_for_the_four_exact_current_head_workflows(): void
+    {
+        $head = str_repeat('a', 40);
+        $branch = 'automation/dependencies-100-1';
+        $created = new DateTimeImmutable('2026-07-24T08:00:00+00:00');
+        $expected = [
+            ['build-and-push.yml', 'Build and Push', 'push'],
+            ['dive.yml', 'Dive Test', 'push'],
+            [
+                'structure-test.yml',
+                'Container Structure Test',
+                'push',
+            ],
+            ['trivy.yml', 'Trivy Scan', 'pull_request'],
+        ];
+        $actual = [];
+        $repository = $this->repository();
+        $repository->expects(self::exactly(4))
+            ->method('runs')
+            ->willReturnCallback(
+                static function (
+                    string $filename,
+                    string $event,
+                    string $runHead,
+                    string $runBranch,
+                ) use (
+                    &$actual,
+                    $expected,
+                    $head,
+                    $branch,
+                    $created,
+                ): array {
+                    $index = count($actual);
+                    [$expectedFilename, $workflow, $expectedEvent] =
+                        $expected[$index];
+                    $actual[] = [$filename, $workflow, $event];
+                    self::assertSame($expectedFilename, $filename);
+                    self::assertSame($expectedEvent, $event);
+                    self::assertSame($head, $runHead);
+                    self::assertSame($branch, $runBranch);
+
+                    return [
+                        new Run(
+                            $index + 1,
+                            $workflow,
+                            $event,
+                            $head,
+                            $branch,
+                            $created,
+                            1,
+                            'completed',
+                            'success',
+                        ),
+                    ];
+                },
+            );
+        $clock = $this->createStub(Clock::class);
+        $clock->method('now')->willReturn($created);
+        $sleeper = $this->createMock(Sleeper::class);
+        $sleeper->expects(self::never())->method('sleep');
+
+        (new Orchestrator($repository, $clock, $sleeper))->checks(
+            $branch,
+            $head,
+            '2026-07-24T08:00:00Z',
+        );
+
+        self::assertSame($expected, $actual);
+    }
+
+    public function test_rejects_a_non_utc_workflow_boundary(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('absolute UTC timestamp');
+
+        $this->orchestrator($this->createStub(Repository::class))->checks(
+            'automation/dependencies-100-1',
+            str_repeat('a', 40),
+            '2026-07-24T20:00:00+12:00',
         );
     }
 
