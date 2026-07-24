@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace DockerBase\Dependency;
 
-use InvalidArgumentException;
-
 final readonly class Console
 {
+    public const string USAGE = 'Usage: dependencies.php [--dry-run] [--dockerfile PATH]';
+
     public function __construct(
         private Updater $updater,
         private Reporter $reporter,
@@ -20,6 +20,15 @@ final readonly class Console
      */
     public function execute(array $arguments): string
     {
+        if ($arguments === ['--help']) {
+            return self::USAGE;
+        }
+        if (in_array('--help', $arguments, true)) {
+            throw new UsageException(
+                '--help cannot be combined with other arguments',
+            );
+        }
+
         $dockerfile = $this->dockerfile;
         $dryRun = false;
 
@@ -33,7 +42,7 @@ final readonly class Console
             if ($argument === '--dockerfile') {
                 $dockerfile = $arguments[++$index] ?? '';
                 if ($dockerfile === '') {
-                    throw new InvalidArgumentException(
+                    throw new UsageException(
                         '--dockerfile requires a path',
                     );
                 }
@@ -43,7 +52,7 @@ final readonly class Console
             if (str_starts_with($argument, '--dockerfile=')) {
                 $dockerfile = substr($argument, strlen('--dockerfile='));
                 if ($dockerfile === '') {
-                    throw new InvalidArgumentException(
+                    throw new UsageException(
                         '--dockerfile requires a path',
                     );
                 }
@@ -51,7 +60,7 @@ final readonly class Console
                 continue;
             }
 
-            throw new InvalidArgumentException(
+            throw new UsageException(
                 "Unknown dependency updater argument '{$argument}'",
             );
         }

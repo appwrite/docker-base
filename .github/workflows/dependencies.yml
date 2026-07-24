@@ -43,6 +43,7 @@ jobs:
               "json",
               "libxml",
               "mbstring",
+              "openssl",
               "phar",
               "tokenizer",
               "xml",
