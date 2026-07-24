@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace DockerBase\Dependency;
 
-use DOMDocument;
-use DOMElement;
 use DockerBase\Command\Exception as CommandException;
 use DockerBase\Command\Runner;
 use DockerBase\Dependency\Source\Git;
 use DockerBase\Dependency\Source\PECL;
+use DOMDocument;
+use DOMElement;
 
 final readonly class Resolver
 {

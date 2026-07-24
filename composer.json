@@ -39,8 +39,8 @@
         "sort-packages": true
     },
     "scripts": {
-        "lint": "vendor/bin/pint --test",
-        "format": "vendor/bin/pint",
+        "lint": "vendor/bin/pint --test .github/scripts",
+        "format": "vendor/bin/pint .github/scripts",
         "check": "vendor/bin/phpstan analyse --configuration=phpstan.neon --memory-limit=1G",
         "test": "vendor/bin/phpunit --configuration=phpunit.xml --log-junit=.phpunit.results.xml",
         "parity": "php .github/scripts/bin/parity.php .phpunit.results.xml",
