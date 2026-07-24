@@ -386,7 +386,8 @@ class MergeResultTest(unittest.TestCase):
                 head='a' * 40,
                 state='merged',
                 commit='b' * 40,
-            ).validate('a' * 40),
+                parents=('c' * 40,),
+            ).validate('a' * 40, 'c' * 40),
         )
 
     def test_rejects_merged_state_for_a_different_final_head(self) -> None:
@@ -395,7 +396,26 @@ class MergeResultTest(unittest.TestCase):
                 head='c' * 40,
                 state='merged',
                 commit='b' * 40,
-            ).validate('a' * 40)
+                parents=('d' * 40,),
+            ).validate('a' * 40, 'd' * 40)
+
+    def test_rejects_merge_commit_for_a_different_tested_base(self) -> None:
+        with self.assertRaises(HeadChangedError):
+            MergeResult(
+                head='a' * 40,
+                state='merged',
+                commit='b' * 40,
+                parents=('e' * 40,),
+            ).validate('a' * 40, 'd' * 40)
+
+    def test_rejects_a_non_squash_merge_commit(self) -> None:
+        with self.assertRaises(HeadChangedError):
+            MergeResult(
+                head='a' * 40,
+                state='merged',
+                commit='b' * 40,
+                parents=('c' * 40, 'd' * 40),
+            ).validate('a' * 40, 'c' * 40)
 
 
 class TargetTest(unittest.TestCase):
@@ -434,15 +454,29 @@ class RecoveryTest(unittest.TestCase):
         *,
         number: int = 75,
         target: str = 'a' * 40,
-        body: str = '<!-- dependency-automation:v1 -->',
+        head: str = 'b' * 40,
+        parent: str = 'c' * 40,
+        tested_base: str | None = None,
+        body: str | None = None,
         files: tuple[str, ...] = ('Dockerfile',),
     ) -> Merge:
+        proof = parent if tested_base is None else tested_base
         return Merge(
             number=number,
             target=target,
+            head=head,
+            parents=(parent,),
             base='main',
             branch='automation/dependencies-100-1',
-            body=body,
+            body=(
+                (
+                    '<!-- dependency-automation:v1 -->\n'
+                    f'<!-- dependency-tested-head:{head} -->\n'
+                    f'<!-- dependency-tested-base:{proof} -->'
+                )
+                if body is None
+                else body
+            ),
             files=files,
             state='merged',
         )
@@ -519,12 +553,57 @@ class RecoveryTest(unittest.TestCase):
             )
         )
 
+    def test_resumes_proven_merge_when_cancelled_before_tag_creation(
+        self,
+    ) -> None:
+        target = 'd' * 40
+
+        self.assertEqual(
+            Candidate(
+                tag=None,
+                target=target,
+                pull=76,
+                draft=None,
+            ),
+            Recovery.select(
+                [Tag(name='1.4.4', target='a' * 40)],
+                [self.release(tag='1.4.4', draft=False)],
+                [self.merge(number=76, target=target)],
+            ),
+        )
+
+    def test_does_not_resume_merge_of_an_untested_base(self) -> None:
+        self.assertIsNone(
+            Recovery.select(
+                [Tag(name='1.4.4', target='a' * 40)],
+                [self.release(tag='1.4.4', draft=False)],
+                [
+                    self.merge(
+                        target='d' * 40,
+                        parent='e' * 40,
+                        tested_base='c' * 40,
+                    )
+                ],
+            )
+        )
+
+    def test_fails_closed_for_ambiguous_proven_untagged_merges(self) -> None:
+        with self.assertRaises(RecoveryError):
+            Recovery.select(
+                [Tag(name='1.4.4', target='a' * 40)],
+                [self.release(tag='1.4.4', draft=False)],
+                [
+                    self.merge(number=76, target='d' * 40),
+                    self.merge(number=77, target='e' * 40),
+                ],
+            )
+
     def test_ignores_unrelated_orphan_tag(self) -> None:
         self.assertIsNone(
             Recovery.select(
                 [Tag(name='9.9.9', target='b' * 40)],
                 [self.release(tag='1.4.4', draft=False)],
-                [self.merge()],
+                [self.merge(body='No automation marker')],
             )
         )
 

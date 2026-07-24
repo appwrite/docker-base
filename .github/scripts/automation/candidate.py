@@ -5,7 +5,7 @@ from dataclasses import dataclass
 class Candidate:
     """A uniquely recoverable dependency release."""
 
-    tag: str
+    tag: str | None
     target: str
     pull: int
     draft: int | None

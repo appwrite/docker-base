@@ -10,6 +10,7 @@ import time
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Sequence
+from urllib.parse import quote
 
 
 sys.path.insert(0, str(Path(__file__).parent))
@@ -17,8 +18,12 @@ sys.path.insert(0, str(Path(__file__).parent))
 from automation import (  # noqa: E402
     Deadline,
     Merge,
+    MergeResult,
+    PullRequest,
+    PullRequestUnavailableError,
     Recovery,
     Release,
+    ReviewDecision,
     Run,
     Tag,
     Version,
@@ -45,6 +50,13 @@ class Orchestrator:
         operation, *values = arguments
         if operation == 'recover' and not values:
             self.recover()
+            return
+        if operation == 'merge' and len(values) == 3:
+            self.merge(
+                pull=int(values[0]),
+                head=values[1],
+                base=values[2],
+            )
             return
         if operation == 'prepare' and len(values) == 4:
             tag, target, pull, draft = values
@@ -151,7 +163,7 @@ class Orchestrator:
             and item['object'].get('type') == 'commit'
         )
 
-    def _releases(self) -> tuple[Recovery, ...]:
+    def _listed_releases(self) -> tuple[Recovery, ...]:
         return tuple(
             Recovery(
                 identifier=int(item['id']),
@@ -165,45 +177,224 @@ class Orchestrator:
             for item in self._pages(f'repos/{self.repository}/releases')
         )
 
-    def _merges(self, tags: Sequence[Tag]) -> tuple[Merge, ...]:
-        merges: list[Merge] = []
-        for target in {tag.target for tag in tags}:
-            pulls = self._pages(
-                f'repos/{self.repository}/commits/{target}/pulls'
+    def _read_graphql_release(self, tag: str) -> dict[str, Any] | None:
+        owner, separator, name = self.repository.partition('/')
+        if not separator or not owner or not name:
+            raise RuntimeError(
+                f'Invalid GitHub repository {self.repository!r}'
             )
-            for pull in pulls:
-                number = int(pull['number'])
-                files = tuple(
-                    str(item['filename'])
-                    for item in self._pages(
-                        f'repos/{self.repository}/pulls/{number}/files'
-                    )
+        query = (
+            'query($owner:String!,$name:String!,$tag:String!){'
+            'repository(owner:$owner,name:$name){'
+            'release(tagName:$tag){'
+            'databaseId tagName isDraft isPrerelease description '
+            'tagCommit{oid}'
+            '}}}'
+        )
+        result = self._api(
+            'POST',
+            'graphql',
+            (
+                ('-f', f'owner={owner}'),
+                ('-f', f'name={name}'),
+                ('-f', f'tag={tag}'),
+                ('-f', f'query={query}'),
+            ),
+        )
+        payload = json.loads(result.stdout)
+        if payload.get('errors'):
+            raise RuntimeError(
+                f'GitHub GraphQL release lookup failed for {tag}'
+            )
+        data = payload.get('data')
+        if not isinstance(data, dict):
+            raise RuntimeError(f'Release lookup for {tag} is invalid')
+        repository = data.get('repository')
+        if not isinstance(repository, dict):
+            raise RuntimeError(f'Release lookup for {tag} is invalid')
+        release = repository.get('release')
+        if release is None:
+            return None
+        if not isinstance(release, dict):
+            raise RuntimeError(f'Release lookup for {tag} is invalid')
+        commit = release.get('tagCommit')
+        target = (
+            str(commit.get('oid', ''))
+            if isinstance(commit, dict)
+            else ''
+        )
+        return {
+            'id': release['databaseId'],
+            'tag_name': release['tagName'],
+            'target_commitish': target,
+            'draft': release['isDraft'],
+            'prerelease': release['isPrerelease'],
+            'body': release.get('description') or '',
+        }
+
+    def _read_release_by_tag(self, tag: str) -> dict[str, Any] | None:
+        result = self._api(
+            'GET',
+            (
+                f'repos/{self.repository}/releases/tags/'
+                f'{quote(tag, safe="")}'
+            ),
+            check=False,
+        )
+        if result.returncode == 0:
+            payload = json.loads(result.stdout)
+            if not isinstance(payload, dict):
+                raise RuntimeError(f'Release lookup for {tag} is invalid')
+            return payload
+
+        try:
+            error = json.loads(result.stdout)
+        except json.JSONDecodeError as exception:
+            raise RuntimeError(
+                f'Release lookup failed for {tag}'
+            ) from exception
+        if not isinstance(error, dict) or str(error.get('status')) != '404':
+            sys.stderr.write(result.stderr)
+            raise RuntimeError(f'Release lookup failed for {tag}')
+        return self._read_graphql_release(tag)
+
+    @staticmethod
+    def _release(payload: dict[str, Any]) -> Recovery:
+        return Recovery(
+            identifier=int(payload['id']),
+            tag=str(payload['tag_name']),
+            target=str(payload['target_commitish']),
+            pull=0,
+            draft=bool(payload['draft']),
+            prerelease=bool(payload['prerelease']),
+            body=str(payload.get('body') or ''),
+        )
+
+    def _releases(self, tags: Sequence[Tag]) -> tuple[Recovery, ...]:
+        listed = self._listed_releases()
+        stable: dict[str, tuple[Version, Tag]] = {}
+        for tag in tags:
+            version = Version.parse(tag.name)
+            if version is not None:
+                stable[tag.name] = (version, tag)
+        releases: dict[str, Recovery] = {}
+        threshold: Version | None = None
+        hints = sorted(
+            (
+                release
+                for release in listed
+                if not release.draft
+                and not release.prerelease
+                and release.tag in stable
+            ),
+            key=lambda release: stable[release.tag][0],
+            reverse=True,
+        )
+        for hint in hints:
+            payload = self._read_release_by_tag(hint.tag)
+            if payload is None:
+                continue
+            release = self._release(payload)
+            if release.tag != hint.tag:
+                raise RuntimeError(
+                    f'Release lookup for {hint.tag} returned {release.tag}'
                 )
-                head = pull.get('head')
-                base = pull.get('base')
-                merged = (
-                    pull.get('merged_at') is not None
-                    and pull.get('merge_commit_sha') == target
+            releases[release.tag] = release
+            if not release.draft and not release.prerelease:
+                threshold = stable[release.tag][0]
+                break
+
+        candidates = sorted(
+            (
+                (version, tag)
+                for version, tag in stable.values()
+                if threshold is None or version > threshold
+            ),
+            reverse=True,
+        )
+        for _, tag in candidates:
+            payload = self._read_release_by_tag(tag.name)
+            if payload is None:
+                continue
+            release = self._release(payload)
+            if release.tag != tag.name:
+                raise RuntimeError(
+                    f'Release lookup for {tag.name} returned {release.tag}'
                 )
-                merges.append(
-                    Merge(
-                        number=number,
-                        target=target,
-                        base=(
-                            str(base.get('ref', ''))
-                            if isinstance(base, dict)
-                            else ''
-                        ),
-                        branch=(
-                            str(head.get('ref', ''))
-                            if isinstance(head, dict)
-                            else ''
-                        ),
-                        body=str(pull.get('body') or ''),
-                        files=files,
-                        state='merged' if merged else str(pull.get('state')),
-                    )
+            releases[release.tag] = release
+        return tuple(releases.values())
+
+    def _read_parents(self, commit: str) -> tuple[str, ...]:
+        result = self._api(
+            'GET',
+            f'repos/{self.repository}/commits/{commit}',
+        )
+        payload = json.loads(result.stdout)
+        parents = payload.get('parents')
+        if not isinstance(parents, list):
+            raise RuntimeError(f'Commit {commit} has invalid parents')
+        if any(
+            not isinstance(parent, dict) or not parent.get('sha')
+            for parent in parents
+        ):
+            raise RuntimeError(f'Commit {commit} has invalid parents')
+        return tuple(
+            str(parent['sha'])
+            for parent in parents
+        )
+
+    def _merges(self) -> tuple[Merge, ...]:
+        merges: list[Merge] = []
+        pulls = self._pages(
+            f'repos/{self.repository}/pulls'
+            '?state=closed&base=main&sort=updated&direction=desc'
+        )
+        for pull in pulls:
+            head = pull.get('head')
+            body = str(pull.get('body') or '')
+            branch = (
+                str(head.get('ref', ''))
+                if isinstance(head, dict)
+                else ''
+            )
+            if (
+                pull.get('merged_at') is None
+                or Merge.marker not in body
+                or not branch.startswith('automation/dependencies-')
+            ):
+                continue
+            number = int(pull['number'])
+            details = self._read_pull(number)
+            commit = details.get('mergeCommit')
+            target = (
+                str(commit.get('oid'))
+                if isinstance(commit, dict) and commit.get('oid')
+                else None
+            )
+            if (
+                str(details.get('state', '')).lower() != 'merged'
+                or target is None
+            ):
+                continue
+            files = tuple(
+                str(item['filename'])
+                for item in self._pages(
+                    f'repos/{self.repository}/pulls/{number}/files'
                 )
+            )
+            merges.append(
+                Merge(
+                    number=number,
+                    target=target,
+                    head=str(details.get('headRefOid', '')),
+                    parents=self._read_parents(target),
+                    base=str(details.get('baseRefName', '')),
+                    branch=branch,
+                    body=body,
+                    files=files,
+                    state='merged',
+                )
+            )
         return tuple(merges)
 
     def _read_tag(self, name: str) -> Tag | None:
@@ -222,6 +413,92 @@ class Orchestrator:
             name=str(payload.get('ref', '')).removeprefix('refs/tags/'),
             target=str(target.get('sha')),
         )
+
+    def _read_pull(self, number: int) -> dict[str, Any]:
+        result = self._run(
+            (
+                'gh',
+                'pr',
+                'view',
+                str(number),
+                '--repo',
+                self.repository,
+                '--json',
+                (
+                    'baseRefName,baseRefOid,headRefOid,mergeCommit,'
+                    'mergeable,number,reviewDecision,state'
+                ),
+                '--jq',
+                '.',
+            )
+        )
+        payload = json.loads(result.stdout)
+        if not isinstance(payload, dict):
+            raise RuntimeError(f'Pull request #{number} is invalid')
+        return payload
+
+    def merge(self, *, pull: int, head: str, base: str) -> None:
+        """Merge and prove the exact tested head and base."""
+        payload = self._read_pull(pull)
+        if payload.get('baseRefName') != 'main':
+            raise PullRequestUnavailableError(
+                'Pull request does not target main'
+            )
+        try:
+            review = ReviewDecision(
+                str(payload.get('reviewDecision', '')).lower()
+            )
+        except ValueError as exception:
+            raise PullRequestUnavailableError(
+                'Pull request has no current approval'
+            ) from exception
+        PullRequest(
+            number=int(payload['number']),
+            head=str(payload['headRefOid']),
+            base=str(payload['baseRefOid']),
+            state=str(payload['state']).lower(),
+            review=review,
+        ).validate(head, base)
+        if payload.get('mergeable') != 'MERGEABLE':
+            raise PullRequestUnavailableError(
+                'Pull request is not currently mergeable'
+            )
+
+        result = self._run(
+            (
+                'gh',
+                'pr',
+                'merge',
+                str(pull),
+                '--repo',
+                self.repository,
+                '--squash',
+                '--match-head-commit',
+                head,
+            ),
+            check=False,
+        )
+        final = self._read_pull(pull)
+        commit = final.get('mergeCommit')
+        target = (
+            str(commit.get('oid'))
+            if isinstance(commit, dict) and commit.get('oid')
+            else None
+        )
+        parents = self._read_parents(target) if target is not None else ()
+        merged = MergeResult(
+            head=str(final.get('headRefOid', '')),
+            state=str(final.get('state', '')).lower(),
+            commit=target,
+            parents=parents,
+        ).validate(head, base)
+        if result.returncode != 0:
+            print(
+                'The merge command exited nonzero, but GitHub proved the '
+                'exact tested squash merge.',
+                flush=True,
+            )
+        self._write({'head': merged})
 
     def _read_release(self, identifier: int) -> dict[str, Any]:
         result = self._api(
@@ -261,6 +538,8 @@ class Orchestrator:
         merge = Merge(
             number=pull,
             target=target,
+            head='',
+            parents=(),
             base='main',
             branch='automation/dependencies-recovery',
             body=Merge.marker,
@@ -273,27 +552,12 @@ class Orchestrator:
 
     def recover(self) -> None:
         """Recover only state proven to originate from this automation."""
-        releases = self._releases()
-        published = {
-            release.tag
-            for release in releases
-            if not release.draft
-        }
-        threshold = Version.stable(published)
-        latest = threshold[-1] if threshold else None
-        tags = tuple(
-            tag
-            for tag in self._tags()
-            if (
-                (version := Version.parse(tag.name)) is not None
-                and tag.name not in published
-                and (latest is None or version > latest)
-            )
-        )
+        all_tags = self._tags()
+        releases = self._releases(all_tags)
         candidate = Recovery.select(
-            tags,
+            all_tags,
             releases,
-            self._merges(tags),
+            self._merges(),
         )
         if candidate is None:
             self._write({'pending': 'false'})
@@ -302,7 +566,7 @@ class Orchestrator:
         self._write(
             {
                 'pending': 'true',
-                'tag': candidate.tag,
+                'tag': candidate.tag or '',
                 'head': candidate.target,
                 'pull': str(candidate.pull),
                 'draft': (
@@ -351,6 +615,17 @@ class Orchestrator:
         return candidate
 
     def _create_draft(self, tag: str, target: str, pull: int) -> int:
+        existing = self._read_release_by_tag(tag)
+        if existing is not None:
+            if existing.get('draft') is not True:
+                raise RuntimeError(f'Release {tag} is already published')
+            return self._validate_draft(
+                existing,
+                tag=tag,
+                target=target,
+                pull=pull,
+            )
+
         body = self._draft_body(target, pull)
         result = self._api(
             'POST',
@@ -375,16 +650,14 @@ class Orchestrator:
                 pull=pull,
             )
 
-        matches = [
-            release
-            for release in self._releases()
-            if release.tag == tag
-        ]
-        if len(matches) != 1:
+        existing = self._read_release_by_tag(tag)
+        if existing is None:
             sys.stderr.write(result.stderr)
             raise RuntimeError(f'Failed to create draft release {tag}')
+        if existing.get('draft') is not True:
+            raise RuntimeError(f'Release {tag} was published concurrently')
         return self._validate_draft(
-            self._read_release(matches[0].identifier),
+            existing,
             tag=tag,
             target=target,
             pull=pull,
