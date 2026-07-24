@@ -8,9 +8,14 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 from automation import (  # noqa: E402
     ApprovalMissingError,
+    Candidate,
     Deadline,
     HeadChangedError,
+    Merge,
+    MergeResult,
     PullRequest,
+    Recovery,
+    RecoveryError,
     Release,
     ReviewDecision,
     Run,
@@ -250,6 +255,20 @@ class WorkflowTest(unittest.TestCase):
     def test_reports_successful_run(self) -> None:
         self.assertIs(WorkflowState.SUCCEEDED, self.state([run()]))
 
+    def test_does_not_accept_branch_run_for_tag_release(self) -> None:
+        state = workflow_state(
+            [run(branch='main')],
+            workflow='Build and Push',
+            event='push',
+            head='approved-head',
+            branch='1.4.5',
+            created=START,
+            deadline=self.deadline,
+            now=START,
+        )
+
+        self.assertIs(WorkflowState.MISSING, state)
+
     def test_reports_failed_run(self) -> None:
         self.assertIs(
             WorkflowState.FAILED,
@@ -308,10 +327,12 @@ class PullRequestTest(unittest.TestCase):
             PullRequest(
                 number=75,
                 head='approved-head',
+                base='tested-base',
                 state='open',
                 review=ReviewDecision.APPROVED,
             ),
             'approved-head',
+            'tested-base',
         )
 
     def test_rejects_changed_head_even_if_currently_approved(self) -> None:
@@ -320,10 +341,26 @@ class PullRequestTest(unittest.TestCase):
                 PullRequest(
                     number=75,
                     head='changed-head',
+                    base='tested-base',
                     state='open',
                     review=ReviewDecision.APPROVED,
                 ),
                 'approved-head',
+                'tested-base',
+            )
+
+    def test_rejects_changed_base_after_ci_succeeds(self) -> None:
+        with self.assertRaises(HeadChangedError):
+            validate_pull_request(
+                PullRequest(
+                    number=75,
+                    head='approved-head',
+                    base='changed-base',
+                    state='open',
+                    review=ReviewDecision.APPROVED,
+                ),
+                'approved-head',
+                'tested-base',
             )
 
     def test_rejects_missing_current_approval(self) -> None:
@@ -332,11 +369,33 @@ class PullRequestTest(unittest.TestCase):
                 PullRequest(
                     number=75,
                     head='approved-head',
+                    base='tested-base',
                     state='open',
                     review=ReviewDecision.REVIEW_REQUIRED,
                 ),
                 'approved-head',
+                'tested-base',
             )
+
+
+class MergeResultTest(unittest.TestCase):
+    def test_accepts_merge_for_exact_tested_head(self) -> None:
+        self.assertEqual(
+            'b' * 40,
+            MergeResult(
+                head='a' * 40,
+                state='merged',
+                commit='b' * 40,
+            ).validate('a' * 40),
+        )
+
+    def test_rejects_merged_state_for_a_different_final_head(self) -> None:
+        with self.assertRaises(HeadChangedError):
+            MergeResult(
+                head='c' * 40,
+                state='merged',
+                commit='b' * 40,
+            ).validate('a' * 40)
 
 
 class TargetTest(unittest.TestCase):
@@ -366,6 +425,151 @@ class TargetTest(unittest.TestCase):
                 Release(tag='1.4.5', target='wrong-head'),
                 expected_tag='1.4.5',
                 expected_target='merged-head',
+            )
+
+
+class RecoveryTest(unittest.TestCase):
+    def merge(
+        self,
+        *,
+        number: int = 75,
+        target: str = 'a' * 40,
+        body: str = '<!-- dependency-automation:v1 -->',
+        files: tuple[str, ...] = ('Dockerfile',),
+    ) -> Merge:
+        return Merge(
+            number=number,
+            target=target,
+            base='main',
+            branch='automation/dependencies-100-1',
+            body=body,
+            files=files,
+            state='merged',
+        )
+
+    def release(
+        self,
+        *,
+        identifier: int = 10,
+        tag: str = '1.4.5',
+        target: str = 'a' * 40,
+        pull: int = 75,
+        draft: bool = True,
+    ) -> Recovery:
+        return Recovery(
+            identifier=identifier,
+            tag=tag,
+            target=target,
+            pull=pull,
+            draft=draft,
+            prerelease=False,
+            body=(
+                '<!-- dependency-automation:v1 -->\n'
+                f'<!-- dependency-target:{target} -->\n'
+                f'<!-- dependency-pull:{pull} -->'
+            ),
+        )
+
+    def test_resumes_draft_after_publish_failure(self) -> None:
+        target = 'a' * 40
+
+        self.assertEqual(
+            Candidate(
+                tag='1.4.5',
+                target=target,
+                pull=75,
+                draft=10,
+            ),
+            Recovery.select(
+                [Tag(name='1.4.5', target=target)],
+                [
+                    self.release(),
+                    self.release(
+                        identifier=9,
+                        tag='1.4.4',
+                        draft=False,
+                    ),
+                ],
+                [self.merge()],
+            )
+        )
+
+    def test_resumes_tag_when_draft_creation_failed_and_next_run_has_no_diff(
+        self,
+    ) -> None:
+        target = 'a' * 40
+
+        self.assertEqual(
+            Candidate(
+                tag='1.4.5',
+                target=target,
+                pull=75,
+                draft=None,
+            ),
+            Recovery.select(
+                [Tag(name='1.4.5', target=target)],
+                [
+                    self.release(
+                        identifier=9,
+                        tag='1.4.4',
+                        draft=False,
+                    )
+                ],
+                [self.merge()],
+            )
+        )
+
+    def test_ignores_unrelated_orphan_tag(self) -> None:
+        self.assertIsNone(
+            Recovery.select(
+                [Tag(name='9.9.9', target='b' * 40)],
+                [self.release(tag='1.4.4', draft=False)],
+                [self.merge()],
+            )
+        )
+
+    def test_ignores_tag_for_unmarked_or_multi_file_pull_request(self) -> None:
+        target = 'a' * 40
+
+        self.assertIsNone(
+            Recovery.select(
+                [Tag(name='1.4.5', target=target)],
+                [self.release(tag='1.4.4', draft=False)],
+                [
+                    self.merge(body='No automation marker'),
+                    self.merge(files=('Dockerfile', 'README.md')),
+                ],
+            )
+        )
+
+    def test_fails_closed_for_multiple_recoverable_releases(self) -> None:
+        first = 'a' * 40
+        second = 'b' * 40
+
+        with self.assertRaises(RecoveryError):
+            Recovery.select(
+                [
+                    Tag(name='1.4.5', target=first),
+                    Tag(name='1.4.6', target=second),
+                ],
+                [self.release(tag='1.4.4', draft=False)],
+                [
+                    self.merge(target=first),
+                    self.merge(number=76, target=second),
+                ],
+            )
+
+    def test_does_not_resume_wrong_target_draft(self) -> None:
+        target = 'a' * 40
+
+        with self.assertRaises(RecoveryError):
+            Recovery.select(
+                [Tag(name='1.4.5', target=target)],
+                [
+                    self.release(tag='1.4.4', draft=False),
+                    self.release(target='b' * 40),
+                ],
+                [self.merge()],
             )
 
 
