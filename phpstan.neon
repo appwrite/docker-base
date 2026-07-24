@@ -1,0 +1,7 @@
+parameters:
+    level: max
+    phpVersion: 80300
+    paths:
+        - .github/scripts/src
+        - .github/scripts/tests
+    tmpDir: .phpstan-cache

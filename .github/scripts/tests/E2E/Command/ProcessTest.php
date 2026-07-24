@@ -1,0 +1,64 @@
+<?php
+
+declare(strict_types=1);
+
+namespace DockerBase\Tests\E2E\Command;
+
+use DockerBase\Command\Exception;
+use DockerBase\Command\Process;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\TestCase;
+
+#[CoversClass(Exception::class)]
+#[CoversClass(Process::class)]
+final class ProcessTest extends TestCase
+{
+    public function testCapturesSuccessfulOutput(): void
+    {
+        $result = new Process()->run([
+            PHP_BINARY,
+            '-r',
+            'fwrite(STDOUT, \'ready\');',
+        ]);
+
+        self::assertSame(0, $result->code);
+        self::assertSame('ready', $result->output);
+        self::assertSame('', $result->error);
+    }
+
+    public function testReturnsAnUncheckedFailure(): void
+    {
+        $result = new Process()->run(
+            [
+                PHP_BINARY,
+                '-r',
+                'fwrite(STDERR, \'failed\'); exit(7);',
+            ],
+            check: false,
+        );
+
+        self::assertSame(7, $result->code);
+        self::assertSame('', $result->output);
+        self::assertSame('failed', $result->error);
+    }
+
+    public function testThrowsACheckedFailureWithItsResult(): void
+    {
+        try {
+            new Process()->run([
+                PHP_BINARY,
+                '-r',
+                'fwrite(STDERR, \'failed\'); exit(9);',
+            ]);
+            self::fail('A checked command failure must throw');
+        } catch (Exception $exception) {
+            $result = $exception->result;
+            if ($result === null) {
+                self::fail('A checked command failure must contain its result');
+            }
+
+            self::assertSame(9, $result->code);
+            self::assertSame('failed', $result->error);
+        }
+    }
+}
