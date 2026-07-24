@@ -1,0 +1,56 @@
+{
+    "name": "appwrite/docker-base",
+    "description": "Tooling for Appwrite's shared PHP Docker base image",
+    "type": "project",
+    "license": "MIT",
+    "require": {
+        "ext-dom": "*",
+        "ext-filter": "*",
+        "ext-json": "*",
+        "ext-libxml": "*",
+        "ext-mbstring": "*",
+        "ext-openssl": "*",
+        "ext-phar": "*",
+        "ext-tokenizer": "*",
+        "ext-xml": "*",
+        "ext-xmlwriter": "*",
+        "php": ">=8.3",
+        "utopia-php/cli": "0.*",
+        "utopia-php/console": "0.2.*"
+    },
+    "require-dev": {
+        "laravel/pint": "1.*",
+        "phpstan/phpstan": "2.*",
+        "phpunit/phpunit": "12.5.*"
+    },
+    "autoload": {
+        "psr-4": {
+            "DockerBase\\": ".github/scripts/src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "DockerBase\\Tests\\": ".github/scripts/tests/"
+        }
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "platform": {
+            "php": "8.3.0"
+        },
+        "sort-packages": true
+    },
+    "scripts": {
+        "lint": "vendor/bin/pint --test .github/scripts",
+        "format": "vendor/bin/pint .github/scripts",
+        "check": "vendor/bin/phpstan analyse --configuration=phpstan.neon --memory-limit=1G",
+        "test": "vendor/bin/phpunit --configuration=phpunit.xml --log-junit=.phpunit.results.xml",
+        "parity": "php .github/scripts/bin/parity.php .phpunit.results.xml",
+        "verify": [
+            "@lint",
+            "@check",
+            "@test",
+            "@parity"
+        ]
+    }
+}

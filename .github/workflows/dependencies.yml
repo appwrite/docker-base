@@ -1,0 +1,256 @@
+name: Update Dependencies
+
+on:
+  schedule:
+    - cron: '0 3 * * 1'
+  workflow_dispatch:
+
+concurrency:
+  group: dependencies-${{ github.repository }}
+  cancel-in-progress: false
+
+permissions:
+  actions: read
+  checks: read
+  contents: read
+  pull-requests: write
+
+env:
+  GITHUB_API_VERSION: '2026-03-10'
+
+jobs:
+  update:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 300
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6.1.0
+        with:
+          token: ${{ github.token }}
+          persist-credentials: false
+
+      - name: Preflight PHP runtime
+        run: |
+          # shellcheck disable=SC2016
+          php -r '
+          if (PHP_VERSION_ID < 80300) {
+              fwrite(STDERR, "PHP 8.3 or newer is required.\n");
+              exit(1);
+          }
+          $required = [
+              "dom",
+              "filter",
+              "json",
+              "libxml",
+              "mbstring",
+              "openssl",
+              "phar",
+              "tokenizer",
+              "xml",
+              "xmlwriter",
+          ];
+          $missing = array_values(array_filter(
+              $required,
+              static fn (string $extension): bool => !extension_loaded($extension),
+          ));
+          if ($missing !== []) {
+              fwrite(
+                  STDERR,
+                  "Missing PHP extensions: " . implode(", ", $missing) . "\n",
+              );
+              exit(1);
+          }
+          '
+
+      - name: Validate Composer configuration
+        run: composer validate --strict
+
+      - name: Install Composer dependencies
+        run: composer install --no-interaction --no-progress
+
+      - name: Check Composer platform requirements
+        run: composer check-platform-reqs
+
+      - name: Verify PHP automation
+        run: composer verify
+
+      - name: Recover an incomplete dependency release
+        id: recover
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: php .github/scripts/bin/orchestrator.php recover
+
+      - name: Update dependencies
+        id: update
+        if: steps.recover.outputs.pending != 'true'
+        run: |
+          report="${RUNNER_TEMP}/dependencies.md"
+          php .github/scripts/bin/dependencies.php | tee "${report}"
+          cat "${report}" >> "${GITHUB_STEP_SUMMARY}"
+
+          if git diff --quiet -- Dockerfile; then
+            echo 'changed=false' >> "${GITHUB_OUTPUT}"
+            exit 0
+          fi
+
+          mapfile -t files < <(git diff --name-only)
+          if (( ${#files[@]} != 1 )) || [[ "${files[0]}" != 'Dockerfile' ]]; then
+            echo 'The updater changed files other than Dockerfile.' >&2
+            printf '%s\n' "${files[@]}" >&2
+            exit 1
+          fi
+
+          git diff --check
+          branch="automation/dependencies-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          git switch --create "${branch}"
+          git config user.name 'github-actions[bot]'
+          git config user.email \
+            '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- Dockerfile
+          git commit --message 'chore: update dependencies'
+
+          {
+            echo 'changed=true'
+            printf 'branch=%s\n' "${branch}"
+            printf 'base=%s\n' "$(git rev-parse HEAD^)"
+            printf 'head=%s\n' "$(git rev-parse HEAD)"
+          } >> "${GITHUB_OUTPUT}"
+
+      - name: Push update branch
+        id: push
+        if: steps.update.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: |
+          branch='${{ steps.update.outputs.branch }}'
+          head='${{ steps.update.outputs.head }}'
+          created="$(date --utc +'%Y-%m-%dT%H:%M:%SZ')"
+          authorization="$(
+            printf 'x-access-token:%s' "${GH_TOKEN}" | base64 --wrap=0
+          )"
+          echo "::add-mask::${authorization}"
+
+          GIT_CONFIG_COUNT=1 \
+            GIT_CONFIG_KEY_0='http.https://github.com/.extraheader' \
+            GIT_CONFIG_VALUE_0="AUTHORIZATION: basic ${authorization}" \
+            git push "https://github.com/${GITHUB_REPOSITORY}.git" \
+              "HEAD:refs/heads/${branch}"
+          unset authorization
+
+          {
+            printf 'branch=%s\n' "${branch}"
+            printf 'head=%s\n' "${head}"
+            printf 'created=%s\n' "${created}"
+          } >> "${GITHUB_OUTPUT}"
+
+      - name: Open pull request
+        id: pull
+        if: steps.update.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: |
+          branch='${{ steps.push.outputs.branch }}'
+          head='${{ steps.push.outputs.head }}'
+          base='${{ steps.update.outputs.base }}'
+          body="${RUNNER_TEMP}/pull-request.md"
+          {
+            echo '<!-- dependency-automation:v1 -->'
+            printf '<!-- dependency-tested-head:%s -->\n' "${head}"
+            printf '<!-- dependency-tested-base:%s -->\n' "${base}"
+            echo 'Automated weekly dependency update.'
+            echo
+            cat "${RUNNER_TEMP}/dependencies.md"
+          } > "${body}"
+
+          url="$(
+            gh pr create \
+              --repo "${GITHUB_REPOSITORY}" \
+              --base main \
+              --head "${branch}" \
+              --title 'chore: update dependencies' \
+              --body-file "${body}"
+          )"
+          pull="$(
+            gh pr view "${url}" \
+              --repo "${GITHUB_REPOSITORY}" \
+              --json baseRefName,baseRefOid,createdAt,headRefName,headRefOid,number,state \
+              --jq '.'
+          )"
+          printf '%s' "${pull}" |
+            php .github/scripts/bin/orchestrator.php validate-pull \
+              "${branch}" "${head}" "${base}"
+          printf 'url=%s\n' "${url}" >> "${GITHUB_OUTPUT}"
+
+      - name: Wait for exact CI runs
+        if: steps.update.outputs.changed == 'true'
+        env:
+          BRANCH: ${{ steps.push.outputs.branch }}
+          CREATED: ${{ steps.push.outputs.created }}
+          GH_TOKEN: ${{ github.token }}
+          HEAD: ${{ steps.push.outputs.head }}
+        run: |
+          php .github/scripts/bin/orchestrator.php wait-checks \
+            "${BRANCH}" "${HEAD}" "${CREATED}"
+
+      - name: Approve pull request
+        if: steps.update.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api \
+            -X POST \
+            -H "X-GitHub-Api-Version: ${GITHUB_API_VERSION}" \
+            "repos/${GITHUB_REPOSITORY}/pulls/${{ steps.pull.outputs.number }}/reviews" \
+            -f event=APPROVE \
+            -f commit_id='${{ steps.push.outputs.head }}' \
+            -f body='Automated dependency checks passed.' \
+            --silent
+
+      - name: Validate and merge pull request
+        id: merge
+        if: steps.update.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: |
+          php .github/scripts/bin/orchestrator.php merge \
+            '${{ steps.pull.outputs.number }}' \
+            '${{ steps.push.outputs.head }}' \
+            '${{ steps.pull.outputs.base }}'
+
+      - name: Prepare exact tag and draft release
+        id: release
+        if: >-
+          steps.update.outputs.changed == 'true' ||
+          steps.recover.outputs.pending == 'true'
+        env:
+          DRAFT: ${{ steps.recover.outputs.draft }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          HEAD: >-
+            ${{ steps.merge.outputs.head || steps.recover.outputs.head }}
+          PULL: >-
+            ${{ steps.pull.outputs.number || steps.recover.outputs.pull }}
+          TAG: ${{ steps.recover.outputs.tag }}
+        run: |
+          php .github/scripts/bin/orchestrator.php prepare \
+            "${TAG}" "${HEAD}" "${PULL}" "${DRAFT}"
+
+      - name: Wait for exact tag Build and Push run
+        if: steps.release.outcome == 'success'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HEAD: ${{ steps.release.outputs.head }}
+          TAG: ${{ steps.release.outputs.tag }}
+        run: |
+          php .github/scripts/bin/orchestrator.php wait "${TAG}" "${HEAD}"
+
+      - name: Verify and publish exact release
+        if: steps.release.outcome == 'success'
+        env:
+          DRAFT: ${{ steps.release.outputs.draft }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          HEAD: ${{ steps.release.outputs.head }}
+          PULL: ${{ steps.release.outputs.pull }}
+          TAG: ${{ steps.release.outputs.tag }}
+        run: |
+          php .github/scripts/bin/orchestrator.php publish \
+            "${TAG}" "${HEAD}" "${PULL}" "${DRAFT}"
