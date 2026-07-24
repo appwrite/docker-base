@@ -82,6 +82,7 @@ jobs:
           authorization="$(
             printf 'x-access-token:%s' "${GH_TOKEN}" | base64 --wrap=0
           )"
+          echo "::add-mask::${authorization}"
 
           GIT_CONFIG_COUNT=1 \
             GIT_CONFIG_KEY_0='http.https://github.com/.extraheader' \
@@ -405,8 +406,8 @@ jobs:
 
           from automation import (
               Tag,
-              next_patch,
               patch_after_collision,
+              release_candidate,
               validate_tag_target,
           )
 
@@ -467,6 +468,28 @@ jobs:
                   text=True,
               )
 
+          def releases() -> tuple[str, ...]:
+              result = subprocess.run(
+                  (
+                      'gh',
+                      'api',
+                      '--paginate',
+                      '-X',
+                      'GET',
+                      f'repos/{repository}/releases',
+                      '-H',
+                      header,
+                      '-f',
+                      'per_page=100',
+                      '--jq',
+                      '.[].tag_name',
+                  ),
+                  check=True,
+                  stdout=subprocess.PIPE,
+                  text=True,
+              )
+              return tuple(result.stdout.splitlines())
+
           def read(tag: str) -> dict[str, object] | None:
               result = subprocess.run(
                   (
@@ -486,7 +509,7 @@ jobs:
               return json.loads(result.stdout) if result.returncode == 0 else None
 
           available = tags()
-          candidate = str(next_patch(available))
+          candidate = str(release_candidate(available, releases()))
           while True:
               result = create(candidate)
               if result.returncode == 0:
@@ -515,7 +538,10 @@ jobs:
           if not isinstance(target, dict) or target.get('type') != 'commit':
               raise RuntimeError(f'Tag {candidate} is not lightweight')
           validate_tag_target(
-              Tag(name=candidate, target=str(target.get('sha'))),
+              Tag(
+                  name=str(payload.get('ref', '')).removeprefix('refs/tags/'),
+                  target=str(target.get('sha')),
+              ),
               expected_name=candidate,
               expected_target=merge,
           )
