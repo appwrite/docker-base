@@ -221,8 +221,8 @@ RUN apk update && \
     c-ares \
     certbot \
     freetype \
-    docker-cli \
-    docker-cli-compose \
+    docker-cli=29.5.2-r0 \
+    docker-cli-compose=2.40.3-r6 \
     git \
     icu-libs \
     imagemagick \

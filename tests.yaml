@@ -16,11 +16,11 @@ commandTests:
   - name: 'Docker command'
     command: "docker"
     args: ["--version"]
-    expectedOutput: ["Docker version 29.*"]
+    expectedOutput: ["Docker version 29.5.2.*"]
   - name: 'Docker Compose command'
     command: "docker"
     args: ["compose", "version"]
-    expectedOutput: ["Docker Compose version v.*"]
+    expectedOutput: ["Docker Compose version v2.40.3"]
   - name: 'Git command'
     command: "git"
     args: ["--version"]

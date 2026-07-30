@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## Version 1.4.5
+
+### Change
+
+* Pin `docker-cli` and `docker-cli-compose` apk packages to the exact versions already shipped in `1.4.4` (`29.5.2-r0` and `2.40.3-r6`) so Alpine package floats cannot silently bump the installer Docker client. Structure tests now assert those exact versions.
+
 ## Version 1.3.2
 
 ### Security
