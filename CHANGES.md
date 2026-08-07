@@ -1,5 +1,17 @@
 # CHANGELOG
 
+## Version 1.4.5
+
+### Fix
+
+* Publish the production image instead of the XDebug variant. Every workflow built with `docker image build ... .` and no `--target`, and Docker defaults to the *last* stage — which is `xdebug`. So `appwrite/base` has shipped XDebug in the production image since the variant was introduced in 1.2.0, and Trivy and dive were measuring the wrong image too. All four build workflows now pass an explicit `--target`. The stage order cannot be fixed instead: `xdebug` is `FROM final`, so it must be declared after `final`, which necessarily makes it last — `--target` is the only reliable control.
+
+### Add
+
+* Publish the XDebug variant under `-xdebug` tags (`<sha>-xdebug`, `<tag>-xdebug`, per-arch and manifest). It was documented as a build target since 1.2.0 but never published, so consumers that want XDebug — such as Appwrite's `development` image, which supplies an ini expecting `xdebug.so` to already exist — now have a real image to pin.
+* Wire `tests-xdebug.yaml` into the structure-test workflow. It had existed since 1.2.0 with no workflow consuming it.
+* `tests.yaml` assertion that XDebug is absent. `tests.yaml` only ever asserted module *presence*, so the XDebug image satisfied it and CI stayed green while shipping the wrong image.
+
 ## Version 1.3.2
 
 ### Security

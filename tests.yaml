@@ -78,6 +78,11 @@ commandTests:
       - yaml
       - zlib
       - zstd
+  - name: 'XDebug absent'
+    command: "php"
+    args: ["-m"]
+    excludedOutput:
+      - xdebug
   - name: 'PHP GD supported formats'
     command: "php"
     args: ["-i"]

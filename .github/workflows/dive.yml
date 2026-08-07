@@ -18,7 +18,7 @@ jobs:
 
       - name: Build an image from Dockerfile
         run: |
-          docker image build --tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} .
+          docker image build --target final --tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} .
 
       - name: Dive
         uses: yuichielectric/dive-action@0.0.4

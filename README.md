@@ -36,9 +36,13 @@ In order to run this container you'll need the Docker runtime installed.
 
 ## Build
 
+`--target` is required. The XDebug variant derives from `final`, so it has to be
+declared after it, which makes it the last stage — and Docker defaults to the
+last stage. Omitting `--target` therefore builds XDebug, not production.
+
 ```shell
 # Default (production) image
-docker build --no-cache --tag appwrite/base:latest .
+docker build --no-cache --target final --tag appwrite/base:latest .
 
 # XDebug variant
 docker build --no-cache --target xdebug --tag appwrite/base:latest-xdebug .
