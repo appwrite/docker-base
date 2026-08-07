@@ -1,22 +1,38 @@
 # Pin php:8.5-alpine by multi-arch index digest. Bump with:
 #   docker buildx imagetools inspect php:8.5-alpine | head -2
-ARG BASE_IMAGE="php:8.5-alpine@sha256:3cfccf28acfbb58ae991324612a3b0e2062a572026bb4dca030020e5295d1633"
+ARG BASE_IMAGE="php:8.5-alpine@sha256:0554eb53778b5316f6b9a3447c9dfa3cf2141c0c02ff816c42cdc9aa240a34aa"
 
 FROM $BASE_IMAGE AS compile
 
+# Every source is fetched by immutable reference — a commit SHA for git, a
+# tarball checksum for PECL — because a tag can be repointed at any time. The
+# version beside each reference is the release it was resolved from; the
+# weekly updater rewrites both together.
 ENV \
-    PHP_BROTLI_VERSION="0.18.3" \
+    PHP_BROTLI_VERSION="0.20.0" \
+    PHP_BROTLI_COMMIT="45faa7966ddcec080d04d72ea4b85e3629857f64" \
     PHP_IMAGICK_VERSION="3.8.1" \
-    PHP_LZ4_VERSION="0.6.0" \
+    PHP_IMAGICK_COMMIT="70087bab33eab913e99ac77d64d04d1a2fd0b7b0" \
+    PHP_LZ4_VERSION="0.7.0" \
+    PHP_LZ4_COMMIT="b871fbf4d0c5c2b0cad22dd74721a340cb2e4ffa" \
     PHP_MAXMINDDB_VERSION="v1.13.1" \
-    PHP_MONGODB_VERSION="2.2.1" \
-    PHP_PROTOBUF_VERSION="5.34.0" \
+    PHP_MAXMINDDB_COMMIT="2194f58d0f024ce923e685cdf92af3daf9951908" \
+    PHP_MONGODB_VERSION="2.3.3" \
+    PHP_MONGODB_COMMIT="06be1f01bb4c44f524be743dcd0a9bed26ae55f6" \
+    PHP_PROTOBUF_VERSION="5.35.1" \
+    PHP_PROTOBUF_CHECKSUM="7ab8cd62e8b78ff9f48462ff9e3e30fd8c2d8bb5ab760d51049b38fa0b8c559e" \
     PHP_REDIS_VERSION="6.3.0" \
-    PHP_SCRYPT_VERSION="2.0.1" \
+    PHP_REDIS_COMMIT="df4fab2de7fc327c54c94a13af2b9542e4fbd720" \
+    PHP_SCRYPT_VERSION="2.0.2" \
+    PHP_SCRYPT_COMMIT="5a14bc766423dac3f868792fa8c41f85f47263ec" \
     PHP_SNAPPY_VERSION="0.2.3" \
-    PHP_SWOOLE_VERSION="v6.2.0" \
+    PHP_SNAPPY_COMMIT="d31b77d63955dbbf1a302ca13c4795292f91d140" \
+    PHP_SWOOLE_VERSION="v6.2.2" \
+    PHP_SWOOLE_COMMIT="8e8c49915ca5f9dcb9ee654f9e336a9c88dd375e" \
     PHP_YAML_VERSION="2.3.0" \
-    PHP_ZSTD_VERSION="0.15.2"
+    PHP_YAML_COMMIT="c1f0d8ba5ef3884846261bbdb91c2ab0b07db44c" \
+    PHP_ZSTD_VERSION="0.17.0" \
+    PHP_ZSTD_COMMIT="1774622c25aa3c20315b5f2a5769def976f5ac8c"
 
 RUN \
   apk update && \
@@ -26,6 +42,7 @@ RUN \
     automake \
     brotli-dev \
     c-ares-dev \
+    curl \
     curl-dev \
     g++ \
     gcc \
@@ -55,8 +72,10 @@ RUN \
 
 FROM compile AS redis
 RUN \
-  git clone --depth 1 --branch $PHP_REDIS_VERSION https://github.com/phpredis/phpredis.git && \
-  cd phpredis && \
+  git init redis && \
+  cd redis && \
+  git fetch --depth 1 https://github.com/phpredis/phpredis.git $PHP_REDIS_COMMIT && \
+  git checkout FETCH_HEAD && \
   phpize && \
   ./configure && \
   make -j"$(nproc)" && make install && \
@@ -65,8 +84,10 @@ RUN \
 
 FROM compile AS imagick
 RUN \
-  git clone --depth 1 --branch $PHP_IMAGICK_VERSION https://github.com/imagick/imagick && \
+  git init imagick && \
   cd imagick && \
+  git fetch --depth 1 https://github.com/imagick/imagick $PHP_IMAGICK_COMMIT && \
+  git checkout FETCH_HEAD && \
   phpize && \
   ./configure && \
   make -j"$(nproc)" && make install && \
@@ -75,8 +96,10 @@ RUN \
 
 FROM compile AS yaml
 RUN \
-  git clone --depth 1 --branch $PHP_YAML_VERSION https://github.com/php/pecl-file_formats-yaml && \
-  cd pecl-file_formats-yaml && \
+  git init yaml && \
+  cd yaml && \
+  git fetch --depth 1 https://github.com/php/pecl-file_formats-yaml $PHP_YAML_COMMIT && \
+  git checkout FETCH_HEAD && \
   phpize && \
   ./configure && \
   make -j"$(nproc)" && make install && \
@@ -85,8 +108,10 @@ RUN \
 
 FROM compile AS maxmind
 RUN \
-  git clone --depth 1 --branch $PHP_MAXMINDDB_VERSION https://github.com/maxmind/MaxMind-DB-Reader-php.git && \
-  cd MaxMind-DB-Reader-php && \
+  git init maxminddb && \
+  cd maxminddb && \
+  git fetch --depth 1 https://github.com/maxmind/MaxMind-DB-Reader-php.git $PHP_MAXMINDDB_COMMIT && \
+  git checkout FETCH_HEAD && \
   cd ext && \
   phpize && \
   ./configure && \
@@ -96,8 +121,10 @@ RUN \
 
 FROM compile AS mongodb
 RUN \
-  git clone --depth 1 --branch $PHP_MONGODB_VERSION https://github.com/mongodb/mongo-php-driver.git && \
-  cd mongo-php-driver && \
+  git init mongodb && \
+  cd mongodb && \
+  git fetch --depth 1 https://github.com/mongodb/mongo-php-driver.git $PHP_MONGODB_COMMIT && \
+  git checkout FETCH_HEAD && \
   git submodule update --init && \
   phpize && \
   ./configure && \
@@ -107,9 +134,11 @@ RUN \
 
 FROM compile AS zstd
 RUN \
-  git clone --recursive https://github.com/kjdev/php-ext-zstd.git && \
-  cd php-ext-zstd && \
-  git reset --hard $PHP_ZSTD_VERSION && \
+  git init zstd && \
+  cd zstd && \
+  git fetch --depth 1 https://github.com/kjdev/php-ext-zstd.git $PHP_ZSTD_COMMIT && \
+  git checkout FETCH_HEAD && \
+  git submodule update --init --recursive && \
   phpize && \
   ./configure --with-libzstd && \
   make -j"$(nproc)" && make install && \
@@ -118,9 +147,10 @@ RUN \
 
 FROM compile AS brotli
 RUN \
-  git clone https://github.com/kjdev/php-ext-brotli.git && \
-  cd php-ext-brotli && \
-  git reset --hard $PHP_BROTLI_VERSION && \
+  git init brotli && \
+  cd brotli && \
+  git fetch --depth 1 https://github.com/kjdev/php-ext-brotli.git $PHP_BROTLI_COMMIT && \
+  git checkout FETCH_HEAD && \
   phpize && \
   ./configure --with-libbrotli && \
   make -j"$(nproc)" && make install && \
@@ -129,9 +159,11 @@ RUN \
 
 FROM compile AS lz4
 RUN \
-  git clone --recursive https://github.com/kjdev/php-ext-lz4.git && \
-  cd php-ext-lz4 && \
-  git reset --hard $PHP_LZ4_VERSION && \
+  git init lz4 && \
+  cd lz4 && \
+  git fetch --depth 1 https://github.com/kjdev/php-ext-lz4.git $PHP_LZ4_COMMIT && \
+  git checkout FETCH_HEAD && \
+  git submodule update --init --recursive && \
   phpize && \
   ./configure --with-lz4-includedir=/usr && \
   make -j"$(nproc)" && make install && \
@@ -140,9 +172,11 @@ RUN \
 
 FROM compile AS snappy
 RUN \
-  git clone --recursive https://github.com/kjdev/php-ext-snappy.git && \
-  cd php-ext-snappy && \
-  git reset --hard $PHP_SNAPPY_VERSION && \
+  git init snappy && \
+  cd snappy && \
+  git fetch --depth 1 https://github.com/kjdev/php-ext-snappy.git $PHP_SNAPPY_COMMIT && \
+  git checkout FETCH_HEAD && \
+  git submodule update --init --recursive && \
   phpize && \
   ./configure && \
   make -j"$(nproc)" && make install && \
@@ -151,9 +185,10 @@ RUN \
 
 FROM compile AS scrypt
 RUN \
-  git clone https://github.com/DomBlack/php-scrypt.git && \
-  cd php-scrypt && \
-  git reset --hard $PHP_SCRYPT_VERSION && \
+  git init scrypt && \
+  cd scrypt && \
+  git fetch --depth 1 https://github.com/DomBlack/php-scrypt.git $PHP_SCRYPT_COMMIT && \
+  git checkout FETCH_HEAD && \
   phpize && \
   ./configure --enable-scrypt && \
   make -j"$(nproc)" && make install && \
@@ -161,7 +196,10 @@ RUN \
   strip /artifacts/scrypt.so
 
 FROM compile AS protobuf
-RUN MAKEFLAGS="-j$(nproc)" pecl install protobuf-${PHP_PROTOBUF_VERSION} && \
+RUN curl -fsSL -o protobuf.tgz \
+      https://pecl.php.net/get/protobuf-${PHP_PROTOBUF_VERSION}.tgz && \
+    echo "${PHP_PROTOBUF_CHECKSUM}  protobuf.tgz" | sha256sum -c - && \
+    MAKEFLAGS="-j$(nproc)" pecl install protobuf.tgz && \
     cp $(php-config --extension-dir)/protobuf.so /artifacts/ && \
     strip /artifacts/protobuf.so
 
@@ -190,8 +228,10 @@ RUN docker-php-ext-configure gd \
 # handlers, which makes opcache's JIT refuse to enable in downstream images.
 FROM compile AS swoole
 RUN \
-  git clone --depth 1 --branch $PHP_SWOOLE_VERSION https://github.com/swoole/swoole-src.git && \
-  cd swoole-src && \
+  git init swoole && \
+  cd swoole && \
+  git fetch --depth 1 https://github.com/swoole/swoole-src.git $PHP_SWOOLE_COMMIT && \
+  git checkout FETCH_HEAD && \
   phpize && \
   ./configure \
     --enable-brotli \
@@ -300,11 +340,15 @@ CMD [ "tail", "-f", "/dev/null" ]
 # XDebug variant — build with: docker build --target xdebug -t appwrite/base:XYZ-xdebug .
 FROM compile AS xdebug-build
 
-ENV PHP_XDEBUG_VERSION="3.5.1"
+ENV \
+    PHP_XDEBUG_VERSION="3.5.3" \
+    PHP_XDEBUG_COMMIT="127bbcb980400752221cfaa54bdc1420e6ef3c12"
 
 RUN \
-  git clone --depth 1 --branch $PHP_XDEBUG_VERSION https://github.com/xdebug/xdebug && \
+  git init xdebug && \
   cd xdebug && \
+  git fetch --depth 1 https://github.com/xdebug/xdebug $PHP_XDEBUG_COMMIT && \
+  git checkout FETCH_HEAD && \
   phpize && \
   ./configure && \
   make -j"$(nproc)" && make install && \
