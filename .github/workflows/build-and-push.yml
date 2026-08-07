@@ -34,13 +34,24 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      # --target is mandatory: the Dockerfile's last stage is the XDebug
+      # variant, so an untargeted build silently publishes XDebug as the
+      # production image.
       - name: Build an image from Dockerfile
         run: |
-          docker image build --tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}-${{matrix.arch}} .
+          docker image build --target final --tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}-${{matrix.arch}} .
+
+      - name: Build the XDebug variant
+        run: |
+          docker image build --target xdebug --tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}-xdebug-${{matrix.arch}} .
 
       - name: Push an image
         run: |
           docker image push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}-${{matrix.arch}}
+
+      - name: Push the XDebug variant
+        run: |
+          docker image push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}-xdebug-${{matrix.arch}}
 
   manifest_build_and_push_on_feature:
     if: github.ref != 'refs/heads/main' && !startsWith(github.ref, 'refs/tags/')
@@ -60,9 +71,20 @@ jobs:
               ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}-amd64 \
               ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}-arm64
 
+      - name: Create XDebug manifest
+        run: |
+            docker manifest create \
+              ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}-xdebug \
+              ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}-xdebug-amd64 \
+              ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}-xdebug-arm64
+
       - name: Push manifest
         run: |
             docker manifest push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+
+      - name: Push XDebug manifest
+        run: |
+            docker manifest push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}-xdebug
 
   manifest_build_and_push_on_tag:
     if: startsWith(github.ref, 'refs/tags/')
@@ -82,6 +104,17 @@ jobs:
               ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}-amd64 \
               ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}-arm64
 
+      - name: Create XDebug manifest
+        run: |
+            docker manifest create \
+              ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.ref_name }}-xdebug \
+              ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}-xdebug-amd64 \
+              ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}-xdebug-arm64
+
       - name: Push manifest
         run: |
             docker manifest push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.ref_name }}
+
+      - name: Push XDebug manifest
+        run: |
+            docker manifest push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.ref_name }}-xdebug
