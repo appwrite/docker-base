@@ -32,7 +32,7 @@ jobs:
           config: tests.yaml
 
       - name: Run container structure tests for the XDebug variant
-        uses: plexsystems/container-structure-test-action@v0.1.0
+        uses: plexsystems/container-structure-test-action@v0.3.0
         with:
           image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}-xdebug
           config: tests-xdebug.yaml
