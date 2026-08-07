@@ -14,14 +14,14 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6.0.2
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Build an image from Dockerfile
         run: |
           docker image build --tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} .
 
       - name: Dive
-        uses: yuichielectric/dive-action@0.0.4
+        uses: yuichielectric/dive-action@c2bf577bd2ed379a30c45597cf304f9f269dbdfe # 0.0.4
         with:
           config-file: ${{ github.workspace }}/.dive-ci.yml
           image: '${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}'
