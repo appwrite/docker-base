@@ -45,6 +45,7 @@ final readonly class Orchestrator
             $tags,
             $this->repository->releases($tags),
             $this->repository->mergedPullRequests(),
+            fn (): string => $this->repository->head(),
         );
     }
 

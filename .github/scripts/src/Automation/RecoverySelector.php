@@ -10,11 +10,13 @@ final readonly class RecoverySelector
      * @param list<Tag> $tags
      * @param list<Recovery> $releases
      * @param list<Merge> $merges
+     * @param callable(): string $head
      */
     public static function select(
         array $tags,
         array $releases,
         array $merges,
+        callable $head,
     ): ?Candidate {
         $released = [];
         $published = [];
@@ -82,18 +84,26 @@ final readonly class RecoverySelector
             );
         }
 
+        $tip = null;
         foreach ($merges as $merge) {
             if (
-                !isset($targets[$merge->target])
-                && MergeValidator::isAutomation($merge)
+                isset($targets[$merge->target])
+                || !MergeValidator::isAutomation($merge)
             ) {
-                $candidates[] = new Candidate(
-                    tag: null,
-                    target: $merge->target,
-                    pull: $merge->number,
-                    draft: null,
-                );
+                continue;
             }
+
+            $tip ??= $head();
+            if ($merge->target !== $tip) {
+                continue;
+            }
+
+            $candidates[] = new Candidate(
+                tag: null,
+                target: $merge->target,
+                pull: $merge->number,
+                draft: null,
+            );
         }
 
         $unique = [];
