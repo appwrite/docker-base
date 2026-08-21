@@ -140,6 +140,27 @@ final class RecoveryTest extends TestCase
     }
 
     #[Test]
+    public function test_does_not_read_the_head_for_tagged_recovery(): void
+    {
+        $target = str_repeat('a', 40);
+
+        $candidate = RecoverySelector::select(
+            [new Tag(name: '1.4.5', target: $target)],
+            [
+                $this->release(),
+                $this->release(identifier: 9, tag: '1.4.4', draft: false),
+            ],
+            [$this->merge()],
+            static fn (): string => throw new RecoveryException(
+                'head must not be read for tagged recovery',
+            ),
+        );
+
+        self::assertNotNull($candidate);
+        self::assertSame('1.4.5', $candidate->tag);
+    }
+
+    #[Test]
     public function test_ignores_an_untagged_merge_main_has_moved_past(): void
     {
         self::assertSame(
@@ -318,7 +339,7 @@ final class RecoveryTest extends TestCase
             $tags,
             $releases,
             $merges,
-            $head ?? str_repeat('a', 40),
+            static fn (): string => $head ?? str_repeat('a', 40),
         );
     }
 }
