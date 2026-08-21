@@ -515,6 +515,71 @@ final class OrchestratorTest extends TestCase
         self::assertSame(0, $runner->remaining());
     }
 
+    public function test_accepts_a_draft_with_generated_notes_appended(): void
+    {
+        $target = str_repeat('a', 40);
+        $body = $this->draftBody($target, 75);
+        $runner = new Queue([
+            $this->commandResult(1, '{"status":"404"}'),
+            $this->commandResult(
+                output: '{"data":{"repository":{"release":null}}}',
+            ),
+            $this->commandResult(
+                output: json_encode(
+                    $this->release(
+                        identifier: 10,
+                        tag: '1.4.5',
+                        target: $target,
+                        draft: true,
+                        body: $body . self::GENERATED_NOTES,
+                    ),
+                    JSON_THROW_ON_ERROR,
+                ),
+            ),
+        ]);
+
+        $draft = $this->github($runner)->createDraft(
+            '1.4.5',
+            $target,
+            75,
+            $body,
+        );
+
+        self::assertSame(10, $draft->identifier);
+        self::assertSame(0, $runner->remaining());
+    }
+
+    public function test_rejects_a_draft_whose_markers_were_rewritten(): void
+    {
+        $target = str_repeat('a', 40);
+        $body = $this->draftBody($target, 75);
+        $runner = new Queue([
+            $this->commandResult(1, '{"status":"404"}'),
+            $this->commandResult(
+                output: '{"data":{"repository":{"release":null}}}',
+            ),
+            $this->commandResult(
+                output: json_encode(
+                    $this->release(
+                        identifier: 10,
+                        tag: '1.4.5',
+                        target: $target,
+                        draft: true,
+                        body: $this->draftBody($target, 76),
+                    ),
+                    JSON_THROW_ON_ERROR,
+                ),
+            ),
+        ]);
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage(
+            'body does not open with the automation markers',
+        );
+
+        $this->github($runner)->createDraft('1.4.5', $target, 75, $body);
+    }
+
     public function test_does_not_publish_when_prepublication_target_changed(): void
     {
         $repository = $this->repository();
@@ -761,6 +826,10 @@ final class OrchestratorTest extends TestCase
             . "\n<!-- dependency-tested-head:{$head} -->"
             . "\n<!-- dependency-tested-base:{$base} -->";
     }
+
+    private const string GENERATED_NOTES = "\n\n## What's Changed"
+        . "\n* chore: update dependencies by @abnegate in "
+        . 'https://github.com/appwrite/docker-base/pull/75';
 
     private function draftBody(string $target, int $pull): string
     {

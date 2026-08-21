@@ -853,16 +853,30 @@ final readonly class GitHub implements Repository
         int $pull,
         string $body,
     ): Recovery {
-        if (
-            $release->tag !== $tag
-            || $release->target !== $target
-            || $release->pull !== $pull
-            || ! $release->draft
-            || $release->prerelease
-            || $release->body !== $body
-        ) {
+        $mismatched = [];
+        if ($release->tag !== $tag) {
+            $mismatched[] = "tag {$release->tag} is not {$tag}";
+        }
+        if ($release->target !== $target) {
+            $mismatched[] = "target {$release->target} is not {$target}";
+        }
+        if ($release->pull !== $pull) {
+            $mismatched[] = "pull {$release->pull} is not {$pull}";
+        }
+        if (! $release->draft) {
+            $mismatched[] = 'release is not a draft';
+        }
+        if ($release->prerelease) {
+            $mismatched[] = 'release is a prerelease';
+        }
+        if (! str_starts_with($release->body, $body)) {
+            $mismatched[] = 'body does not open with the automation markers';
+        }
+
+        if ($mismatched !== []) {
             throw new RuntimeException(
-                "Draft release {$release->identifier} is unsafe",
+                "Draft release {$release->identifier} is unsafe: "
+                . implode(', ', $mismatched),
             );
         }
 
