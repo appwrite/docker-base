@@ -22,6 +22,8 @@ final readonly class Orchestrator
 
     private const int INTERVAL = 30;
 
+    private const int GRACE = 120;
+
     public function __construct(
         private Repository $repository,
         private Dockerfile $dockerfile,
@@ -67,9 +69,17 @@ final readonly class Orchestrator
     {
         $deadline = Deadline::after($this->clock->now(), self::TIMEOUT);
 
+        $grace = Deadline::after($this->clock->now(), self::GRACE);
+        $previous = null;
+
         while (true) {
             $checks = $this->repository->checks($pull);
-            if (Checks::settled($checks)) {
+            $signature = Checks::signature($checks);
+            if (
+                Checks::settled($checks)
+                && $grace->expired($this->clock->now())
+                && $signature === $previous
+            ) {
                 $failed = Checks::failed($checks);
                 if ($failed !== []) {
                     throw new Exception(
@@ -81,6 +91,7 @@ final readonly class Orchestrator
                 return;
             }
 
+            $previous = $signature;
             if ($deadline->expired($this->clock->now())) {
                 throw new Exception(
                     "Base update CI did not settle for pull request #{$pull}",
@@ -91,15 +102,42 @@ final readonly class Orchestrator
         }
     }
 
+    public function recover(string $version): ?Release
+    {
+        $target = $this->repository->mergeCommit(self::BRANCH . $version);
+        if ($target === null) {
+            return null;
+        }
+
+        if ($target !== $this->repository->head($this->base)) {
+            return null;
+        }
+
+        foreach ($this->repository->tags(Release::PREFIX) as $tag) {
+            if ($tag->target === $target) {
+                return null;
+            }
+        }
+
+        return $this->tag($target);
+    }
+
     public function release(int $pull, string $head): Release
     {
-        $target = $this->repository->merge($pull, $head);
+        return $this->tag($this->repository->merge($pull, $head));
+    }
+
+    private function tag(string $target): Release
+    {
         $application = $this->constants->application(
             $this->repository->file(self::CONSTANTS, $target),
         );
         $release = Release::next(
             $application,
-            $this->repository->tags(Release::PREFIX),
+            array_map(
+                static fn (Tag $tag): string => $tag->name,
+                $this->repository->tags(Release::PREFIX),
+            ),
         );
         $this->repository->tag((string) $release, $target);
 

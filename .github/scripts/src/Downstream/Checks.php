@@ -11,6 +11,20 @@ final readonly class Checks
     /**
      * @param list<array{name: string, status: string, conclusion: string}> $checks
      */
+    public static function signature(array $checks): string
+    {
+        $names = [];
+        foreach ($checks as $check) {
+            $names[] = "{$check['name']}={$check['conclusion']}";
+        }
+        sort($names, SORT_STRING);
+
+        return implode("\0", $names);
+    }
+
+    /**
+     * @param list<array{name: string, status: string, conclusion: string}> $checks
+     */
     public static function settled(array $checks): bool
     {
         if ($checks === []) {

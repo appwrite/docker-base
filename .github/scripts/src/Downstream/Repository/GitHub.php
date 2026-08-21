@@ -8,6 +8,7 @@ use DockerBase\Command\Runner;
 use DockerBase\Downstream\Exception;
 use DockerBase\Downstream\Pull;
 use DockerBase\Downstream\Repository;
+use DockerBase\Downstream\Tag;
 use JsonException;
 use Override;
 
@@ -58,7 +59,7 @@ final readonly class GitHub implements Repository
     }
 
     /**
-     * @return list<string>
+     * @return list<Tag>
      */
     #[Override]
     public function tags(string $prefix): array
@@ -67,18 +68,44 @@ final readonly class GitHub implements Repository
             'gh', 'api', '--paginate',
             "repos/{$this->repository}/git/matching-refs/tags/{$prefix}",
             '-H', "X-GitHub-Api-Version: {$this->version}",
-            '--jq', '.[].ref',
+            '--jq', '.[] | "\(.ref)\t\(.object.sha)"',
         ]);
 
         $tags = [];
         foreach (preg_split('/\R/', $output) ?: [] as $line) {
-            $line = trim($line);
-            if (str_starts_with($line, 'refs/tags/')) {
-                $tags[] = substr($line, strlen('refs/tags/'));
+            $fields = explode("\t", trim($line));
+            if (
+                count($fields) !== 2
+                || ! str_starts_with($fields[0], 'refs/tags/')
+            ) {
+                continue;
             }
+
+            $tags[] = new Tag(
+                substr($fields[0], strlen('refs/tags/')),
+                $fields[1],
+            );
         }
 
         return $tags;
+    }
+
+    #[Override]
+    public function mergeCommit(string $branch): ?string
+    {
+        $output = $this->text([
+            'gh', 'pr', 'list',
+            '--repo', $this->repository,
+            '--head', $branch,
+            '--state', 'merged',
+            '--json', 'mergeCommit',
+            '--jq', '.[0].mergeCommit.oid // ""',
+        ]);
+        if (trim($output) === '') {
+            return null;
+        }
+
+        return $this->sha($output, "merge commit for {$branch}");
     }
 
     #[Override]

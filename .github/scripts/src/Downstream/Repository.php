@@ -11,9 +11,11 @@ interface Repository
     public function head(string $branch): string;
 
     /**
-     * @return list<string>
+     * @return list<Tag>
      */
     public function tags(string $prefix): array;
+
+    public function mergeCommit(string $branch): ?string;
 
     public function commit(
         string $branch,

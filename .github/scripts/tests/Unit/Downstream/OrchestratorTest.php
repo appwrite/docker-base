@@ -4,14 +4,12 @@ declare(strict_types=1);
 
 namespace DockerBase\Tests\Unit\Downstream;
 
-use DateTimeImmutable;
-use DateTimeZone;
-use DockerBase\Automation\Clock;
 use DockerBase\Automation\Sleeper;
 use DockerBase\Downstream\Constants;
 use DockerBase\Downstream\Dockerfile;
 use DockerBase\Downstream\Exception;
 use DockerBase\Downstream\Orchestrator;
+use DockerBase\Downstream\Tag;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
@@ -58,19 +56,52 @@ final class OrchestratorTest extends TestCase
             rounds: [
                 [self::check('build', 'IN_PROGRESS', '')],
                 [self::check('build', 'COMPLETED', 'SUCCESS')],
+                [self::check('build', 'COMPLETED', 'SUCCESS')],
             ],
         );
 
         $this->orchestrator($repository)->wait(93);
 
-        self::assertSame(['checks:93', 'checks:93'], $repository->calls);
+        self::assertSame(
+            ['checks:93', 'checks:93', 'checks:93'],
+            $repository->calls,
+        );
+    }
+
+    public function test_waits_out_a_late_registering_workflow(): void
+    {
+        $repository = new Fake(
+            self::DOCKERFILE,
+            rounds: [
+                [self::check('lint', 'COMPLETED', 'SUCCESS')],
+                [
+                    self::check('lint', 'COMPLETED', 'SUCCESS'),
+                    self::check('tests', 'IN_PROGRESS', ''),
+                ],
+                [
+                    self::check('lint', 'COMPLETED', 'SUCCESS'),
+                    self::check('tests', 'COMPLETED', 'SUCCESS'),
+                ],
+                [
+                    self::check('lint', 'COMPLETED', 'SUCCESS'),
+                    self::check('tests', 'COMPLETED', 'SUCCESS'),
+                ],
+            ],
+        );
+
+        $this->orchestrator($repository)->wait(93);
+
+        self::assertSame(4, count($repository->calls));
     }
 
     public function test_refuses_to_continue_when_a_check_failed(): void
     {
         $repository = new Fake(
             self::DOCKERFILE,
-            rounds: [[self::check('tests', 'COMPLETED', 'FAILURE')]],
+            rounds: [
+                [self::check('tests', 'COMPLETED', 'FAILURE')],
+                [self::check('tests', 'COMPLETED', 'FAILURE')],
+            ],
         );
 
         $this->expectException(Exception::class);
@@ -101,6 +132,55 @@ final class OrchestratorTest extends TestCase
         );
     }
 
+    public function test_tags_a_merge_that_never_got_its_tag(): void
+    {
+        $merge = 'b0000000000000000000000000000000000000bb';
+        $repository = new Fake(
+            "FROM appwrite/base:2.0.1 AS base\n",
+            head: $merge,
+            merged: $merge,
+        );
+
+        $release = $this->orchestrator($repository)->recover('2.0.1');
+
+        self::assertNotNull($release);
+        self::assertSame('cl-1.9.6-2', (string) $release);
+        self::assertSame('cl-1.9.6-2', $repository->tagged);
+    }
+
+    public function test_does_not_recover_a_merge_already_tagged(): void
+    {
+        $merge = 'b0000000000000000000000000000000000000bb';
+        $repository = new Fake(
+            "FROM appwrite/base:2.0.1 AS base\n",
+            tags: [new Tag('cl-1.9.6-2', $merge)],
+            head: $merge,
+            merged: $merge,
+        );
+
+        self::assertNull($this->orchestrator($repository)->recover('2.0.1'));
+        self::assertNull($repository->tagged);
+    }
+
+    public function test_does_not_recover_a_merge_main_has_moved_past(): void
+    {
+        $repository = new Fake(
+            "FROM appwrite/base:2.0.1 AS base\n",
+            head: 'd0000000000000000000000000000000000000dd',
+            merged: 'b0000000000000000000000000000000000000bb',
+        );
+
+        self::assertNull($this->orchestrator($repository)->recover('2.0.1'));
+        self::assertNull($repository->tagged);
+    }
+
+    public function test_recovers_nothing_without_a_merged_pull_request(): void
+    {
+        $repository = new Fake(self::DOCKERFILE);
+
+        self::assertNull($this->orchestrator($repository)->recover('2.0.1'));
+    }
+
     /**
      * @return array{name: string, status: string, conclusion: string}
      */
@@ -118,19 +198,11 @@ final class OrchestratorTest extends TestCase
 
     private function orchestrator(Fake $repository): Orchestrator
     {
-        $clock = $this->createStub(Clock::class);
-        $clock->method('now')->willReturn(
-            new DateTimeImmutable(
-                '2026-08-21T00:00:00+00:00',
-                new DateTimeZone('UTC'),
-            ),
-        );
-
         return new Orchestrator(
             $repository,
             new Dockerfile(),
             new Constants(),
-            $clock,
+            new Ticker(),
             $this->createStub(Sleeper::class),
         );
     }

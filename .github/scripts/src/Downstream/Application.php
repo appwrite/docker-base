@@ -29,6 +29,7 @@ final readonly class Application
         [$operation, $values] = [array_shift($arguments), $arguments];
 
         return match ([$operation, count($values)]) {
+            ['recover', 1] => $this->recover($values[0]),
             ['propose', 1] => $this->propose($values[0]),
             ['wait', 1] => $this->wait($this->integer($values[0])),
             ['release', 2] => $this->release(
@@ -39,6 +40,22 @@ final readonly class Application
                 "Unknown downstream operation '{$operation}'",
             ),
         };
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function recover(string $version): array
+    {
+        $release = $this->orchestrator->recover($version);
+        if ($release === null) {
+            return ['recovered' => 'false'];
+        }
+
+        return [
+            'recovered' => 'true',
+            'tag' => (string) $release,
+        ];
     }
 
     /**

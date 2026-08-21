@@ -7,6 +7,7 @@ namespace DockerBase\Tests\Unit\Downstream;
 use DockerBase\Downstream\Exception;
 use DockerBase\Downstream\Pull;
 use DockerBase\Downstream\Repository;
+use DockerBase\Downstream\Tag;
 use Override;
 
 final class Fake implements Repository
@@ -17,16 +18,17 @@ final class Fake implements Repository
     public ?string $tagged = null;
 
     /**
-     * @param list<string> $tags
+     * @param list<Tag> $tags
      * @param list<list<array{name: string, status: string, conclusion: string}>> $rounds
      */
     public function __construct(
         private readonly string $dockerfile,
         private readonly string $constants = "<?php\nconst APP_VERSION_STABLE = '1.9.6';\n",
-        private readonly array $tags = ['cl-1.9.6-1'],
+        private readonly array $tags = [],
         private array $rounds = [],
         private readonly string $head = 'a0000000000000000000000000000000000000aa',
         private readonly string $mergeCommit = 'b0000000000000000000000000000000000000bb',
+        private readonly ?string $merged = null,
     ) {
     }
 
@@ -49,14 +51,24 @@ final class Fake implements Repository
     }
 
     /**
-     * @return list<string>
+     * @return list<Tag>
      */
     #[Override]
     public function tags(string $prefix): array
     {
         $this->calls[] = "tags:{$prefix}";
 
-        return $this->tags;
+        return $this->tags === []
+            ? [new Tag('cl-1.9.6-1', 'c0000000000000000000000000000000000000cc')]
+            : $this->tags;
+    }
+
+    #[Override]
+    public function mergeCommit(string $branch): ?string
+    {
+        $this->calls[] = "merged:{$branch}";
+
+        return $this->merged;
     }
 
     #[Override]
