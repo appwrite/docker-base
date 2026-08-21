@@ -10,11 +10,14 @@ final readonly class Change
         public string $name,
         public string $current,
         public string $latest,
+        public ?string $currentReference = null,
+        public ?string $latestReference = null,
     ) {
     }
 
     public function changed(): bool
     {
-        return $this->current !== $this->latest;
+        return $this->current !== $this->latest
+            || $this->currentReference !== $this->latestReference;
     }
 }

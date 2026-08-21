@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace DockerBase\Tests\Unit\Dependency;
 
 use DockerBase\Dependency\Exception;
+use DockerBase\Dependency\Release;
 use DockerBase\Dependency\Selector;
 use DockerBase\Dependency\Version;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -49,16 +50,16 @@ final class VersionTest extends TestCase
         self::assertSame(
             '1.10.0',
             (new Selector())->select(
-                '1.2.0',
-                ['1.2.9', '1.10.0', '1.9.12'],
-            ),
+                self::release('1.2.0'),
+                self::releases(['1.2.9', '1.10.0', '1.9.12']),
+            )->version,
         );
         self::assertSame(
             '1.18446744073709551616.0',
             (new Selector())->select(
-                '1.18446744073709551615.0',
-                ['1.18446744073709551616.0'],
-            ),
+                self::release('1.18446744073709551615.0'),
+                self::releases(['1.18446744073709551616.0']),
+            )->version,
         );
     }
 
@@ -68,11 +69,17 @@ final class VersionTest extends TestCase
 
         self::assertSame(
             '1.3.0',
-            $selector->select('1.2.3', ['1.2.4', '1.3.0']),
+            $selector->select(
+                self::release('1.2.3'),
+                self::releases(['1.2.4', '1.3.0']),
+            )->version,
         );
         self::assertSame(
             '1.2.4',
-            $selector->select('1.2.3', ['1.2.4']),
+            $selector->select(
+                self::release('1.2.3'),
+                self::releases(['1.2.4']),
+            )->version,
         );
     }
 
@@ -80,7 +87,10 @@ final class VersionTest extends TestCase
     {
         self::assertSame(
             '1.2.3',
-            (new Selector())->select('1.2.3', ['2.0.0', 'v3.4.5']),
+            (new Selector())->select(
+                self::release('1.2.3'),
+                self::releases(['2.0.0', 'v3.4.5']),
+            )->version,
         );
     }
 
@@ -89,9 +99,9 @@ final class VersionTest extends TestCase
         self::assertSame(
             '1.2.4',
             (new Selector())->select(
-                '1.2.3',
-                ['1.2.4RC1', 'v1.3.0-beta.1', '1.2.4'],
-            ),
+                self::release('1.2.3'),
+                self::releases(['1.2.4RC1', 'v1.3.0-beta.1', '1.2.4']),
+            )->version,
         );
     }
 
@@ -100,9 +110,9 @@ final class VersionTest extends TestCase
         self::assertSame(
             '1.5.0',
             (new Selector())->select(
-                '1.5.0',
-                ['1.4.9', '1.5.0', '2.0.0'],
-            ),
+                self::release('1.5.0'),
+                self::releases(['1.4.9', '1.5.0', '2.0.0']),
+            )->version,
         );
     }
 
@@ -112,26 +122,32 @@ final class VersionTest extends TestCase
 
         self::assertSame(
             'v1.3.0',
-            $selector->select('1.2.3', ['v1.3.0']),
+            $selector->select(
+                self::release('1.2.3'),
+                self::releases(['v1.3.0']),
+            )->version,
         );
         self::assertSame(
             '1.3.0',
-            $selector->select('v1.2.3', ['1.3.0']),
+            $selector->select(
+                self::release('v1.2.3'),
+                self::releases(['1.3.0']),
+            )->version,
         );
     }
 
     public function test_prefers_current_prefix_for_equivalent_tags(): void
     {
         $selector = new Selector();
-        $releases = ['1.3.0', 'v1.3.0'];
+        $releases = self::releases(['1.3.0', 'v1.3.0']);
 
         self::assertSame(
             'v1.3.0',
-            $selector->select('v1.2.3', $releases),
+            $selector->select(self::release('v1.2.3'), $releases)->version,
         );
         self::assertSame(
             '1.3.0',
-            $selector->select('1.2.3', $releases),
+            $selector->select(self::release('1.2.3'), $releases)->version,
         );
     }
 
@@ -140,6 +156,26 @@ final class VersionTest extends TestCase
         $this->expectException(Exception::class);
         $this->expectExceptionMessage('Invalid current version: 1.2.3RC1');
 
-        (new Selector())->select('1.2.3RC1', ['1.2.4']);
+        (new Selector())->select(
+            self::release('1.2.3RC1'),
+            self::releases(['1.2.4']),
+        );
+    }
+
+    private static function release(string $version): Release
+    {
+        return new Release($version, null);
+    }
+
+    /**
+     * @param list<string> $versions
+     * @return list<Release>
+     */
+    private static function releases(array $versions): array
+    {
+        return array_map(
+            static fn (string $version): Release => self::release($version),
+            $versions,
+        );
     }
 }

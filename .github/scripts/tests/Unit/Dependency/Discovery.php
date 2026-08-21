@@ -53,13 +53,12 @@ final class Discovery implements Fetcher, Runner
             return new Result(0, $output, '');
         }
 
-        if (array_slice($command, 0, 4) === [
+        if (array_slice($command, 0, 3) === [
             'git',
             'ls-remote',
             '--tags',
-            '--refs',
         ]) {
-            $url = $command[4];
+            $url = $command[3];
             foreach (Catalog::create()->dependencies() as $dependency) {
                 if (
                     $dependency->source instanceof Git
@@ -86,6 +85,10 @@ final class Discovery implements Fetcher, Runner
     public function fetch(string $url): string
     {
         $this->urls[] = $url;
+        if (preg_match('#/get/protobuf-(.+)\.tgz\z#', $url, $matched) === 1) {
+            return Fixture::tarball($matched[1]);
+        }
+
         if ($url !== Catalog::PECL_RELEASES) {
             throw new LogicException("Unexpected URL: {$url}");
         }

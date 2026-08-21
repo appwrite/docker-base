@@ -7,19 +7,19 @@ namespace DockerBase\Dependency;
 final readonly class Selector
 {
     /**
-     * @param iterable<string> $releases
+     * @param iterable<Release> $releases
      */
-    public function select(string $current, iterable $releases): string
+    public function select(Release $current, iterable $releases): Release
     {
-        $currentVersion = Version::parse($current);
+        $currentVersion = Version::parse($current->version);
         if ($currentVersion === null) {
-            throw new Exception("Invalid current version: {$current}");
+            throw new Exception("Invalid current version: {$current->version}");
         }
 
         $candidates = [];
         $latest = null;
         foreach ($releases as $release) {
-            $version = Version::parse($release);
+            $version = Version::parse($release->version);
             if (
                 $version === null
                 || $version->major !== $currentVersion->major
@@ -38,16 +38,34 @@ final readonly class Selector
         }
 
         if ($latest === null) {
+            foreach ($releases as $release) {
+                if (
+                    $release->version === $current->version
+                    && $release->reference !== null
+                ) {
+                    return $release;
+                }
+            }
+
             return $current;
         }
 
-        $prefixed = str_starts_with($current, 'v');
+        $prefixed = str_starts_with($current->version, 'v');
         $matching = array_values(array_filter(
             $candidates,
-            static fn (string $release): bool => str_starts_with($release, 'v') === $prefixed,
+            static fn (Release $release): bool => str_starts_with(
+                $release->version,
+                'v',
+            ) === $prefixed,
         ));
         $selected = $matching === [] ? $candidates : $matching;
-        sort($selected, SORT_STRING);
+        usort(
+            $selected,
+            static fn (Release $left, Release $right): int => strcmp(
+                $left->version,
+                $right->version,
+            ),
+        );
 
         return $selected[0];
     }

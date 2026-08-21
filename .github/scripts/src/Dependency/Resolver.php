@@ -58,7 +58,7 @@ final readonly class Resolver
     }
 
     /**
-     * @return list<string>
+     * @return list<Release>
      */
     public function releases(Dependency $dependency): array
     {
@@ -67,7 +67,6 @@ final readonly class Resolver
                 'git',
                 'ls-remote',
                 '--tags',
-                '--refs',
                 $dependency->source->url(),
             ];
 
@@ -98,16 +97,18 @@ final readonly class Resolver
     }
 
     /**
-     * @return list<string>
+     * @return list<Release>
      */
     public function git(string $output): array
     {
-        $releases = [];
         $lines = preg_split('/\R/', $output);
         if ($lines === false) {
             throw new Exception('Unable to inspect git release tags');
         }
 
+        $order = [];
+        $objects = [];
+        $peeled = [];
         foreach ($lines as $line) {
             $line = trim($line);
             if ($line === '') {
@@ -124,16 +125,46 @@ final readonly class Resolver
             }
 
             $tag = substr($fields[1], strlen('refs/tags/'));
-            if (Version::parse($tag) !== null) {
-                $releases[] = $tag;
+            $dereferenced = str_ends_with($tag, '^{}');
+            if ($dereferenced) {
+                $tag = substr($tag, 0, -strlen('^{}'));
             }
+
+            if (Version::parse($tag) === null) {
+                continue;
+            }
+
+            if (preg_match('/\A[0-9a-f]{40}\z/', $fields[0]) !== 1) {
+                throw new Exception(
+                    "Invalid commit for git tag {$tag}",
+                );
+            }
+
+            if ($dereferenced) {
+                $peeled[$tag] = $fields[0];
+
+                continue;
+            }
+
+            if (! isset($objects[$tag])) {
+                $order[] = $tag;
+            }
+            $objects[$tag] = $fields[0];
+        }
+
+        $releases = [];
+        foreach ($order as $tag) {
+            $releases[] = new Release(
+                $tag,
+                $peeled[$tag] ?? $objects[$tag],
+            );
         }
 
         return $releases;
     }
 
     /**
-     * @return list<string>
+     * @return list<Release>
      */
     public function pecl(string $document): array
     {
@@ -178,10 +209,29 @@ final readonly class Resolver
                 strtolower($fields['s'] ?? '') === 'stable'
                 && Version::parse($spelling) !== null
             ) {
-                $releases[] = $spelling;
+                $releases[] = new Release($spelling, null);
             }
         }
 
         return $releases;
+    }
+
+    public function reference(Dependency $dependency, string $version): string
+    {
+        $url = sprintf(
+            'https://pecl.php.net/get/%s-%s.tgz',
+            $dependency->name,
+            $version,
+        );
+        $checksum = hash('sha256', $this->fetcher->fetch($url));
+        $pattern = $dependency->source->pattern();
+        if (preg_match("/\A{$pattern}\z/", $checksum) !== 1) {
+            throw new Exception(
+                "Unable to resolve an immutable reference for "
+                . "{$dependency->name} {$version}",
+            );
+        }
+
+        return $checksum;
     }
 }

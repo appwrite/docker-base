@@ -16,16 +16,19 @@ final readonly class Dockerfile
         $expected = [];
         foreach ($catalog->dependencies() as $dependency) {
             $expected[$dependency->variable] = true;
+            $expected[$dependency->reference] = true;
         }
 
         $declared = [];
         $lines = $this->matches(
-            '/^[ \t]*(?:(?:ARG|ENV)[ \t]+[^\r\n]*|PHP_[A-Za-z0-9_]+_VERSION[^\r\n]*)$/m',
+            '/^[ \t]*(?:(?:ARG|ENV)[ \t]+[^\r\n]*'
+            . '|PHP_[A-Za-z0-9_]+_(?:VERSION|COMMIT|CHECKSUM)[^\r\n]*)$/m',
             $content,
         );
         foreach ($lines as $line) {
             $variables = $this->matches(
-                '/(?<![$A-Za-z0-9_])(PHP_[A-Za-z0-9_]+_VERSION)(?=[ \t]*(?:=|$))/',
+                '/(?<![$A-Za-z0-9_])(PHP_[A-Za-z0-9_]+_'
+                . '(?:VERSION|COMMIT|CHECKSUM))(?=[ \t]*(?:=|$))/',
                 $line[0][0],
             );
             foreach ($variables as $variable) {
@@ -39,7 +42,7 @@ final readonly class Dockerfile
             $plural = count($unknown) === 1 ? '' : 's';
 
             throw new Exception(
-                "Unknown PHP extension version declaration{$plural}: "
+                "Unknown PHP extension pin declaration{$plural}: "
                 . implode(', ', $unknown),
             );
         }
@@ -75,12 +78,7 @@ final readonly class Dockerfile
         ];
 
         foreach ($catalog->dependencies() as $dependency) {
-            $variable = preg_quote($dependency->variable, '/');
-            $match = $this->single(
-                "/^[ \t]*(?:ENV[ \t]+)?{$variable}=\"([^\"\\r\\n]+)\"[ \t]*(?:\\\\)?[ \t]*$/m",
-                $content,
-                $dependency->variable,
-            );
+            $match = $this->declaration($content, $dependency->variable);
             $current = $match[1][0];
             if (Version::parse($current) === null) {
                 throw new Exception(
@@ -94,6 +92,23 @@ final readonly class Dockerfile
                 $current,
                 $match[1][1],
                 $match[1][1] + strlen($current),
+            );
+
+            $match = $this->declaration($content, $dependency->reference);
+            $reference = $match[1][0];
+            $pattern = $dependency->source->pattern();
+            if (preg_match("/\\A{$pattern}\\z/", $reference) !== 1) {
+                throw new Exception(
+                    "{$dependency->reference} must be a lowercase "
+                    . 'immutable reference',
+                );
+            }
+
+            $pins[] = new Pin(
+                $dependency->reference,
+                $reference,
+                $match[1][1],
+                $match[1][1] + strlen($reference),
             );
         }
 
@@ -113,7 +128,14 @@ final readonly class Dockerfile
             throw new Exception('Every dependency pin must have a selected value');
         }
 
-        for ($index = count($pins) - 1; $index >= 0; --$index) {
+        $order = array_keys($pins);
+        usort(
+            $order,
+            static fn (int $left, int $right): int => $pins[$right]->start
+                <=> $pins[$left]->start,
+        );
+
+        foreach ($order as $index) {
             $pin = $pins[$index];
             $content = substr($content, 0, $pin->start)
                 . $selected[$index]
@@ -121,6 +143,20 @@ final readonly class Dockerfile
         }
 
         return $content;
+    }
+
+    /**
+     * @return array<int|string, array{string, int}>
+     */
+    private function declaration(string $content, string $variable): array
+    {
+        $quoted = preg_quote($variable, '/');
+
+        return $this->single(
+            "/^[ \t]*(?:ENV[ \t]+)?{$quoted}=\"([^\"\r\n]+)\"[ \t]*(?:\\\\)?[ \t]*$/m",
+            $content,
+            $variable,
+        );
     }
 
     /**

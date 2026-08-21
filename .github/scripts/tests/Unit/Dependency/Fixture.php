@@ -25,36 +25,53 @@ final readonly class Fixture
     ];
 
     public const array DECLARATIONS = [
-        ['brotli', 'PHP_BROTLI_VERSION'],
-        ['imagick', 'PHP_IMAGICK_VERSION'],
-        ['lz4', 'PHP_LZ4_VERSION'],
-        ['maxminddb', 'PHP_MAXMINDDB_VERSION'],
-        ['mongodb', 'PHP_MONGODB_VERSION'],
-        ['protobuf', 'PHP_PROTOBUF_VERSION'],
-        ['redis', 'PHP_REDIS_VERSION'],
-        ['scrypt', 'PHP_SCRYPT_VERSION'],
-        ['snappy', 'PHP_SNAPPY_VERSION'],
-        ['swoole', 'PHP_SWOOLE_VERSION'],
-        ['yaml', 'PHP_YAML_VERSION'],
-        ['zstd', 'PHP_ZSTD_VERSION'],
+        ['brotli', 'PHP_BROTLI_VERSION', 'PHP_BROTLI_COMMIT'],
+        ['imagick', 'PHP_IMAGICK_VERSION', 'PHP_IMAGICK_COMMIT'],
+        ['lz4', 'PHP_LZ4_VERSION', 'PHP_LZ4_COMMIT'],
+        ['maxminddb', 'PHP_MAXMINDDB_VERSION', 'PHP_MAXMINDDB_COMMIT'],
+        ['mongodb', 'PHP_MONGODB_VERSION', 'PHP_MONGODB_COMMIT'],
+        ['protobuf', 'PHP_PROTOBUF_VERSION', 'PHP_PROTOBUF_CHECKSUM'],
+        ['redis', 'PHP_REDIS_VERSION', 'PHP_REDIS_COMMIT'],
+        ['scrypt', 'PHP_SCRYPT_VERSION', 'PHP_SCRYPT_COMMIT'],
+        ['snappy', 'PHP_SNAPPY_VERSION', 'PHP_SNAPPY_COMMIT'],
+        ['swoole', 'PHP_SWOOLE_VERSION', 'PHP_SWOOLE_COMMIT'],
+        ['yaml', 'PHP_YAML_VERSION', 'PHP_YAML_COMMIT'],
+        ['zstd', 'PHP_ZSTD_VERSION', 'PHP_ZSTD_COMMIT'],
     ];
 
     public const array EXPECTED_DOCKERFILE_DECLARATIONS = [
         'BASE_IMAGE',
+        'PHP_BROTLI_COMMIT',
         'PHP_BROTLI_VERSION',
+        'PHP_IMAGICK_COMMIT',
         'PHP_IMAGICK_VERSION',
+        'PHP_LZ4_COMMIT',
         'PHP_LZ4_VERSION',
+        'PHP_MAXMINDDB_COMMIT',
         'PHP_MAXMINDDB_VERSION',
+        'PHP_MONGODB_COMMIT',
         'PHP_MONGODB_VERSION',
+        'PHP_PROTOBUF_CHECKSUM',
         'PHP_PROTOBUF_VERSION',
+        'PHP_REDIS_COMMIT',
         'PHP_REDIS_VERSION',
+        'PHP_SCRYPT_COMMIT',
         'PHP_SCRYPT_VERSION',
+        'PHP_SNAPPY_COMMIT',
         'PHP_SNAPPY_VERSION',
+        'PHP_SWOOLE_COMMIT',
         'PHP_SWOOLE_VERSION',
+        'PHP_XDEBUG_COMMIT',
         'PHP_XDEBUG_VERSION',
+        'PHP_YAML_COMMIT',
         'PHP_YAML_VERSION',
+        'PHP_ZSTD_COMMIT',
         'PHP_ZSTD_VERSION',
     ];
+
+    public const string OLD_CHECKSUM = 'c0ffee00000000000000000000000000000000000000000000000000000000ee';
+
+    public const string NEW_CHECKSUM = 'facade11111111111111111111111111111111111111111111111111111111dd';
 
     public const string OLD_DIGEST = 'sha256:1111111111111111111111111111111111111111111111111111111111111111';
 
@@ -70,9 +87,11 @@ final readonly class Fixture
             'ENV \\',
         ];
 
-        foreach (self::DECLARATIONS as $index => [$name, $variable]) {
-            $suffix = $index < count(self::DECLARATIONS) - 1 ? ' \\' : '';
-            $lines[] = "    {$variable}=\"" . self::CURRENT[$name] . "\"{$suffix}";
+        foreach (self::DECLARATIONS as $index => [$name, $variable, $reference]) {
+            $last = $index === count(self::DECLARATIONS) - 1;
+            $lines[] = "    {$variable}=\"" . self::CURRENT[$name] . '" \\';
+            $lines[] = "    {$reference}=\"" . self::reference($name) . '"'
+                . ($last ? '' : ' \\');
         }
 
         array_push(
@@ -83,21 +102,52 @@ final readonly class Fixture
             '',
             'FROM compile AS xdebug-build',
             '',
-            'ENV PHP_XDEBUG_VERSION="' . self::CURRENT['xdebug'] . '"',
+            'ENV PHP_XDEBUG_VERSION="' . self::CURRENT['xdebug'] . '" \\',
+            '    PHP_XDEBUG_COMMIT="' . self::reference('xdebug') . '"',
             '',
         );
 
         return implode("\n", $lines);
     }
 
+    public static function reference(string $name): string
+    {
+        return $name === 'protobuf'
+            ? self::checksum(self::CURRENT[$name])
+            : self::commit(self::CURRENT[$name]);
+    }
+
+    public static function tarball(string $version): string
+    {
+        return "protobuf-{$version} tarball";
+    }
+
+    public static function checksum(string $version): string
+    {
+        return hash('sha256', self::tarball($version));
+    }
+
+    public static function commit(string $spelling): string
+    {
+        return substr(hash('sha256', "tag:{$spelling}"), 0, 40);
+    }
+
     public static function gitTags(string ...$spellings): string
     {
         $output = '';
         foreach ($spellings as $spelling) {
-            $output .= str_repeat('a', 40) . "\trefs/tags/{$spelling}\n";
+            $output .= self::annotation($spelling)
+                . "\trefs/tags/{$spelling}\n"
+                . self::commit($spelling)
+                . "\trefs/tags/{$spelling}^{}\n";
         }
 
         return $output;
+    }
+
+    public static function annotation(string $spelling): string
+    {
+        return substr(hash('sha256', "annotation:{$spelling}"), 0, 40);
     }
 
     /**

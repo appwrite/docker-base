@@ -6,6 +6,7 @@ namespace DockerBase\Tests\Unit\Dependency;
 
 use DockerBase\Dependency\Catalog;
 use DockerBase\Dependency\Exception;
+use DockerBase\Dependency\Release;
 use DockerBase\Dependency\Resolver;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
@@ -21,11 +22,16 @@ final class ResolverTest extends TestCase
             '1.4.0RC1',
             'release-1.5.0',
         ) . str_repeat('b', 40) . "\trefs/heads/1.6.0\n"
+            . str_repeat('c', 40) . "\trefs/tags/1.7.0\n"
             . "malformed\n";
 
         self::assertSame(
-            ['1.2.3', 'v1.3.0'],
-            $this->resolver()->git($output),
+            [
+                ['1.2.3', Fixture::commit('1.2.3')],
+                ['v1.3.0', Fixture::commit('v1.3.0')],
+                ['1.7.0', str_repeat('c', 40)],
+            ],
+            self::pairs($this->resolver()->git($output)),
         );
     }
 
@@ -41,8 +47,12 @@ final class ResolverTest extends TestCase
         );
 
         self::assertSame(
-            ['5.35.0', '5.34.2', 'v5.35.1'],
-            $this->resolver()->pecl($document),
+            [
+                ['5.35.0', null],
+                ['5.34.2', null],
+                ['v5.35.1', null],
+            ],
+            self::pairs($this->resolver()->pecl($document)),
         );
     }
 
@@ -79,5 +89,20 @@ final class ResolverTest extends TestCase
         $discovery = new Discovery();
 
         return new Resolver($discovery, $discovery);
+    }
+
+    /**
+     * @param list<Release> $releases
+     * @return list<array{string, string|null}>
+     */
+    private static function pairs(array $releases): array
+    {
+        return array_map(
+            static fn (Release $release): array => [
+                $release->version,
+                $release->reference,
+            ],
+            $releases,
+        );
     }
 }
