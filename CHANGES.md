@@ -13,6 +13,7 @@
 ### Fix
 
 * Duplicate release builds — `build-and-push.yml` no longer triggers on `release: published`. Tag pushes already trigger it, so publishing a release rebuilt and repushed the same image a second time.
+* The XDebug `container-structure-test` step ran `plexsystems/container-structure-test-action@v0.1.0` — a mutable tag two minor versions behind the production step directly above it, and the only action reference in the repo not pinned to a commit SHA. Both steps now pin the same `v0.3.0` commit.
 
 ## Version 1.4.5
 
