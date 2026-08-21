@@ -65,27 +65,14 @@ final readonly class Orchestrator
 
     public function wait(int $pull): void
     {
-        $required = $this->repository->required($this->base);
-        if ($required === []) {
-            throw new Exception(
-                "Branch '{$this->base}' declares no required status checks, "
-                . 'so a merge cannot be verified',
-            );
-        }
-
+        $required = $this->required();
         $deadline = Deadline::after($this->clock->now(), self::TIMEOUT);
 
         while (true) {
             $checks = $this->repository->checks($pull);
             $pending = Checks::pending($checks, $required);
             if ($pending === []) {
-                $failed = Checks::failed($checks, $required);
-                if ($failed !== []) {
-                    throw new Exception(
-                        'Base update CI did not succeed: '
-                        . implode(', ', $failed),
-                    );
-                }
+                $this->assertPassed($checks, $required);
 
                 return;
             }
@@ -123,7 +110,48 @@ final readonly class Orchestrator
 
     public function release(int $pull, string $head): Release
     {
+        $required = $this->required();
+        $checks = $this->repository->checks($pull);
+        $pending = Checks::pending($checks, $required);
+        if ($pending !== []) {
+            throw new Exception(
+                'Required checks are no longer concluded: '
+                . implode(', ', $pending),
+            );
+        }
+        $this->assertPassed($checks, $required);
+
         return $this->tag($this->repository->merge($pull, $head));
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function required(): array
+    {
+        $required = $this->repository->required($this->base);
+        if ($required === []) {
+            throw new Exception(
+                "Branch '{$this->base}' declares no required status checks, "
+                . 'so a merge cannot be verified',
+            );
+        }
+
+        return $required;
+    }
+
+    /**
+     * @param list<array{name: string, status: string, conclusion: string}> $checks
+     * @param list<string> $required
+     */
+    private function assertPassed(array $checks, array $required): void
+    {
+        $failed = Checks::failed($checks, $required);
+        if ($failed !== []) {
+            throw new Exception(
+                'Base update CI did not succeed: ' . implode(', ', $failed),
+            );
+        }
     }
 
     private function tag(string $target): Release

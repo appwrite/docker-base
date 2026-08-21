@@ -18,6 +18,8 @@ final class OrchestratorTest extends TestCase
 {
     private const string DOCKERFILE = "FROM appwrite/base:2.0.0 AS base\n";
 
+    private const string HEAD = 'a0000000000000000000000000000000000000aa';
+
     public function test_opens_a_pull_request_for_a_new_base_version(): void
     {
         $repository = new Fake(self::DOCKERFILE);
@@ -117,9 +119,42 @@ final class OrchestratorTest extends TestCase
         $this->orchestrator($repository)->wait(93);
     }
 
+    public function test_refuses_to_merge_a_check_that_went_pending_again(): void
+    {
+        $repository = new Fake(
+            self::DOCKERFILE,
+            rounds: [[self::check('Tests / Unit', 'IN_PROGRESS', '')]],
+        );
+
+        $this->expectException(Exception::class);
+        $this->expectExceptionMessage(
+            'Required checks are no longer concluded: Tests / Unit',
+        );
+
+        $this->orchestrator($repository)->release(93, self::HEAD);
+    }
+
+    public function test_refuses_to_merge_a_check_that_failed_after_waiting(): void
+    {
+        $repository = new Fake(
+            self::DOCKERFILE,
+            rounds: [[self::check('Tests / Unit', 'COMPLETED', 'FAILURE')]],
+        );
+
+        $this->expectException(Exception::class);
+        $this->expectExceptionMessage(
+            'Base update CI did not succeed: Tests / Unit=FAILURE',
+        );
+
+        $this->orchestrator($repository)->release(93, self::HEAD);
+    }
+
     public function test_merges_then_tags_the_merge_commit(): void
     {
-        $repository = new Fake(self::DOCKERFILE);
+        $repository = new Fake(
+            self::DOCKERFILE,
+            rounds: [[self::check('Tests / Unit', 'COMPLETED', 'SUCCESS')]],
+        );
         $head = 'a0000000000000000000000000000000000000aa';
 
         $release = $this->orchestrator($repository)->release(93, $head);
@@ -128,6 +163,8 @@ final class OrchestratorTest extends TestCase
         self::assertSame('cl-1.9.6-2', $repository->tagged);
         self::assertSame(
             [
+                'required:main',
+                'checks:93',
                 "merge:93@{$head}",
                 'file:app/init/constants.php',
                 'tags:cl-',
