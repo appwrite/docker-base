@@ -24,9 +24,9 @@ final class Ticker implements Clock
         $elapsed = $this->ticks * $this->seconds;
         ++$this->ticks;
 
-        return new DateTimeImmutable(
+        return (new DateTimeImmutable(
             '2026-08-21T00:00:00+00:00',
             new DateTimeZone('UTC'),
-        )->modify("+{$elapsed} seconds");
+        ))->modify("+{$elapsed} seconds");
     }
 }
