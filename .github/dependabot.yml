@@ -21,3 +21,10 @@ updates:
       actions:
         patterns:
           - "*"
+
+  # The automation under .github/scripts is only as trustworthy as the tools
+  # that gate it, so keep Pint, PHPStan, and PHPUnit current.
+  - package-ecosystem: "composer"
+    directory: "/"
+    schedule:
+      interval: "weekly"
