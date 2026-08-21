@@ -30,23 +30,39 @@ final readonly class Application
 
     public function plan(string $content): Plan
     {
+        $dependencies = $this->catalog->dependencies();
         $pins = $this->dockerfile->pins($content, $this->catalog);
-        $selected = [$this->resolver->digest()];
-
-        foreach ($this->catalog->dependencies() as $index => $dependency) {
-            $releases = $this->resolver->releases($dependency);
-            $selected[] = $this->selector->select(
-                $pins[$index + 1]->current,
-                $releases,
+        $expected = 1 + (count($dependencies) * 2);
+        if (count($pins) !== $expected) {
+            throw new Exception(
+                'Every dependency must pin a version and a reference',
             );
         }
 
-        $changes = [];
-        foreach ($pins as $index => $pin) {
+        $digest = $this->resolver->digest();
+        $selected = [$digest];
+        $changes = [new Change($pins[0]->name, $pins[0]->current, $digest)];
+
+        foreach ($dependencies as $index => $dependency) {
+            $version = $pins[($index * 2) + 1];
+            $reference = $pins[($index * 2) + 2];
+            $current = new Release($version->current, $reference->current);
+            $releases = $this->resolver->releases($dependency);
+            $release = $this->selector->select($current, $releases);
+            $resolved = $this->resolver->reference(
+                $dependency,
+                $release->version,
+                $releases,
+            );
+
+            $selected[] = $release->version;
+            $selected[] = $resolved;
             $changes[] = new Change(
-                $pin->name,
-                $pin->current,
-                $selected[$index],
+                $dependency->name,
+                $current->version,
+                $release->version,
+                $reference->current,
+                $resolved,
             );
         }
 

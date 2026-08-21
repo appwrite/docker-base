@@ -34,10 +34,13 @@ final class DockerfileTest extends TestCase
             array_slice($pins, 1),
         );
         $expected = array_keys(Fixture::CURRENT);
+        foreach (Catalog::create()->dependencies() as $dependency) {
+            $expected[] = $dependency->reference;
+        }
         sort($names, SORT_STRING);
         sort($expected, SORT_STRING);
 
-        self::assertSame(14, count($pins));
+        self::assertSame(27, count($pins));
         self::assertSame(Catalog::BASE, $pins[0]->name);
         self::assertSame(Fixture::OLD_DIGEST, $pins[0]->current);
         self::assertSame($expected, $names);
@@ -51,11 +54,12 @@ final class DockerfileTest extends TestCase
 
         $count = preg_match_all(
             '/^[ \t]*(?:(?:ARG|ENV)[ \t]+)?'
-            . '((?:BASE_IMAGE|PHP_[A-Z0-9_]+_VERSION))[ \t]*=/m',
+            . '((?:BASE_IMAGE|PHP_[A-Z0-9_]+_(?:VERSION|COMMIT|CHECKSUM)))'
+            . '[ \t]*=/m',
             $content,
             $matches,
         );
-        self::assertSame(14, $count);
+        self::assertSame(27, $count);
 
         $declarations = array_values(array_unique($matches[1]));
         $expectedDeclarations = Fixture::EXPECTED_DOCKERFILE_DECLARATIONS;
@@ -69,12 +73,153 @@ final class DockerfileTest extends TestCase
             $pins,
         );
         $expectedNames = [Catalog::BASE, ...array_keys(Fixture::CURRENT)];
+        foreach (Catalog::create()->dependencies() as $dependency) {
+            $expectedNames[] = $dependency->reference;
+        }
         sort($names, SORT_STRING);
         sort($expectedNames, SORT_STRING);
         self::assertSame($expectedNames, $names);
         self::assertSame(
             1,
             preg_match('/\Asha256:[0-9a-f]{64}\z/', $pins[0]->current),
+        );
+    }
+
+    public function test_rewrites_every_reference_with_its_version(): void
+    {
+        $plan = $this->application(new Discovery(
+            digest: Fixture::NEW_DIGEST,
+            releases: [
+                'redis' => [Fixture::CURRENT['redis'], '6.3.1'],
+            ],
+            pecl: [
+                [Fixture::CURRENT['protobuf'], 'stable'],
+                ['5.34.1', 'stable'],
+            ],
+        ))->plan(Fixture::dockerfile());
+
+        self::assertSame(
+            1,
+            preg_match(
+                '/PHP_REDIS_COMMIT="' . Fixture::commit('6.3.1') . '"/',
+                $plan->content,
+            ),
+            'redis commit must move to the selected release',
+        );
+        self::assertSame(
+            0,
+            substr_count($plan->content, Fixture::reference('redis')),
+            'the superseded redis commit must not survive',
+        );
+        self::assertSame(
+            1,
+            preg_match(
+                '/PHP_PROTOBUF_CHECKSUM="' . Fixture::checksum('5.34.1') . '"/',
+                $plan->content,
+            ),
+            'protobuf checksum must be resolved from the selected tarball',
+        );
+        self::assertSame(
+            1,
+            preg_match(
+                '/PHP_SNAPPY_COMMIT="' . Fixture::reference('snappy') . '"/',
+                $plan->content,
+            ),
+            'an unchanged dependency must keep its reference',
+        );
+    }
+
+    public function test_reports_a_reference_only_change_as_an_update(): void
+    {
+        $content = str_replace(
+            'PHP_SNAPPY_COMMIT="' . Fixture::reference('snappy') . '"',
+            'PHP_SNAPPY_COMMIT="' . str_repeat('9', 40) . '"',
+            Fixture::dockerfile(),
+        );
+        $plan = $this->application(new Discovery())->plan($content);
+
+        $snappy = null;
+        foreach ($plan->changes as $change) {
+            if ($change->name === 'snappy') {
+                $snappy = $change;
+            }
+        }
+
+        self::assertNotNull($snappy);
+        self::assertSame(Fixture::CURRENT['snappy'], $snappy->latest);
+        self::assertSame(true, $snappy->changed());
+        self::assertSame(
+            Fixture::commit(Fixture::CURRENT['snappy']),
+            $snappy->latestReference,
+        );
+    }
+
+    public function test_reresolves_a_drifted_checksum_without_a_version_change(): void
+    {
+        $content = str_replace(
+            'PHP_PROTOBUF_CHECKSUM="' . Fixture::reference('protobuf') . '"',
+            'PHP_PROTOBUF_CHECKSUM="' . str_repeat('9', 64) . '"',
+            Fixture::dockerfile(),
+        );
+        $plan = $this->application(new Discovery())->plan($content);
+
+        self::assertSame(
+            1,
+            preg_match(
+                '/PHP_PROTOBUF_CHECKSUM="'
+                . Fixture::checksum(Fixture::CURRENT['protobuf']) . '"/',
+                $plan->content,
+            ),
+            'a drifted checksum must be re-resolved from the selected tarball',
+        );
+        self::assertSame(
+            0,
+            substr_count($plan->content, str_repeat('9', 64)),
+            'the drifted checksum must not survive',
+        );
+    }
+
+    public function test_rehashes_a_checksum_absent_from_the_release_feed(): void
+    {
+        $content = str_replace(
+            'PHP_PROTOBUF_CHECKSUM="' . Fixture::reference('protobuf') . '"',
+            'PHP_PROTOBUF_CHECKSUM="' . str_repeat('8', 64) . '"',
+            Fixture::dockerfile(),
+        );
+        $plan = $this->application(new Discovery(
+            pecl: [['4.99.0', 'stable']],
+        ))->plan($content);
+
+        self::assertSame(
+            1,
+            preg_match(
+                '/PHP_PROTOBUF_CHECKSUM="'
+                . Fixture::checksum(Fixture::CURRENT['protobuf']) . '"/',
+                $plan->content,
+            ),
+            'a pin missing from the feed must still be re-hashed',
+        );
+    }
+
+    public function test_rejects_a_pinned_tag_that_upstream_no_longer_has(): void
+    {
+        $this->expectException(Exception::class);
+        $this->expectExceptionMessage('No upstream tag for snappy 0.2.3');
+
+        $this->application(new Discovery(
+            releases: ['snappy' => ['0.2.2']],
+        ))->plan(Fixture::dockerfile());
+    }
+
+    public function test_rejects_a_reference_that_is_not_immutable(): void
+    {
+        $this->assertFailure(
+            str_replace(
+                'PHP_SNAPPY_COMMIT="' . Fixture::reference('snappy') . '"',
+                'PHP_SNAPPY_COMMIT="main"',
+                Fixture::dockerfile(),
+            ),
+            'PHP_SNAPPY_COMMIT must be a lowercase immutable reference',
         );
     }
 
@@ -86,20 +231,20 @@ final class DockerfileTest extends TestCase
                 "ENV \\\n    PHP_UNKNOWN_VERSION=\"1.2.3\" \\\n",
                 Fixture::dockerfile(),
             ),
-            'Unknown PHP extension version declaration: PHP_UNKNOWN_VERSION',
+            'Unknown PHP extension pin declaration: PHP_UNKNOWN_VERSION',
         );
 
         $this->assertFailure(
             Fixture::dockerfile()
                 . "\nENV PHP_second_VERSION=\"1.2.3\" "
                 . "PHP_THIRD_VERSION=\"2.3.4\"\n",
-            'Unknown PHP extension version declarations: '
+            'Unknown PHP extension pin declarations: '
                 . 'PHP_THIRD_VERSION, PHP_second_VERSION',
         );
 
         $this->assertFailure(
             Fixture::dockerfile() . "\nARG PHP_ARGUMENT_VERSION\n",
-            'Unknown PHP extension version declaration: PHP_ARGUMENT_VERSION',
+            'Unknown PHP extension pin declaration: PHP_ARGUMENT_VERSION',
         );
     }
 
@@ -298,7 +443,14 @@ final class DockerfileTest extends TestCase
         ));
 
         self::assertSame(1 + $gitSources, count($discovery->commands));
-        self::assertSame([Catalog::PECL_RELEASES], $discovery->urls);
+        self::assertSame(
+            [
+                Catalog::PECL_RELEASES,
+                'https://pecl.php.net/get/protobuf-'
+                    . Fixture::CURRENT['protobuf'] . '.tgz',
+            ],
+            $discovery->urls,
+        );
 
         foreach ($catalog->dependencies() as $dependency) {
             if (! $dependency->source instanceof Git) {
@@ -312,7 +464,6 @@ final class DockerfileTest extends TestCase
                         'git',
                         'ls-remote',
                         '--tags',
-                        '--refs',
                         $dependency->source->url(),
                     ],
                     $discovery->commands,

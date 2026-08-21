@@ -12,8 +12,8 @@ final readonly class Reporter
         $rows = [
             '## Dependency update report',
             '',
-            '| Dependency | Current | Selected | Result |',
-            '| --- | --- | --- | --- |',
+            '| Dependency | Current | Selected | Reference | Result |',
+            '| --- | --- | --- | --- | --- |',
         ];
 
         foreach ($plan->changes as $change) {
@@ -22,8 +22,11 @@ final readonly class Reporter
             }
 
             $result = $change->changed() ? 'Updated' : 'Current';
+            $reference = $change->latestReference === null
+                ? '—'
+                : '`' . substr($change->latestReference, 0, 12) . '`';
             $rows[] = "| {$change->name} | `{$change->current}` "
-                . "| `{$change->latest}` | {$result} |";
+                . "| `{$change->latest}` | {$reference} | {$result} |";
         }
 
         $rows[] = '';

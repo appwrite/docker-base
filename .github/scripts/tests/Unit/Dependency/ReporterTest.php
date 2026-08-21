@@ -34,7 +34,7 @@ final class ReporterTest extends TestCase
             true,
             str_contains(
                 $report,
-                '| Dependency | Current | Selected | Result |',
+                '| Dependency | Current | Selected | Reference | Result |',
             ),
         );
         self::assertSame(
@@ -42,7 +42,7 @@ final class ReporterTest extends TestCase
             str_contains(
                 $report,
                 '| ' . Catalog::BASE . ' | `' . Fixture::OLD_DIGEST
-                    . '` | `' . Fixture::NEW_DIGEST . '` | Updated |',
+                    . '` | `' . Fixture::NEW_DIGEST . '` | — | Updated |',
             ),
         );
         self::assertSame(
@@ -50,7 +50,9 @@ final class ReporterTest extends TestCase
             str_contains(
                 $report,
                 '| redis | `' . Fixture::CURRENT['redis']
-                    . '` | `6.3.1` | Updated |',
+                    . '` | `6.3.1` | `'
+                    . substr(Fixture::commit('6.3.1'), 0, 12)
+                    . '` | Updated |',
             ),
         );
         self::assertSame(true, str_contains($report, '**Updates:** 2'));

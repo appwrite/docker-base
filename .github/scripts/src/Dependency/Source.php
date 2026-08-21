@@ -7,4 +7,6 @@ namespace DockerBase\Dependency;
 interface Source
 {
     public function url(): string;
+
+    public function pattern(): string;
 }

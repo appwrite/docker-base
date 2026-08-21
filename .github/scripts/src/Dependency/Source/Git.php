@@ -19,4 +19,10 @@ final readonly class Git implements Source
     {
         return $this->url;
     }
+
+    #[Override]
+    public function pattern(): string
+    {
+        return '[0-9a-f]{40}';
+    }
 }
