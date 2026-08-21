@@ -6,6 +6,8 @@ namespace DockerBase\Automation;
 
 interface Repository
 {
+    public function head(): string;
+
     /**
      * @return list<Tag>
      */

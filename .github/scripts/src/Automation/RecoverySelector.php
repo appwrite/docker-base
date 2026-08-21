@@ -15,6 +15,7 @@ final readonly class RecoverySelector
         array $tags,
         array $releases,
         array $merges,
+        string $head,
     ): ?Candidate {
         $released = [];
         $published = [];
@@ -85,6 +86,7 @@ final readonly class RecoverySelector
         foreach ($merges as $merge) {
             if (
                 !isset($targets[$merge->target])
+                && $merge->target === $head
                 && MergeValidator::isAutomation($merge)
             ) {
                 $candidates[] = new Candidate(

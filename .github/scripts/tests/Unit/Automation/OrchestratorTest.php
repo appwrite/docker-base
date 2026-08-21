@@ -253,6 +253,7 @@ final class OrchestratorTest extends TestCase
                     state: 'merged',
                 ),
             ]);
+        $repository->method('head')->willReturn($target);
 
         $candidate = $this->orchestrator($repository)->recover();
 

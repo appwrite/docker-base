@@ -397,6 +397,22 @@ final readonly class GitHub implements Repository
     }
 
     #[Override]
+    public function head(): string
+    {
+        $result = $this->api(
+            'GET',
+            "repos/{$this->repository}/commits/main",
+            [['--jq', '.sha']],
+        );
+        $head = trim($result->output);
+        if (preg_match('/\A[0-9a-f]{40}\z/', $head) !== 1) {
+            throw new RuntimeException('Unable to read the head of main');
+        }
+
+        return $head;
+    }
+
+    #[Override]
     public function draft(int $identifier): Recovery
     {
         $result = $this->api(

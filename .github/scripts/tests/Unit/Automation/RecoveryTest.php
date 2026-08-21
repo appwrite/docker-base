@@ -21,7 +21,7 @@ final class RecoveryTest extends TestCase
         $target = str_repeat('a', 40);
 
         $this->assertCandidate(
-            RecoverySelector::select(
+            self::select(
                 [new Tag(name: '1.4.5', target: $target)],
                 [
                     $this->release(),
@@ -46,7 +46,7 @@ final class RecoveryTest extends TestCase
         $target = str_repeat('a', 40);
 
         $this->assertCandidate(
-            RecoverySelector::select(
+            self::select(
                 [new Tag(name: '1.4.5', target: $target)],
                 [
                     $this->release(
@@ -70,7 +70,7 @@ final class RecoveryTest extends TestCase
         $target = str_repeat('d', 40);
 
         $this->assertCandidate(
-            RecoverySelector::select(
+            self::select(
                 [
                     new Tag(
                         name: '1.4.4',
@@ -79,6 +79,7 @@ final class RecoveryTest extends TestCase
                 ],
                 [$this->release(tag: '1.4.4', draft: false)],
                 [$this->merge(number: 76, target: $target)],
+                head: $target,
             ),
             tag: null,
             target: $target,
@@ -92,7 +93,7 @@ final class RecoveryTest extends TestCase
     {
         self::assertSame(
             null,
-            RecoverySelector::select(
+            self::select(
                 [
                     new Tag(
                         name: '1.4.4',
@@ -116,7 +117,7 @@ final class RecoveryTest extends TestCase
     {
         $this->expectException(RecoveryException::class);
 
-        RecoverySelector::select(
+        self::select(
             [
                 new Tag(
                     name: '1.4.4',
@@ -131,9 +132,29 @@ final class RecoveryTest extends TestCase
                 ),
                 $this->merge(
                     number: 77,
-                    target: str_repeat('e', 40),
+                    target: str_repeat('d', 40),
                 ),
             ],
+            head: str_repeat('d', 40),
+        );
+    }
+
+    #[Test]
+    public function test_ignores_an_untagged_merge_main_has_moved_past(): void
+    {
+        self::assertSame(
+            null,
+            self::select(
+                [
+                    new Tag(
+                        name: '1.4.4',
+                        target: str_repeat('a', 40),
+                    ),
+                ],
+                [$this->release(tag: '1.4.4', draft: false)],
+                [$this->merge(number: 76, target: str_repeat('d', 40))],
+                head: str_repeat('f', 40),
+            ),
         );
     }
 
@@ -142,7 +163,7 @@ final class RecoveryTest extends TestCase
     {
         self::assertSame(
             null,
-            RecoverySelector::select(
+            self::select(
                 [
                     new Tag(
                         name: '9.9.9',
@@ -162,7 +183,7 @@ final class RecoveryTest extends TestCase
 
         self::assertSame(
             null,
-            RecoverySelector::select(
+            self::select(
                 [new Tag(name: '1.4.5', target: $target)],
                 [$this->release(tag: '1.4.4', draft: false)],
                 [
@@ -180,7 +201,7 @@ final class RecoveryTest extends TestCase
         $second = str_repeat('b', 40);
         $this->expectException(RecoveryException::class);
 
-        RecoverySelector::select(
+        self::select(
             [
                 new Tag(name: '1.4.5', target: $first),
                 new Tag(name: '1.4.6', target: $second),
@@ -199,7 +220,7 @@ final class RecoveryTest extends TestCase
         $target = str_repeat('a', 40);
         $this->expectException(RecoveryException::class);
 
-        RecoverySelector::select(
+        self::select(
             [new Tag(name: '1.4.5', target: $target)],
             [
                 $this->release(tag: '1.4.4', draft: false),
@@ -280,5 +301,24 @@ final class RecoveryTest extends TestCase
         self::assertSame($target, $candidate->target);
         self::assertSame($pull, $candidate->pull);
         self::assertSame($draft, $candidate->draft);
+    }
+
+    /**
+     * @param list<Tag> $tags
+     * @param list<Recovery> $releases
+     * @param list<Merge> $merges
+     */
+    private static function select(
+        array $tags,
+        array $releases,
+        array $merges,
+        ?string $head = null,
+    ): ?Candidate {
+        return RecoverySelector::select(
+            $tags,
+            $releases,
+            $merges,
+            $head ?? str_repeat('a', 40),
+        );
     }
 }
