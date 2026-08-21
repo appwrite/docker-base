@@ -109,6 +109,43 @@ final readonly class GitHub implements Repository
     }
 
     #[Override]
+    public function contains(string $branch, string $commit): bool
+    {
+        $status = $this->text([
+            'gh', 'api', '-X', 'GET',
+            "repos/{$this->repository}/compare/{$branch}...{$commit}",
+            '-H', "X-GitHub-Api-Version: {$this->version}",
+            '--jq', '.status',
+        ]);
+
+        return in_array(trim($status), ['identical', 'behind'], true);
+    }
+
+    /**
+     * @return list<string>
+     */
+    #[Override]
+    public function required(string $branch): array
+    {
+        $output = $this->text([
+            'gh', 'api', '-X', 'GET',
+            "repos/{$this->repository}/branches/{$branch}/protection",
+            '-H', "X-GitHub-Api-Version: {$this->version}",
+            '--jq', '.required_status_checks.contexts // [] | .[]',
+        ]);
+
+        $contexts = [];
+        foreach (preg_split('/\R/', $output) ?: [] as $line) {
+            $line = trim($line);
+            if ($line !== '') {
+                $contexts[] = $line;
+            }
+        }
+
+        return $contexts;
+    }
+
+    #[Override]
     public function commit(
         string $branch,
         string $base,

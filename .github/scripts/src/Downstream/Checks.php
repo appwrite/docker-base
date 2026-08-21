@@ -10,46 +10,45 @@ final readonly class Checks
 
     /**
      * @param list<array{name: string, status: string, conclusion: string}> $checks
-     */
-    public static function signature(array $checks): string
-    {
-        $names = [];
-        foreach ($checks as $check) {
-            $names[] = "{$check['name']}={$check['conclusion']}";
-        }
-        sort($names, SORT_STRING);
-
-        return implode("\0", $names);
-    }
-
-    /**
-     * @param list<array{name: string, status: string, conclusion: string}> $checks
-     */
-    public static function settled(array $checks): bool
-    {
-        if ($checks === []) {
-            return false;
-        }
-
-        foreach ($checks as $check) {
-            if ($check['status'] !== 'COMPLETED') {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    /**
-     * @param list<array{name: string, status: string, conclusion: string}> $checks
+     * @param list<string> $required
      *
      * @return list<string>
      */
-    public static function failed(array $checks): array
+    public static function pending(array $checks, array $required): array
     {
+        $concluded = [];
+        foreach ($checks as $check) {
+            if ($check['status'] === 'COMPLETED') {
+                $concluded[$check['name']] = $check['conclusion'];
+            }
+        }
+
+        $pending = [];
+        foreach ($required as $context) {
+            if (! isset($concluded[$context])) {
+                $pending[] = $context;
+            }
+        }
+        sort($pending, SORT_STRING);
+
+        return $pending;
+    }
+
+    /**
+     * @param list<array{name: string, status: string, conclusion: string}> $checks
+     * @param list<string> $required
+     *
+     * @return list<string>
+     */
+    public static function failed(array $checks, array $required): array
+    {
+        $wanted = array_flip($required);
         $failed = [];
         foreach ($checks as $check) {
-            if (! in_array($check['conclusion'], self::PASSING, true)) {
+            if (
+                isset($wanted[$check['name']])
+                && ! in_array($check['conclusion'], self::PASSING, true)
+            ) {
                 $failed[] = "{$check['name']}={$check['conclusion']}";
             }
         }

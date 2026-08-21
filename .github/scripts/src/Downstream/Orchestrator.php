@@ -22,8 +22,6 @@ final readonly class Orchestrator
 
     private const int INTERVAL = 30;
 
-    private const int GRACE = 120;
-
     public function __construct(
         private Repository $repository,
         private Dockerfile $dockerfile,
@@ -67,20 +65,21 @@ final readonly class Orchestrator
 
     public function wait(int $pull): void
     {
-        $deadline = Deadline::after($this->clock->now(), self::TIMEOUT);
+        $required = $this->repository->required($this->base);
+        if ($required === []) {
+            throw new Exception(
+                "Branch '{$this->base}' declares no required status checks, "
+                . 'so a merge cannot be verified',
+            );
+        }
 
-        $grace = Deadline::after($this->clock->now(), self::GRACE);
-        $previous = null;
+        $deadline = Deadline::after($this->clock->now(), self::TIMEOUT);
 
         while (true) {
             $checks = $this->repository->checks($pull);
-            $signature = Checks::signature($checks);
-            if (
-                Checks::settled($checks)
-                && $grace->expired($this->clock->now())
-                && $signature === $previous
-            ) {
-                $failed = Checks::failed($checks);
+            $pending = Checks::pending($checks, $required);
+            if ($pending === []) {
+                $failed = Checks::failed($checks, $required);
                 if ($failed !== []) {
                     throw new Exception(
                         'Base update CI did not succeed: '
@@ -91,10 +90,10 @@ final readonly class Orchestrator
                 return;
             }
 
-            $previous = $signature;
             if ($deadline->expired($this->clock->now())) {
                 throw new Exception(
-                    "Base update CI did not settle for pull request #{$pull}",
+                    'Base update CI did not conclude for pull request '
+                    . "#{$pull}: " . implode(', ', $pending),
                 );
             }
 
@@ -109,7 +108,7 @@ final readonly class Orchestrator
             return null;
         }
 
-        if ($target !== $this->repository->head($this->base)) {
+        if (! $this->repository->contains($this->base, $target)) {
             return null;
         }
 

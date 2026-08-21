@@ -19,6 +19,7 @@ final class Fake implements Repository
 
     /**
      * @param list<Tag> $tags
+     * @param list<string> $requiredChecks
      * @param list<list<array{name: string, status: string, conclusion: string}>> $rounds
      */
     public function __construct(
@@ -29,6 +30,8 @@ final class Fake implements Repository
         private readonly string $head = 'a0000000000000000000000000000000000000aa',
         private readonly string $mergeCommit = 'b0000000000000000000000000000000000000bb',
         private readonly ?string $merged = null,
+        private readonly bool $contained = true,
+        private readonly array $requiredChecks = ['Tests / Unit'],
     ) {
     }
 
@@ -61,6 +64,25 @@ final class Fake implements Repository
         return $this->tags === []
             ? [new Tag('cl-1.9.6-1', 'c0000000000000000000000000000000000000cc')]
             : $this->tags;
+    }
+
+    /**
+     * @return list<string>
+     */
+    #[Override]
+    public function required(string $branch): array
+    {
+        $this->calls[] = "required:{$branch}";
+
+        return $this->requiredChecks;
+    }
+
+    #[Override]
+    public function contains(string $branch, string $commit): bool
+    {
+        $this->calls[] = "contains:{$branch}";
+
+        return $this->contained;
     }
 
     #[Override]

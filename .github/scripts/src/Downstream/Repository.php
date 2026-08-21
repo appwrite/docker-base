@@ -17,6 +17,13 @@ interface Repository
 
     public function mergeCommit(string $branch): ?string;
 
+    public function contains(string $branch, string $commit): bool;
+
+    /**
+     * @return list<string>
+     */
+    public function required(string $branch): array;
+
     public function commit(
         string $branch,
         string $base,

@@ -49,64 +49,69 @@ final class OrchestratorTest extends TestCase
         );
     }
 
-    public function test_waits_until_every_check_concludes(): void
+    public function test_waits_until_every_required_check_concludes(): void
     {
         $repository = new Fake(
             self::DOCKERFILE,
             rounds: [
-                [self::check('build', 'IN_PROGRESS', '')],
-                [self::check('build', 'COMPLETED', 'SUCCESS')],
-                [self::check('build', 'COMPLETED', 'SUCCESS')],
+                [self::check('Tests / Unit', 'IN_PROGRESS', '')],
+                [self::check('Tests / Unit', 'COMPLETED', 'SUCCESS')],
             ],
         );
 
         $this->orchestrator($repository)->wait(93);
 
         self::assertSame(
-            ['checks:93', 'checks:93', 'checks:93'],
+            ['required:main', 'checks:93', 'checks:93'],
             $repository->calls,
         );
     }
 
-    public function test_waits_out_a_late_registering_workflow(): void
+    public function test_waits_for_a_required_check_that_registers_late(): void
     {
         $repository = new Fake(
             self::DOCKERFILE,
             rounds: [
                 [self::check('lint', 'COMPLETED', 'SUCCESS')],
+                [self::check('lint', 'COMPLETED', 'SUCCESS')],
                 [
                     self::check('lint', 'COMPLETED', 'SUCCESS'),
-                    self::check('tests', 'IN_PROGRESS', ''),
+                    self::check('Tests / Unit', 'IN_PROGRESS', ''),
                 ],
                 [
                     self::check('lint', 'COMPLETED', 'SUCCESS'),
-                    self::check('tests', 'COMPLETED', 'SUCCESS'),
-                ],
-                [
-                    self::check('lint', 'COMPLETED', 'SUCCESS'),
-                    self::check('tests', 'COMPLETED', 'SUCCESS'),
+                    self::check('Tests / Unit', 'COMPLETED', 'SUCCESS'),
                 ],
             ],
         );
 
         $this->orchestrator($repository)->wait(93);
 
-        self::assertSame(4, count($repository->calls));
+        self::assertSame(5, count($repository->calls));
+    }
+
+    public function test_refuses_to_merge_when_nothing_is_required(): void
+    {
+        $repository = new Fake(self::DOCKERFILE, requiredChecks: []);
+
+        $this->expectException(Exception::class);
+        $this->expectExceptionMessage(
+            "Branch 'main' declares no required status checks",
+        );
+
+        $this->orchestrator($repository)->wait(93);
     }
 
     public function test_refuses_to_continue_when_a_check_failed(): void
     {
         $repository = new Fake(
             self::DOCKERFILE,
-            rounds: [
-                [self::check('tests', 'COMPLETED', 'FAILURE')],
-                [self::check('tests', 'COMPLETED', 'FAILURE')],
-            ],
+            rounds: [[self::check('Tests / Unit', 'COMPLETED', 'FAILURE')]],
         );
 
         $this->expectException(Exception::class);
         $this->expectExceptionMessage(
-            'Base update CI did not succeed: tests=FAILURE',
+            'Base update CI did not succeed: Tests / Unit=FAILURE',
         );
 
         $this->orchestrator($repository)->wait(93);
@@ -162,12 +167,26 @@ final class OrchestratorTest extends TestCase
         self::assertNull($repository->tagged);
     }
 
-    public function test_does_not_recover_a_merge_main_has_moved_past(): void
+    public function test_recovers_after_main_has_moved_past_the_merge(): void
     {
         $repository = new Fake(
             "FROM appwrite/base:2.0.1 AS base\n",
             head: 'd0000000000000000000000000000000000000dd',
             merged: 'b0000000000000000000000000000000000000bb',
+        );
+
+        $release = $this->orchestrator($repository)->recover('2.0.1');
+
+        self::assertNotNull($release);
+        self::assertSame('cl-1.9.6-2', (string) $release);
+    }
+
+    public function test_does_not_recover_a_merge_absent_from_the_branch(): void
+    {
+        $repository = new Fake(
+            "FROM appwrite/base:2.0.1 AS base\n",
+            merged: 'b0000000000000000000000000000000000000bb',
+            contained: false,
         );
 
         self::assertNull($this->orchestrator($repository)->recover('2.0.1'));

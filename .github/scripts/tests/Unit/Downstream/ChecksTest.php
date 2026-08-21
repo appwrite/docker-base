@@ -11,43 +11,69 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(Checks::class)]
 final class ChecksTest extends TestCase
 {
-    public function test_is_unsettled_while_any_check_runs(): void
+    public function test_reports_a_required_check_that_has_not_registered(): void
     {
         self::assertSame(
-            false,
-            Checks::settled([
-                self::check('build', 'COMPLETED', 'SUCCESS'),
-                self::check('tests', 'IN_PROGRESS', ''),
-            ]),
+            ['Tests / E2E'],
+            Checks::pending(
+                [self::check('Tests / Unit', 'COMPLETED', 'SUCCESS')],
+                ['Tests / Unit', 'Tests / E2E'],
+            ),
         );
     }
 
-    public function test_is_unsettled_when_no_checks_exist(): void
-    {
-        self::assertSame(false, Checks::settled([]));
-    }
-
-    public function test_accepts_skipped_and_neutral_conclusions(): void
-    {
-        $checks = [
-            self::check('build', 'COMPLETED', 'SUCCESS'),
-            self::check('tag-only', 'COMPLETED', 'SKIPPED'),
-            self::check('advisory', 'COMPLETED', 'NEUTRAL'),
-        ];
-
-        self::assertSame(true, Checks::settled($checks));
-        self::assertSame([], Checks::failed($checks));
-    }
-
-    public function test_reports_every_failing_check(): void
+    public function test_reports_a_required_check_that_is_still_running(): void
     {
         self::assertSame(
-            ['lint=CANCELLED', 'tests=FAILURE'],
-            Checks::failed([
-                self::check('build', 'COMPLETED', 'SUCCESS'),
-                self::check('tests', 'COMPLETED', 'FAILURE'),
-                self::check('lint', 'COMPLETED', 'CANCELLED'),
-            ]),
+            ['Build'],
+            Checks::pending(
+                [self::check('Build', 'IN_PROGRESS', '')],
+                ['Build'],
+            ),
+        );
+    }
+
+    public function test_ignores_checks_that_are_not_required(): void
+    {
+        $checks = [
+            self::check('Tests / Unit', 'COMPLETED', 'SUCCESS'),
+            self::check('advisory', 'IN_PROGRESS', ''),
+            self::check('flaky-optional', 'COMPLETED', 'FAILURE'),
+        ];
+
+        self::assertSame([], Checks::pending($checks, ['Tests / Unit']));
+        self::assertSame([], Checks::failed($checks, ['Tests / Unit']));
+    }
+
+    public function test_accepts_skipped_and_neutral_required_conclusions(): void
+    {
+        $checks = [
+            self::check('Tests / Unit', 'COMPLETED', 'SKIPPED'),
+            self::check('Build', 'COMPLETED', 'NEUTRAL'),
+        ];
+
+        self::assertSame(
+            [],
+            Checks::pending($checks, ['Tests / Unit', 'Build']),
+        );
+        self::assertSame(
+            [],
+            Checks::failed($checks, ['Tests / Unit', 'Build']),
+        );
+    }
+
+    public function test_reports_every_failing_required_check(): void
+    {
+        self::assertSame(
+            ['Build=CANCELLED', 'Tests / Unit=FAILURE'],
+            Checks::failed(
+                [
+                    self::check('Tests / Unit', 'COMPLETED', 'FAILURE'),
+                    self::check('Build', 'COMPLETED', 'CANCELLED'),
+                    self::check('lint', 'COMPLETED', 'FAILURE'),
+                ],
+                ['Tests / Unit', 'Build'],
+            ),
         );
     }
 
