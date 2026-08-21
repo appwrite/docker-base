@@ -39,10 +39,7 @@ final readonly class Selector
 
         if ($latest === null) {
             foreach ($releases as $release) {
-                if (
-                    $release->version === $current->version
-                    && $release->reference !== null
-                ) {
+                if ($release->version === $current->version) {
                     return $release;
                 }
             }

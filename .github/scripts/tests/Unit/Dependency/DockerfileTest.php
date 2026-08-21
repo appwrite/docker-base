@@ -154,6 +154,31 @@ final class DockerfileTest extends TestCase
         );
     }
 
+    public function test_reresolves_a_drifted_checksum_without_a_version_change(): void
+    {
+        $content = str_replace(
+            'PHP_PROTOBUF_CHECKSUM="' . Fixture::reference('protobuf') . '"',
+            'PHP_PROTOBUF_CHECKSUM="' . str_repeat('9', 64) . '"',
+            Fixture::dockerfile(),
+        );
+        $plan = $this->application(new Discovery())->plan($content);
+
+        self::assertSame(
+            1,
+            preg_match(
+                '/PHP_PROTOBUF_CHECKSUM="'
+                . Fixture::checksum(Fixture::CURRENT['protobuf']) . '"/',
+                $plan->content,
+            ),
+            'a drifted checksum must be re-resolved from the selected tarball',
+        );
+        self::assertSame(
+            0,
+            substr_count($plan->content, str_repeat('9', 64)),
+            'the drifted checksum must not survive',
+        );
+    }
+
     public function test_rejects_a_reference_that_is_not_immutable(): void
     {
         $this->assertFailure(
@@ -386,7 +411,14 @@ final class DockerfileTest extends TestCase
         ));
 
         self::assertSame(1 + $gitSources, count($discovery->commands));
-        self::assertSame([Catalog::PECL_RELEASES], $discovery->urls);
+        self::assertSame(
+            [
+                Catalog::PECL_RELEASES,
+                'https://pecl.php.net/get/protobuf-'
+                    . Fixture::CURRENT['protobuf'] . '.tgz',
+            ],
+            $discovery->urls,
+        );
 
         foreach ($catalog->dependencies() as $dependency) {
             if (! $dependency->source instanceof Git) {

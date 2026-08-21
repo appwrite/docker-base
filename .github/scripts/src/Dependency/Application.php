@@ -51,15 +51,8 @@ final readonly class Application
                 $current,
                 $this->resolver->releases($dependency),
             );
-            $resolved = $release->reference;
-            if ($resolved === null) {
-                $resolved = $release->version === $current->version
-                    ? $reference->current
-                    : $this->resolver->reference(
-                        $dependency,
-                        $release->version,
-                    );
-            }
+            $resolved = $release->reference
+                ?? $this->resolver->reference($dependency, $release->version);
 
             $selected[] = $release->version;
             $selected[] = $resolved;
