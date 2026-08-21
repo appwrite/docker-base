@@ -10,6 +10,10 @@
 * `verify.yml` runs `composer validate --strict`, `composer check-platform-reqs`, and `composer verify` on every push, so the automation is gated at pull-request time rather than only on the Monday run that uses it.
 * Dependabot now tracks the `composer` ecosystem. The automation is only as trustworthy as the Pint, PHPStan, and PHPUnit versions gating it.
 
+### Add
+
+* Downstream base bump. After a base release publishes, the weekly job opens a pull request in `appwrite/appwrite` rewriting every `appwrite/base:<version>` reference in its `Dockerfile`, waits for that pull request's checks to conclude, merges it, and tags the merge commit `cl-{APP_VERSION_STABLE}-{n}` — reading the application version from `app/init/constants.php` and taking the next unused sub-version for it. Lives in `.github/scripts/src/Downstream`, driven by `bin/downstream.php`. Requires a `DOWNSTREAM_TOKEN` secret with admin rights on the downstream repository, because `main` there requires an approving review and GitHub forbids self-approval; the merge bypasses that review requirement but never the checks.
+
 ### Fix
 
 * The updater rewrote `PHP_*_VERSION` and left `PHP_*_COMMIT` / `PHP_*_CHECKSUM` at the superseded release. Protobuf failed loudly on the checksum, but the git-sourced extensions did not: the build fetched the old commit and shipped, say, brotli 0.20.0 in an image labelled 0.21.0. `Dockerfile::pins()` only ever located the version variable, so no companion reference was ever a candidate for replacement. Every dependency now carries its reference variable through the catalog, resolver, selector, and rewriter, and both move together or neither does.

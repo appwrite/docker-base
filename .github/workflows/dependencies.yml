@@ -16,6 +16,8 @@ permissions:
   pull-requests: write
 
 env:
+  DOWNSTREAM_BRANCH: main
+  DOWNSTREAM_REPOSITORY: appwrite/appwrite
   GITHUB_API_VERSION: '2026-03-10'
 
 jobs:
@@ -254,3 +256,38 @@ jobs:
         run: |
           php .github/scripts/bin/orchestrator.php publish \
             "${TAG}" "${HEAD}" "${PULL}" "${DRAFT}"
+
+      - name: Propose the downstream base update
+        id: downstream
+        if: steps.release.outcome == 'success'
+        env:
+          GH_TOKEN: ${{ secrets.DOWNSTREAM_TOKEN }}
+          TAG: ${{ steps.release.outputs.tag }}
+        run: |
+          php .github/scripts/bin/downstream.php propose "${TAG}"
+
+      - name: Wait for downstream CI
+        if: steps.downstream.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.DOWNSTREAM_TOKEN }}
+          PULL: ${{ steps.downstream.outputs.pull }}
+        run: |
+          php .github/scripts/bin/downstream.php wait "${PULL}"
+
+      - name: Merge and tag the downstream release
+        id: downstream_release
+        if: steps.downstream.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.DOWNSTREAM_TOKEN }}
+          HEAD: ${{ steps.downstream.outputs.head }}
+          PULL: ${{ steps.downstream.outputs.pull }}
+        run: |
+          php .github/scripts/bin/downstream.php release "${PULL}" "${HEAD}"
+
+      - name: Summarise the downstream release
+        if: steps.downstream_release.outcome == 'success'
+        env:
+          TAG: ${{ steps.downstream_release.outputs.tag }}
+        run: |
+          printf '## Downstream release\n\nTagged `%s` in `%s`.\n' \
+            "${TAG}" "${DOWNSTREAM_REPOSITORY}" >> "${GITHUB_STEP_SUMMARY}"
