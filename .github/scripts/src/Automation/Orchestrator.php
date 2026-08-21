@@ -348,13 +348,21 @@ final readonly class Orchestrator
             files: ['Dockerfile'],
             state: 'merged',
         );
-        if (
-            $draft->tag !== $tag
-            || $draft->body !== $body
-            || ! RecoverySelector::matches($draft, $merge)
-        ) {
+        $mismatched = [];
+        if ($draft->tag !== $tag) {
+            $mismatched[] = "tag {$draft->tag} is not {$tag}";
+        }
+        if (! str_starts_with($draft->body, $body)) {
+            $mismatched[] = 'body does not open with the automation markers';
+        }
+        if (! RecoverySelector::matches($draft, $merge)) {
+            $mismatched[] = 'release does not match its automation merge';
+        }
+
+        if ($mismatched !== []) {
             throw new RuntimeException(
-                "Draft release {$draft->identifier} is unsafe",
+                "Draft release {$draft->identifier} is unsafe: "
+                . implode(', ', $mismatched),
             );
         }
     }
