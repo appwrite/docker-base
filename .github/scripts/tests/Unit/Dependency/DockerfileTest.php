@@ -179,6 +179,38 @@ final class DockerfileTest extends TestCase
         );
     }
 
+    public function test_rehashes_a_checksum_absent_from_the_release_feed(): void
+    {
+        $content = str_replace(
+            'PHP_PROTOBUF_CHECKSUM="' . Fixture::reference('protobuf') . '"',
+            'PHP_PROTOBUF_CHECKSUM="' . str_repeat('8', 64) . '"',
+            Fixture::dockerfile(),
+        );
+        $plan = $this->application(new Discovery(
+            pecl: [['4.99.0', 'stable']],
+        ))->plan($content);
+
+        self::assertSame(
+            1,
+            preg_match(
+                '/PHP_PROTOBUF_CHECKSUM="'
+                . Fixture::checksum(Fixture::CURRENT['protobuf']) . '"/',
+                $plan->content,
+            ),
+            'a pin missing from the feed must still be re-hashed',
+        );
+    }
+
+    public function test_rejects_a_pinned_tag_that_upstream_no_longer_has(): void
+    {
+        $this->expectException(Exception::class);
+        $this->expectExceptionMessage('No upstream tag for snappy 0.2.3');
+
+        $this->application(new Discovery(
+            releases: ['snappy' => ['0.2.2']],
+        ))->plan(Fixture::dockerfile());
+    }
+
     public function test_rejects_a_reference_that_is_not_immutable(): void
     {
         $this->assertFailure(

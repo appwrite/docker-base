@@ -47,12 +47,13 @@ final readonly class Application
             $version = $pins[($index * 2) + 1];
             $reference = $pins[($index * 2) + 2];
             $current = new Release($version->current, $reference->current);
-            $release = $this->selector->select(
-                $current,
-                $this->resolver->releases($dependency),
+            $releases = $this->resolver->releases($dependency);
+            $release = $this->selector->select($current, $releases);
+            $resolved = $this->resolver->reference(
+                $dependency,
+                $release->version,
+                $releases,
             );
-            $resolved = $release->reference
-                ?? $this->resolver->reference($dependency, $release->version);
 
             $selected[] = $release->version;
             $selected[] = $resolved;

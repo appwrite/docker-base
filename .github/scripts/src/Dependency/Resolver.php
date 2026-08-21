@@ -216,8 +216,29 @@ final readonly class Resolver
         return $releases;
     }
 
-    public function reference(Dependency $dependency, string $version): string
-    {
+    /**
+     * @param list<Release> $releases
+     */
+    public function reference(
+        Dependency $dependency,
+        string $version,
+        array $releases,
+    ): string {
+        if ($dependency->source instanceof Git) {
+            foreach ($releases as $release) {
+                if (
+                    $release->version === $version
+                    && $release->reference !== null
+                ) {
+                    return $release->reference;
+                }
+            }
+
+            throw new Exception(
+                "No upstream tag for {$dependency->name} {$version}",
+            );
+        }
+
         $url = sprintf(
             'https://pecl.php.net/get/%s-%s.tgz',
             $dependency->name,
