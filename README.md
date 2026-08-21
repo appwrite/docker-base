@@ -96,6 +96,26 @@ Pushing a built image to a repository should be handle by automation.
 docker push appwrite/base:latest | tee "push-$(date +%s).log"
 ```
 
+## Automation
+
+Dependency updates and releases are automated. `.github/workflows/dependencies.yml`
+runs every Monday (and on manual dispatch): it resolves the newest stable
+same-major release for the PHP base digest and each pinned extension, rewrites
+the pins in `Dockerfile`, opens a pull request, waits for that exact head's CI,
+merges it, then tags, builds, and publishes the release. A run that dies between
+merge and publish is resumed on the next run rather than duplicated.
+
+The logic lives in `.github/scripts` as PHP and is exercised by its own suite.
+
+```bash
+composer install
+composer verify
+# pint, phpstan, phpunit, parity
+```
+
+`composer verify` also runs on every push via `.github/workflows/verify.yml`, and
+gates the Monday job before it touches any dependency.
+
 ## Find Us
 
 * [GitHub](https://github.com/appwrite)

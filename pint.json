@@ -1,0 +1,16 @@
+{
+    "preset": "psr12",
+    "rules": {
+        "array_indentation": true,
+        "ordered_imports": {
+            "imports_order": [
+                "const",
+                "class",
+                "function"
+            ],
+            "sort_algorithm": "alpha"
+        },
+        "simplified_null_return": true,
+        "single_import_per_statement": true
+    }
+}

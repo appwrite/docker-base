@@ -1,5 +1,19 @@
 # CHANGELOG
 
+## Version 2.1.0
+
+### Add
+
+* Weekly dependency automation (`.github/workflows/dependencies.yml`). A scheduled job resolves the newest upstream release for every pinned Dockerfile source, rewrites the pins, opens a pull request, waits for the exact CI runs for that head, approves and merges it, then tags, builds, and publishes the release. A `recover` step resumes a run that died between merge and publish, so a half-finished release is completed rather than duplicated.
+* PHP automation domain under `.github/scripts` — `Dependency` (catalog, resolvers, Dockerfile pin rewriting, reporting), `Automation` (release orchestration, version selection, merge and target validation, recovery), `Command`, and `Parity`. Entry points are `bin/dependencies.php`, `bin/orchestrator.php`, and `bin/parity.php`.
+* Composer tooling for the automation: `lint` (Pint), `check` (PHPStan), `test` (PHPUnit), `parity` (asserts every source class has covering tests), and `verify` to run all four. CI runs `composer verify` before touching any dependency.
+* `verify.yml` runs `composer validate --strict`, `composer check-platform-reqs`, and `composer verify` on every push, so the automation is gated at pull-request time rather than only on the Monday run that uses it.
+* Dependabot now tracks the `composer` ecosystem. The automation is only as trustworthy as the Pint, PHPStan, and PHPUnit versions gating it.
+
+### Fix
+
+* Duplicate release builds — `build-and-push.yml` no longer triggers on `release: published`. Tag pushes already trigger it, so publishing a release rebuilt and repushed the same image a second time.
+
 ## Version 1.4.5
 
 ### Fix
