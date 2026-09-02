@@ -102,6 +102,7 @@ commandTests:
     args: ["-i"]
     expectedOutput:
       - "ImageMagick supported formats .*WEBP.*"
+      - "ImageMagick supported formats .*SVG.*"
   - name: 'ImageMagick hardened policy loaded'
     command: "identify"
     args: ["-list", "policy"]
@@ -110,6 +111,11 @@ commandTests:
       - "name: height"
       - "name: disk"
       - "50KP"
+      - "rights: Read\\s+pattern: \\{SVG,SVGZ\\}"
+  - name: 'ImageMagick SVG decode'
+    command: "php"
+    args: ["-r", "$i = new Imagick(); $i->readImageBlob('<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"8\" height=\"8\"/>'); print($i->getImageWidth());"]
+    expectedOutput: ["8"]
   - name: 'PHP intl'
     command: "php"
     args: ["-r", 'print(\Normalizer::FORM_D);']
