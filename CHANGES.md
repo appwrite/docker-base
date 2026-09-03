@@ -2,6 +2,11 @@
 
 ## Version 2.1.0
 
+### Security
+
+* Refresh the PHP 8.5 Alpine base image to PHP 8.5.10, pulling patched `libexpat` 2.8.4-r0 and `rsync` 3.5.0-r0 packages. The resulting production and XDebug images have no vulnerabilities reported by Trivy.
+* Make the Trivy workflow fail on fixable medium, high, or critical vulnerabilities while continuing to upload its SARIF report.
+
 ### Add
 
 * Weekly dependency automation (`.github/workflows/dependencies.yml`). A scheduled job resolves the newest upstream release for every pinned Dockerfile source, rewrites the pins, opens a pull request, waits for the exact CI runs for that head, approves and merges it, then tags, builds, and publishes the release. A `recover` step resumes a run that died between merge and publish, so a half-finished release is completed rather than duplicated.
