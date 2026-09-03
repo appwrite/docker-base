@@ -1,0 +1,49 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended"
+  ],
+  "enabledManagers": [
+    "custom.regex",
+    "dockerfile",
+    "github-actions"
+  ],
+  "labels": [
+    "dependencies"
+  ],
+  "packageRules": [
+    {
+      "allowedVersions": "/^8\\.5-alpine$/",
+      "matchDatasources": [
+        "docker"
+      ],
+      "matchPackageNames": [
+        "php"
+      ]
+    },
+    {
+      "enabled": false,
+      "matchManagers": [
+        "custom.regex"
+      ],
+      "matchUpdateTypes": [
+        "major"
+      ]
+    }
+  ],
+  "schedule": [
+    "before 3am on Monday"
+  ],
+  "timezone": "UTC",
+  "customManagers": [
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^Dockerfile$/"
+      ],
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+) versioning=(?<versioning>\\S+)\\s+ENV PHP_[A-Z0-9_]+_VERSION=\"(?<currentValue>[^\"]+)\"\\s+\\\\\\s+PHP_[A-Z0-9_]+_COMMIT=\"(?<currentDigest>[a-f0-9]{40})\""
+      ]
+    }
+  ]
+}

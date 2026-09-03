@@ -1,5 +1,1 @@
 .idea
-/.phpstan-cache/
-/.phpunit.cache/
-/.phpunit.results.xml
-/vendor/
