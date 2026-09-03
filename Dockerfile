@@ -6,32 +6,54 @@ FROM $BASE_IMAGE AS compile
 
 # Every source is fetched by immutable reference — a commit SHA for git, a
 # tarball checksum for PECL — because a tag can be repointed at any time. The
-# version beside each reference is the release it was resolved from; the
-# weekly updater rewrites both together.
-ENV \
-    PHP_BROTLI_VERSION="0.21.0" \
-    PHP_BROTLI_COMMIT="ced23f5b6f52ef58a3a96d4731db4bee40a82736" \
-    PHP_IMAGICK_VERSION="3.8.1" \
-    PHP_IMAGICK_COMMIT="70087bab33eab913e99ac77d64d04d1a2fd0b7b0" \
-    PHP_LZ4_VERSION="0.7.1" \
-    PHP_LZ4_COMMIT="065a57d8fe237924d74efa3baedf231b7f837c3a" \
-    PHP_MAXMINDDB_VERSION="v1.13.1" \
-    PHP_MAXMINDDB_COMMIT="2194f58d0f024ce923e685cdf92af3daf9951908" \
-    PHP_MONGODB_VERSION="2.4.1" \
-    PHP_MONGODB_COMMIT="3d7e69fd9ed9ed3893b5a3fcdc204c6864ef2241" \
-    PHP_PROTOBUF_VERSION="5.36.0" \
-    PHP_PROTOBUF_CHECKSUM="bbf710ddc3b7ff53acfc327a7c0644d3632590c152567ff57e5d23f11bb8eba7" \
-    PHP_REDIS_VERSION="6.3.0" \
-    PHP_REDIS_COMMIT="df4fab2de7fc327c54c94a13af2b9542e4fbd720" \
-    PHP_SCRYPT_VERSION="2.0.2" \
-    PHP_SCRYPT_COMMIT="5a14bc766423dac3f868792fa8c41f85f47263ec" \
-    PHP_SNAPPY_VERSION="0.2.3" \
-    PHP_SNAPPY_COMMIT="d31b77d63955dbbf1a302ca13c4795292f91d140" \
-    PHP_SWOOLE_VERSION="v6.2.2" \
-    PHP_SWOOLE_COMMIT="8e8c49915ca5f9dcb9ee654f9e336a9c88dd375e" \
-    PHP_YAML_VERSION="2.3.0" \
-    PHP_YAML_COMMIT="c1f0d8ba5ef3884846261bbdb91c2ab0b07db44c" \
-    PHP_ZSTD_VERSION="0.18.0" \
+# version beside each reference is the release it was resolved from. Renovate
+# updates each GitHub tag and its immutable commit together.
+# renovate: datasource=github-tags depName=kjdev/php-ext-brotli versioning=semver-coerced
+ENV PHP_BROTLI_VERSION="0.21.0" \
+    PHP_BROTLI_COMMIT="ced23f5b6f52ef58a3a96d4731db4bee40a82736"
+
+# renovate: datasource=github-tags depName=Imagick/imagick versioning=semver-coerced
+ENV PHP_IMAGICK_VERSION="3.8.1" \
+    PHP_IMAGICK_COMMIT="70087bab33eab913e99ac77d64d04d1a2fd0b7b0"
+
+# renovate: datasource=github-tags depName=kjdev/php-ext-lz4 versioning=semver-coerced
+ENV PHP_LZ4_VERSION="0.7.1" \
+    PHP_LZ4_COMMIT="065a57d8fe237924d74efa3baedf231b7f837c3a"
+
+# renovate: datasource=github-tags depName=maxmind/MaxMind-DB-Reader-php versioning=semver-coerced
+ENV PHP_MAXMINDDB_VERSION="v1.13.1" \
+    PHP_MAXMINDDB_COMMIT="2194f58d0f024ce923e685cdf92af3daf9951908"
+
+# renovate: datasource=github-tags depName=mongodb/mongo-php-driver versioning=semver-coerced
+ENV PHP_MONGODB_VERSION="2.4.1" \
+    PHP_MONGODB_COMMIT="3d7e69fd9ed9ed3893b5a3fcdc204c6864ef2241"
+
+# PECL has no Renovate datasource; update this version and checksum together.
+ENV PHP_PROTOBUF_VERSION="5.36.0" \
+    PHP_PROTOBUF_CHECKSUM="bbf710ddc3b7ff53acfc327a7c0644d3632590c152567ff57e5d23f11bb8eba7"
+
+# renovate: datasource=github-tags depName=phpredis/phpredis versioning=semver-coerced
+ENV PHP_REDIS_VERSION="6.3.0" \
+    PHP_REDIS_COMMIT="df4fab2de7fc327c54c94a13af2b9542e4fbd720"
+
+# renovate: datasource=github-tags depName=DomBlack/php-scrypt versioning=semver-coerced
+ENV PHP_SCRYPT_VERSION="2.0.2" \
+    PHP_SCRYPT_COMMIT="5a14bc766423dac3f868792fa8c41f85f47263ec"
+
+# renovate: datasource=github-tags depName=kjdev/php-ext-snappy versioning=semver-coerced
+ENV PHP_SNAPPY_VERSION="0.2.3" \
+    PHP_SNAPPY_COMMIT="d31b77d63955dbbf1a302ca13c4795292f91d140"
+
+# renovate: datasource=github-tags depName=swoole/swoole-src versioning=semver-coerced
+ENV PHP_SWOOLE_VERSION="v6.2.2" \
+    PHP_SWOOLE_COMMIT="8e8c49915ca5f9dcb9ee654f9e336a9c88dd375e"
+
+# renovate: datasource=github-tags depName=php/pecl-file_formats-yaml versioning=semver-coerced
+ENV PHP_YAML_VERSION="2.3.0" \
+    PHP_YAML_COMMIT="c1f0d8ba5ef3884846261bbdb91c2ab0b07db44c"
+
+# renovate: datasource=github-tags depName=kjdev/php-ext-zstd versioning=semver-coerced
+ENV PHP_ZSTD_VERSION="0.18.0" \
     PHP_ZSTD_COMMIT="c2593a4ce2457b23e7fa7f81ddf0dd9bbdd89b47"
 
 RUN \
@@ -340,8 +362,8 @@ CMD [ "tail", "-f", "/dev/null" ]
 # XDebug variant — build with: docker build --target xdebug -t appwrite/base:XYZ-xdebug .
 FROM compile AS xdebug-build
 
-ENV \
-    PHP_XDEBUG_VERSION="3.5.3" \
+# renovate: datasource=github-tags depName=xdebug/xdebug versioning=semver-coerced
+ENV PHP_XDEBUG_VERSION="3.5.3" \
     PHP_XDEBUG_COMMIT="127bbcb980400752221cfaa54bdc1420e6ef3c12"
 
 RUN \
