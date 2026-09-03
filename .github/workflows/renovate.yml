@@ -1,0 +1,33 @@
+name: Renovate
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - '.github/workflows/**'
+      - 'Dockerfile'
+      - 'renovate.json'
+  pull_request:
+    branches: [ "main" ]
+    paths:
+      - '.github/workflows/**'
+      - 'Dockerfile'
+      - 'renovate.json'
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    container:
+      image: renovate/renovate:44.61.1@sha256:1cdf664e8d59ff536f95842a840f6c6c13be3b4ad1a91afc96c84f9d06b1852c
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Validate configuration
+        run: renovate-config-validator --strict renovate.json
+
+      - name: Verify dependency extraction
+        run: renovate --platform=local --dry-run=lookup --require-config=required
