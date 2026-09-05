@@ -1,6 +1,10 @@
 schemaVersion: '2.0.0'
 
 commandTests:
+  - name: 'PHP libcurl includes TLS shutdown fix'
+    command: "php"
+    args: ["-r", 'exit(version_compare(curl_version()["version"], "8.22.0", ">=") ? 0 : 1);']
+    exitCode: 0
   - name: 'Imagemagick command'
     command: "magick"
     args: ["--version"]
