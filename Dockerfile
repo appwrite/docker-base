@@ -34,6 +34,8 @@ ENV \
     PHP_ZSTD_VERSION="0.18.0" \
     PHP_ZSTD_COMMIT="c2593a4ce2457b23e7fa7f81ddf0dd9bbdd89b47"
 
+# libcurl 8.22.0 fixes retained TLS shutdown sockets in the socket-action API
+# used by Swoole's curl hook (curl/curl#22282). Require it here and at runtime.
 RUN \
   apk update && \
   apk upgrade --no-cache && \
@@ -43,7 +45,7 @@ RUN \
     brotli-dev \
     c-ares-dev \
     curl \
-    curl-dev \
+    'curl-dev>=8.22.0' \
     g++ \
     gcc \
     git \
@@ -268,6 +270,7 @@ RUN apk update && \
     imagemagick \
     imagemagick-heic \
     libavif \
+    'libcurl>=8.22.0' \
     libgomp \
     libheif \
     libjpeg-turbo \
