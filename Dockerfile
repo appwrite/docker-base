@@ -269,6 +269,7 @@ RUN apk update && \
     icu-libs \
     imagemagick \
     imagemagick-heic \
+    imagemagick-svg \
     libavif \
     'libcurl>=8.22.0' \
     libgomp \
@@ -297,7 +298,10 @@ RUN set -eux; \
     POLICY_DIR="$(identify -list configure | awk '/^CONFIGURE_PATH/ {print $2}' | cut -d: -f1)"; \
     cp /tmp/policy.xml "${POLICY_DIR%/}/policy.xml"; \
     rm /tmp/policy.xml; \
-    identify -list policy | grep -q '50KP'
+    identify -list policy | grep -q '50KP'; \
+    printf '<svg xmlns="http://www.w3.org/2000/svg" width="8" height="8"/>' > /tmp/probe.svg; \
+    identify /tmp/probe.svg; \
+    rm /tmp/probe.svg
 
 WORKDIR /usr/src/code
 

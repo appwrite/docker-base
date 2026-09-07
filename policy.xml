@@ -23,7 +23,7 @@
   allocated, and disk caps the pixel-cache spill. memory/map/area merely change
   when the cache moves to disk. All values are tunable.
 
-  Preview inputs are limited to JPEG, PNG, HEIC, WEBP and GIF (output adds
+  Preview inputs are limited to JPEG, PNG, HEIC, WEBP, GIF and SVG (output adds
   AVIF), so the delegate coders disabled below are never used and only add risk.
   Validate changes with https://imagemagick-secevaluator.doyensec.com/.
 -->
@@ -60,13 +60,16 @@
   <policy domain="delegate" rights="none" pattern="HTTPS"/>
   <policy domain="delegate" rights="none" pattern="HTTP"/>
   <policy domain="coder" rights="none" pattern="{PS,PS2,PS3,EPS,EPI,EPT,EPSF,EPSI,PDF,XPS}"/>
-  <policy domain="coder" rights="none" pattern="{MSL,MVG,SVG,SVGZ,MSVG,TEXT,LABEL,CAPTION}"/>
+  <policy domain="coder" rights="none" pattern="{MSL,MVG,MSVG,TEXT,LABEL,CAPTION}"/>
   <policy domain="coder" rights="none" pattern="{URL,FTP,EPHEMERAL,MPEG,MPG}"/>
 
-  <!-- SVG is an SSRF/XXE vector (its renderer resolves external hrefs and
-       entities) and is never a preview input. The module deny also closes the
-       delegate route (e.g. rsvg), which a plain coder deny does not. -->
-  <policy domain="module" rights="none" pattern="{SVG,MSVG,SVGZ}"/>
+  <!-- SVG previews decode via librsvg (imagemagick-svg), read-only - nothing
+       encodes SVG. SVG is historically an SSRF/XXE vector, so the guards
+       around it stay load-bearing: the HTTP/HTTPS delegate denies block
+       external hrefs, the @* path deny below blocks local file reads, and
+       MSVG stays denied above so ImageMagick's internal SVG renderer (the
+       riskier fallback) cannot be reached even if librsvg goes missing. -->
+  <policy domain="coder" rights="read" pattern="{SVG,SVGZ}"/>
 
   <!-- Block indirect reads (e.g. @file, caption:@file) that can leak local files. -->
   <policy domain="path" rights="none" pattern="@*"/>
