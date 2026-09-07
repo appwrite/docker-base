@@ -1,6 +1,6 @@
 # Pin php:8.5-alpine by multi-arch index digest. Bump with:
 #   docker buildx imagetools inspect php:8.5-alpine | head -2
-ARG BASE_IMAGE="php:8.5-alpine@sha256:763e2dc50d4b0cf8d02a1d8fbeedd43f9be879c0be928b1d6f247d45c81fa28f"
+ARG BASE_IMAGE="php:8.5-alpine@sha256:aa66ee4275e0472bafcd18e35142499fcbda6ac90e641e751418e052e6a0d812"
 
 FROM $BASE_IMAGE AS compile
 
@@ -17,10 +17,10 @@ ENV \
     PHP_LZ4_COMMIT="065a57d8fe237924d74efa3baedf231b7f837c3a" \
     PHP_MAXMINDDB_VERSION="v1.13.1" \
     PHP_MAXMINDDB_COMMIT="2194f58d0f024ce923e685cdf92af3daf9951908" \
-    PHP_MONGODB_VERSION="2.4.1" \
-    PHP_MONGODB_COMMIT="3d7e69fd9ed9ed3893b5a3fcdc204c6864ef2241" \
-    PHP_PROTOBUF_VERSION="5.36.0" \
-    PHP_PROTOBUF_CHECKSUM="bbf710ddc3b7ff53acfc327a7c0644d3632590c152567ff57e5d23f11bb8eba7" \
+    PHP_MONGODB_VERSION="2.5.2" \
+    PHP_MONGODB_COMMIT="365aabbed6a6ba1f6a126d6c876d87cdf9f61a82" \
+    PHP_PROTOBUF_VERSION="5.36.1" \
+    PHP_PROTOBUF_CHECKSUM="5bba769656bdddc9ee275f5d08b0faf18e527088230ab52058aa56e363f2fa41" \
     PHP_REDIS_VERSION="6.3.0" \
     PHP_REDIS_COMMIT="df4fab2de7fc327c54c94a13af2b9542e4fbd720" \
     PHP_SCRYPT_VERSION="2.0.2" \
