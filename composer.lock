@@ -61,16 +61,16 @@
         },
         {
             "name": "utopia-php/cli",
-            "version": "0.24.3",
+            "version": "0.24.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/cli.git",
-                "reference": "d6a27f2902e777c2985e834ffb3e662130fd7ecc"
+                "reference": "39d590ffe67b0d63f107ad45533a85163899bc08"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/cli/zipball/d6a27f2902e777c2985e834ffb3e662130fd7ecc",
-                "reference": "d6a27f2902e777c2985e834ffb3e662130fd7ecc",
+                "url": "https://api.github.com/repos/utopia-php/cli/zipball/39d590ffe67b0d63f107ad45533a85163899bc08",
+                "reference": "39d590ffe67b0d63f107ad45533a85163899bc08",
                 "shasum": ""
             },
             "require": {
@@ -102,9 +102,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/cli/issues",
-                "source": "https://github.com/utopia-php/cli/tree/0.24.3"
+                "source": "https://github.com/utopia-php/cli/tree/0.24.4"
             },
-            "time": "2026-06-26T10:48:18+00:00"
+            "time": "2026-09-02T15:57:19+00:00"
         },
         {
             "name": "utopia-php/console",
@@ -150,16 +150,16 @@
         },
         {
             "name": "utopia-php/di",
-            "version": "0.3.5",
+            "version": "0.3.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/di.git",
-                "reference": "053ebd097963190c5b279d66c5b530acb584d8c0"
+                "reference": "a72d8ee141c0883145876da95b527ffdff7ae2a9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/di/zipball/053ebd097963190c5b279d66c5b530acb584d8c0",
-                "reference": "053ebd097963190c5b279d66c5b530acb584d8c0",
+                "url": "https://api.github.com/repos/utopia-php/di/zipball/a72d8ee141c0883145876da95b527ffdff7ae2a9",
+                "reference": "a72d8ee141c0883145876da95b527ffdff7ae2a9",
                 "shasum": ""
             },
             "require": {
@@ -192,9 +192,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/di/issues",
-                "source": "https://github.com/utopia-php/di/tree/0.3.5"
+                "source": "https://github.com/utopia-php/di/tree/0.3.6"
             },
-            "time": "2026-06-26T10:48:18+00:00"
+            "time": "2026-09-02T15:57:19+00:00"
         },
         {
             "name": "utopia-php/servers",
