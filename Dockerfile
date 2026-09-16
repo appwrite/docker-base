@@ -159,6 +159,23 @@ RUN \
   cp $(php-config --extension-dir)/brotli.so /artifacts/ && \
   strip /artifacts/brotli.so
 
+# igbinary 3.2.17RC1 is the first tag that builds on PHP 8.5, and no final
+# 3.2.17 exists yet. The dependency updater only understands x.y.z pins, so the
+# commit is inlined here rather than declared as PHP_IGBINARY_VERSION/COMMIT;
+# move it into the catalog (.github/scripts/src/Dependency/Catalog.php) once
+# igbinary tags a final release.
+FROM compile AS igbinary
+RUN \
+  git init igbinary && \
+  cd igbinary && \
+  git fetch --depth 1 https://github.com/igbinary/igbinary.git edda7101adf583df047d028a154abf3bf04ced61 && \
+  git checkout FETCH_HEAD && \
+  phpize && \
+  ./configure && \
+  make -j"$(nproc)" && make install && \
+  cp $(php-config --extension-dir)/igbinary.so /artifacts/ && \
+  strip /artifacts/igbinary.so
+
 FROM compile AS lz4
 RUN \
   git init lz4 && \
@@ -303,6 +320,7 @@ WORKDIR /usr/src/code
 
 COPY --from=core-extensions /artifacts/ /tmp/exts/
 COPY --from=brotli   /artifacts/ /tmp/exts/
+COPY --from=igbinary /artifacts/ /tmp/exts/
 COPY --from=imagick  /artifacts/ /tmp/exts/
 COPY --from=lz4      /artifacts/ /tmp/exts/
 COPY --from=maxmind  /artifacts/ /tmp/exts/
@@ -320,6 +338,7 @@ RUN cp /tmp/exts/*.so $(php-config --extension-dir)/ && \
     docker-php-ext-enable \
       brotli \
       gd \
+      igbinary \
       imagick \
       intl \
       lz4 \

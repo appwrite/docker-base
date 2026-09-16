@@ -44,6 +44,7 @@ commandTests:
       - gd
       - hash
       - iconv
+      - igbinary
       - imagick
       - intl
       - json
