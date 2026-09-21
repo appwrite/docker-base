@@ -1,6 +1,6 @@
 # Pin php:8.5-alpine by multi-arch index digest. Bump with:
 #   docker buildx imagetools inspect php:8.5-alpine | head -2
-ARG BASE_IMAGE="php:8.5-alpine@sha256:aa66ee4275e0472bafcd18e35142499fcbda6ac90e641e751418e052e6a0d812"
+ARG BASE_IMAGE="php:8.5-alpine@sha256:4992c6fda82eadfb3b22dca3929188dc5831e9f44a3d42b3c8d36a460b4d5a80"
 
 FROM $BASE_IMAGE AS compile
 
@@ -19,8 +19,8 @@ ENV \
     PHP_MAXMINDDB_COMMIT="f3c92f68b3bec42a9aa780368399e03dc6b91e89" \
     PHP_MONGODB_VERSION="2.5.2" \
     PHP_MONGODB_COMMIT="365aabbed6a6ba1f6a126d6c876d87cdf9f61a82" \
-    PHP_PROTOBUF_VERSION="5.36.1" \
-    PHP_PROTOBUF_CHECKSUM="5bba769656bdddc9ee275f5d08b0faf18e527088230ab52058aa56e363f2fa41" \
+    PHP_PROTOBUF_VERSION="5.36.2" \
+    PHP_PROTOBUF_CHECKSUM="f0a17c67de29df0fb0e5215a381df9b155125e1ace6252dd617bf16b4194dd5b" \
     PHP_REDIS_VERSION="6.3.0" \
     PHP_REDIS_COMMIT="df4fab2de7fc327c54c94a13af2b9542e4fbd720" \
     PHP_SCRYPT_VERSION="2.0.2" \
