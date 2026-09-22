@@ -18,6 +18,10 @@ final class Fake implements Repository
 
     public ?string $tagged = null;
 
+    /** Merge attempts in order, each true when branch protection was bypassed. */
+    /** @var list<bool> */
+    public array $merges = [];
+
     /**
      * @param list<Tag> $tags
      * @param list<string> $requiredChecks
@@ -35,6 +39,7 @@ final class Fake implements Repository
         private readonly bool $contained = true,
         private readonly array $requiredChecks = ['Tests / Unit'],
         private array $states = [],
+        private readonly bool $protectionRefusesMerge = false,
     ) {
     }
 
@@ -136,9 +141,17 @@ final class Fake implements Repository
     }
 
     #[Override]
-    public function merge(int $pull, string $head): string
+    public function merge(int $pull, string $head, bool $bypass): string
     {
         $this->calls[] = "merge:{$pull}@{$head}";
+        $this->merges[] = $bypass;
+
+        if ($this->protectionRefusesMerge && ! $bypass) {
+            throw new Exception(
+                "GitHub refused to merge pull request #{$pull} at {$head}: "
+                . 'At least 1 approving review is required.',
+            );
+        }
 
         return $this->mergeCommit;
     }

@@ -257,17 +257,19 @@ final readonly class GitHub implements Repository
     }
 
     #[Override]
-    public function merge(int $pull, string $head): string
+    public function merge(int $pull, string $head, bool $bypass): string
     {
-        $result = $this->runner->run(
-            [
-                'gh', 'pr', 'merge', (string) $pull,
-                '--repo', $this->repository,
-                '--squash',
-                '--match-head-commit', $head,
-            ],
-            check: false,
-        );
+        $command = [
+            'gh', 'pr', 'merge', (string) $pull,
+            '--repo', $this->repository,
+            '--squash',
+            '--match-head-commit', $head,
+        ];
+        if ($bypass) {
+            $command[] = '--admin';
+        }
+
+        $result = $this->runner->run($command, check: false);
         if (! $result->succeeded()) {
             throw new Exception(
                 "GitHub refused to merge pull request #{$pull} at {$head}: "

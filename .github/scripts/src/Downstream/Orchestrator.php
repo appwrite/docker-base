@@ -90,12 +90,46 @@ final readonly class Orchestrator
 
     public function release(int $pull, string $head): Release
     {
-        $this->settle($pull);
+        $required = $this->settle($pull);
 
-        return $this->tag($this->repository->merge($pull, $head));
+        return $this->tag($this->mergeUnderProtection($pull, $head, $required));
     }
 
-    private function settle(int $pull): void
+    /**
+     * Merge through branch protection so GitHub evaluates the required checks
+     * at merge time, which is the only place that evaluation is atomic. A
+     * refusal is only bypassed once the checks are re-read and still green, so
+     * the bypass covers the review requirement the automation cannot satisfy
+     * on its own and never a check that changed underneath it.
+     *
+     * @param list<string> $required
+     */
+    private function mergeUnderProtection(
+        int $pull,
+        string $head,
+        array $required,
+    ): string {
+        try {
+            return $this->repository->merge($pull, $head, bypass: false);
+        } catch (Exception $refused) {
+            $status = $this->repository->status($pull);
+            if (Checks::pending($status->checks, $required) !== []) {
+                throw $refused;
+            }
+            $this->assertPassed($status->checks, $required);
+
+            return $this->repository->merge($pull, $head, bypass: true);
+        }
+    }
+
+    /**
+     * Wait until every required check has concluded green. BLOCKED is not
+     * waited out: the review requirement holds a pull request there forever,
+     * and the merge itself is what resolves it.
+     *
+     * @return list<string>
+     */
+    private function settle(int $pull): array
     {
         $required = $this->required();
         $deadline = Deadline::after($this->clock->now(), self::TIMEOUT);
@@ -105,17 +139,17 @@ final readonly class Orchestrator
             $blocking = Checks::pending($status->checks, $required);
             if ($blocking === []) {
                 $this->assertPassed($status->checks, $required);
-                if ($status->mergeable()) {
-                    return;
-                }
                 if ($status->stuck()) {
                     throw new Exception(
                         "Pull request #{$pull} cannot be merged: "
                         . "merge state {$status->state}",
                     );
                 }
+                if (! $status->computing()) {
+                    return $required;
+                }
 
-                $blocking = ["merge state {$status->state}"];
+                $blocking = ['merge state UNKNOWN'];
             }
 
             if ($deadline->expired($this->clock->now())) {

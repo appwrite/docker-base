@@ -69,27 +69,25 @@ final class OrchestratorTest extends TestCase
         );
     }
 
-    public function test_waits_for_branch_protection_to_clear(): void
+    public function test_merges_through_branch_protection(): void
     {
         $repository = new Fake(
             self::DOCKERFILE,
-            rounds: [
-                [self::check('Tests / Unit', 'COMPLETED', 'SUCCESS')],
-                [self::check('Tests / Unit', 'COMPLETED', 'SUCCESS')],
-                [self::check('Tests / Unit', 'COMPLETED', 'SUCCESS')],
-            ],
-            states: ['UNKNOWN', 'BLOCKED', 'CLEAN'],
+            rounds: [[self::check('Tests / Unit', 'COMPLETED', 'SUCCESS')]],
+            states: ['CLEAN'],
         );
 
-        $this->orchestrator($repository)->wait(93);
+        $release = $this->orchestrator($repository)->release(93, self::HEAD);
 
+        self::assertSame('cl-1.9.6-2', (string) $release);
         self::assertSame(
-            ['required:main', 'status:93', 'status:93', 'status:93'],
-            $repository->calls,
+            [false],
+            $repository->merges,
+            'a mergeable pull request must never be admin-merged',
         );
     }
 
-    public function test_gives_up_when_the_merge_stays_blocked(): void
+    public function test_bypasses_only_the_review_requirement(): void
     {
         $repository = new Fake(
             self::DOCKERFILE,
@@ -98,14 +96,61 @@ final class OrchestratorTest extends TestCase
                 [self::check('Tests / Unit', 'COMPLETED', 'SUCCESS')],
             ],
             states: ['BLOCKED', 'BLOCKED'],
+            protectionRefusesMerge: true,
+        );
+
+        $release = $this->orchestrator($repository)->release(93, self::HEAD);
+
+        self::assertSame('cl-1.9.6-2', (string) $release);
+        self::assertSame(
+            [false, true],
+            $repository->merges,
+            'the bypass must be a fallback, never the first attempt',
+        );
+    }
+
+    public function test_does_not_bypass_a_check_that_went_red_at_the_merge(): void
+    {
+        $repository = new Fake(
+            self::DOCKERFILE,
+            rounds: [
+                [self::check('Tests / Unit', 'COMPLETED', 'SUCCESS')],
+                [self::check('Tests / Unit', 'COMPLETED', 'FAILURE')],
+            ],
+            states: ['CLEAN', 'BLOCKED'],
+            protectionRefusesMerge: true,
+        );
+
+        try {
+            $this->orchestrator($repository)->release(93, self::HEAD);
+            self::fail('a failing required check must not be merged past');
+        } catch (Exception $exception) {
+            self::assertStringContainsString(
+                'Base update CI did not succeed',
+                $exception->getMessage(),
+            );
+        }
+
+        self::assertSame([false], $repository->merges);
+        self::assertNull($repository->tagged);
+    }
+
+    public function test_does_not_bypass_a_check_that_went_pending_at_the_merge(): void
+    {
+        $repository = new Fake(
+            self::DOCKERFILE,
+            rounds: [
+                [self::check('Tests / Unit', 'COMPLETED', 'SUCCESS')],
+                [self::check('Tests / Unit', 'IN_PROGRESS', '')],
+            ],
+            states: ['CLEAN', 'BLOCKED'],
+            protectionRefusesMerge: true,
         );
 
         $this->expectException(Exception::class);
-        $this->expectExceptionMessage(
-            'Pull request #93 did not become mergeable: merge state BLOCKED',
-        );
+        $this->expectExceptionMessage('GitHub refused to merge');
 
-        $this->orchestrator($repository, 7200)->wait(93);
+        $this->orchestrator($repository)->release(93, self::HEAD);
     }
 
     public function test_gives_up_when_a_required_check_never_concludes(): void

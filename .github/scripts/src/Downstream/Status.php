@@ -6,8 +6,6 @@ namespace DockerBase\Downstream;
 
 final readonly class Status
 {
-    private const array MERGEABLE = ['CLEAN', 'HAS_HOOKS', 'UNSTABLE'];
-
     private const array STUCK = ['BEHIND', 'DIRTY', 'DRAFT'];
 
     /**
@@ -19,11 +17,17 @@ final readonly class Status
     ) {
     }
 
-    public function mergeable(): bool
+    /**
+     * GitHub computes mergeability lazily; UNKNOWN means "ask again".
+     */
+    public function computing(): bool
     {
-        return in_array($this->state, self::MERGEABLE, true);
+        return $this->state === 'UNKNOWN';
     }
 
+    /**
+     * Nothing this automation can do clears these states.
+     */
     public function stuck(): bool
     {
         return in_array($this->state, self::STUCK, true);

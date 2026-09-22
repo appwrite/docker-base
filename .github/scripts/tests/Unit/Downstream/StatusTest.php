@@ -17,11 +17,11 @@ final class StatusTest extends TestCase
      */
     public static function states(): iterable
     {
-        yield 'clean' => ['CLEAN', true, false];
-        yield 'hooks' => ['HAS_HOOKS', true, false];
-        yield 'unstable' => ['UNSTABLE', true, false];
+        yield 'clean' => ['CLEAN', false, false];
+        yield 'hooks' => ['HAS_HOOKS', false, false];
+        yield 'unstable' => ['UNSTABLE', false, false];
         yield 'blocked' => ['BLOCKED', false, false];
-        yield 'unknown' => ['UNKNOWN', false, false];
+        yield 'unknown' => ['UNKNOWN', true, false];
         yield 'behind' => ['BEHIND', false, true];
         yield 'dirty' => ['DIRTY', false, true];
         yield 'draft' => ['DRAFT', false, true];
@@ -30,12 +30,12 @@ final class StatusTest extends TestCase
     #[DataProvider('states')]
     public function test_classifies_the_merge_state(
         string $state,
-        bool $mergeable,
+        bool $computing,
         bool $stuck,
     ): void {
         $status = new Status([], $state);
 
-        self::assertSame($mergeable, $status->mergeable());
+        self::assertSame($computing, $status->computing());
         self::assertSame($stuck, $status->stuck());
     }
 }

@@ -41,7 +41,11 @@ interface Repository
 
     public function status(int $pull): Status;
 
-    public function merge(int $pull, string $head): string;
+    /**
+     * Squash-merge, pinned to $head. With $bypass the merge skips branch
+     * protection; without it GitHub evaluates the protection itself.
+     */
+    public function merge(int $pull, string $head, bool $bypass): string;
 
     public function tag(string $name, string $target): void;
 }
