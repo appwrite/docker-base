@@ -39,10 +39,7 @@ interface Repository
         string $body,
     ): Pull;
 
-    /**
-     * @return list<array{name: string, status: string, conclusion: string}>
-     */
-    public function checks(int $pull): array;
+    public function status(int $pull): Status;
 
     public function merge(int $pull, string $head): string;
 

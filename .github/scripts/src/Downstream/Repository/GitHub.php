@@ -8,6 +8,7 @@ use DockerBase\Command\Runner;
 use DockerBase\Downstream\Exception;
 use DockerBase\Downstream\Pull;
 use DockerBase\Downstream\Repository;
+use DockerBase\Downstream\Status;
 use DockerBase\Downstream\Tag;
 use JsonException;
 use Override;
@@ -217,22 +218,20 @@ final readonly class GitHub implements Repository
         );
     }
 
-    /**
-     * @return list<array{name: string, status: string, conclusion: string}>
-     */
     #[Override]
-    public function checks(int $pull): array
+    public function status(int $pull): Status
     {
         $payload = $this->json([
             'gh', 'pr', 'view', (string) $pull,
             '--repo', $this->repository,
-            '--json', 'statusCheckRollup',
+            '--json', 'mergeStateStatus,statusCheckRollup',
         ]);
 
         $rollup = $payload['statusCheckRollup'] ?? null;
-        if (! is_array($rollup)) {
+        $state = $payload['mergeStateStatus'] ?? null;
+        if (! is_array($rollup) || ! is_string($state)) {
             throw new Exception(
-                "Unable to read checks for pull request #{$pull}",
+                "Unable to read the status of pull request #{$pull}",
             );
         }
 
@@ -254,19 +253,27 @@ final readonly class GitHub implements Repository
             ];
         }
 
-        return $checks;
+        return new Status($checks, strtoupper($state));
     }
 
     #[Override]
     public function merge(int $pull, string $head): string
     {
-        $this->runner->run([
-            'gh', 'pr', 'merge', (string) $pull,
-            '--repo', $this->repository,
-            '--squash',
-            '--admin',
-            '--match-head-commit', $head,
-        ]);
+        $result = $this->runner->run(
+            [
+                'gh', 'pr', 'merge', (string) $pull,
+                '--repo', $this->repository,
+                '--squash',
+                '--match-head-commit', $head,
+            ],
+            check: false,
+        );
+        if (! $result->succeeded()) {
+            throw new Exception(
+                "GitHub refused to merge pull request #{$pull} at {$head}: "
+                . trim($result->error),
+            );
+        }
 
         $target = $this->text([
             'gh', 'pr', 'view', (string) $pull,

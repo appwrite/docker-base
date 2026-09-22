@@ -7,6 +7,7 @@ namespace DockerBase\Tests\Unit\Downstream;
 use DockerBase\Downstream\Exception;
 use DockerBase\Downstream\Pull;
 use DockerBase\Downstream\Repository;
+use DockerBase\Downstream\Status;
 use DockerBase\Downstream\Tag;
 use Override;
 
@@ -21,6 +22,7 @@ final class Fake implements Repository
      * @param list<Tag> $tags
      * @param list<string> $requiredChecks
      * @param list<list<array{name: string, status: string, conclusion: string}>> $rounds
+     * @param list<string> $states
      */
     public function __construct(
         private readonly string $dockerfile,
@@ -32,6 +34,7 @@ final class Fake implements Repository
         private readonly ?string $merged = null,
         private readonly bool $contained = true,
         private readonly array $requiredChecks = ['Tests / Unit'],
+        private array $states = [],
     ) {
     }
 
@@ -118,18 +121,18 @@ final class Fake implements Repository
         return new Pull(93, $this->head, $base);
     }
 
-    /**
-     * @return list<array{name: string, status: string, conclusion: string}>
-     */
     #[Override]
-    public function checks(int $pull): array
+    public function status(int $pull): Status
     {
-        $this->calls[] = "checks:{$pull}";
+        $this->calls[] = "status:{$pull}";
         if ($this->rounds === []) {
-            throw new Exception('No further check rounds');
+            throw new Exception('No further status rounds');
         }
 
-        return array_shift($this->rounds);
+        return new Status(
+            array_shift($this->rounds),
+            array_shift($this->states) ?? 'CLEAN',
+        );
     }
 
     #[Override]

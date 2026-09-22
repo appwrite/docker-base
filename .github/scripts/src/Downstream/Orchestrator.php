@@ -65,27 +65,7 @@ final readonly class Orchestrator
 
     public function wait(int $pull): void
     {
-        $required = $this->required();
-        $deadline = Deadline::after($this->clock->now(), self::TIMEOUT);
-
-        while (true) {
-            $checks = $this->repository->checks($pull);
-            $pending = Checks::pending($checks, $required);
-            if ($pending === []) {
-                $this->assertPassed($checks, $required);
-
-                return;
-            }
-
-            if ($deadline->expired($this->clock->now())) {
-                throw new Exception(
-                    'Base update CI did not conclude for pull request '
-                    . "#{$pull}: " . implode(', ', $pending),
-                );
-            }
-
-            $this->sleeper->sleep(self::INTERVAL);
-        }
+        $this->settle($pull);
     }
 
     public function recover(string $version): ?Release
@@ -110,18 +90,43 @@ final readonly class Orchestrator
 
     public function release(int $pull, string $head): Release
     {
-        $required = $this->required();
-        $checks = $this->repository->checks($pull);
-        $pending = Checks::pending($checks, $required);
-        if ($pending !== []) {
-            throw new Exception(
-                'Required checks are no longer concluded: '
-                . implode(', ', $pending),
-            );
-        }
-        $this->assertPassed($checks, $required);
+        $this->settle($pull);
 
         return $this->tag($this->repository->merge($pull, $head));
+    }
+
+    private function settle(int $pull): void
+    {
+        $required = $this->required();
+        $deadline = Deadline::after($this->clock->now(), self::TIMEOUT);
+
+        while (true) {
+            $status = $this->repository->status($pull);
+            $blocking = Checks::pending($status->checks, $required);
+            if ($blocking === []) {
+                $this->assertPassed($status->checks, $required);
+                if ($status->mergeable()) {
+                    return;
+                }
+                if ($status->stuck()) {
+                    throw new Exception(
+                        "Pull request #{$pull} cannot be merged: "
+                        . "merge state {$status->state}",
+                    );
+                }
+
+                $blocking = ["merge state {$status->state}"];
+            }
+
+            if ($deadline->expired($this->clock->now())) {
+                throw new Exception(
+                    "Pull request #{$pull} did not become mergeable: "
+                    . implode(', ', $blocking),
+                );
+            }
+
+            $this->sleeper->sleep(self::INTERVAL);
+        }
     }
 
     /**

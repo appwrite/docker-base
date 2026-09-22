@@ -64,9 +64,82 @@ final class OrchestratorTest extends TestCase
         $this->orchestrator($repository)->wait(93);
 
         self::assertSame(
-            ['required:main', 'checks:93', 'checks:93'],
+            ['required:main', 'status:93', 'status:93'],
             $repository->calls,
         );
+    }
+
+    public function test_waits_for_branch_protection_to_clear(): void
+    {
+        $repository = new Fake(
+            self::DOCKERFILE,
+            rounds: [
+                [self::check('Tests / Unit', 'COMPLETED', 'SUCCESS')],
+                [self::check('Tests / Unit', 'COMPLETED', 'SUCCESS')],
+                [self::check('Tests / Unit', 'COMPLETED', 'SUCCESS')],
+            ],
+            states: ['UNKNOWN', 'BLOCKED', 'CLEAN'],
+        );
+
+        $this->orchestrator($repository)->wait(93);
+
+        self::assertSame(
+            ['required:main', 'status:93', 'status:93', 'status:93'],
+            $repository->calls,
+        );
+    }
+
+    public function test_gives_up_when_the_merge_stays_blocked(): void
+    {
+        $repository = new Fake(
+            self::DOCKERFILE,
+            rounds: [
+                [self::check('Tests / Unit', 'COMPLETED', 'SUCCESS')],
+                [self::check('Tests / Unit', 'COMPLETED', 'SUCCESS')],
+            ],
+            states: ['BLOCKED', 'BLOCKED'],
+        );
+
+        $this->expectException(Exception::class);
+        $this->expectExceptionMessage(
+            'Pull request #93 did not become mergeable: merge state BLOCKED',
+        );
+
+        $this->orchestrator($repository, 7200)->wait(93);
+    }
+
+    public function test_gives_up_when_a_required_check_never_concludes(): void
+    {
+        $repository = new Fake(
+            self::DOCKERFILE,
+            rounds: [
+                [self::check('Tests / Unit', 'IN_PROGRESS', '')],
+                [self::check('Tests / Unit', 'IN_PROGRESS', '')],
+            ],
+        );
+
+        $this->expectException(Exception::class);
+        $this->expectExceptionMessage(
+            'Pull request #93 did not become mergeable: Tests / Unit',
+        );
+
+        $this->orchestrator($repository, 7200)->wait(93);
+    }
+
+    public function test_refuses_a_pull_request_that_cannot_merge(): void
+    {
+        $repository = new Fake(
+            self::DOCKERFILE,
+            rounds: [[self::check('Tests / Unit', 'COMPLETED', 'SUCCESS')]],
+            states: ['DIRTY'],
+        );
+
+        $this->expectException(Exception::class);
+        $this->expectExceptionMessage(
+            'Pull request #93 cannot be merged: merge state DIRTY',
+        );
+
+        $this->orchestrator($repository)->release(93, self::HEAD);
     }
 
     public function test_waits_for_a_required_check_that_registers_late(): void
@@ -119,19 +192,31 @@ final class OrchestratorTest extends TestCase
         $this->orchestrator($repository)->wait(93);
     }
 
-    public function test_refuses_to_merge_a_check_that_went_pending_again(): void
+    public function test_waits_for_a_rerun_check_before_merging(): void
     {
         $repository = new Fake(
             self::DOCKERFILE,
-            rounds: [[self::check('Tests / Unit', 'IN_PROGRESS', '')]],
+            rounds: [
+                [self::check('Tests / Unit', 'IN_PROGRESS', '')],
+                [self::check('Tests / Unit', 'COMPLETED', 'SUCCESS')],
+            ],
         );
 
-        $this->expectException(Exception::class);
-        $this->expectExceptionMessage(
-            'Required checks are no longer concluded: Tests / Unit',
-        );
+        $release = $this->orchestrator($repository)->release(93, self::HEAD);
 
-        $this->orchestrator($repository)->release(93, self::HEAD);
+        self::assertSame('cl-1.9.6-2', (string) $release);
+        self::assertSame(
+            [
+                'required:main',
+                'status:93',
+                'status:93',
+                'merge:93@' . self::HEAD,
+                'file:app/init/constants.php',
+                'tags:cl-',
+                'tag:cl-1.9.6-2@b0000000000000000000000000000000000000bb',
+            ],
+            $repository->calls,
+        );
     }
 
     public function test_refuses_to_merge_a_check_that_failed_after_waiting(): void
@@ -164,7 +249,7 @@ final class OrchestratorTest extends TestCase
         self::assertSame(
             [
                 'required:main',
-                'checks:93',
+                'status:93',
                 "merge:93@{$head}",
                 'file:app/init/constants.php',
                 'tags:cl-',
@@ -252,13 +337,15 @@ final class OrchestratorTest extends TestCase
         ];
     }
 
-    private function orchestrator(Fake $repository): Orchestrator
-    {
+    private function orchestrator(
+        Fake $repository,
+        int $seconds = 90,
+    ): Orchestrator {
         return new Orchestrator(
             $repository,
             new Dockerfile(),
             new Constants(),
-            new Ticker(),
+            new Ticker($seconds),
             $this->createStub(Sleeper::class),
         );
     }
