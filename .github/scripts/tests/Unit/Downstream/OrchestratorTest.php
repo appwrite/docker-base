@@ -286,18 +286,13 @@ final class OrchestratorTest extends TestCase
         $release = $this->orchestrator($repository)->release(93, self::HEAD);
 
         self::assertSame('cl-1.9.6-2', (string) $release);
+        self::assertSame('cl-1.9.6-2', $repository->tagged);
         self::assertSame(
-            [
-                'required:main',
-                'status:93',
-                'status:93',
-                'merge:93@' . self::HEAD,
-                'file:app/init/constants.php',
-                'tags:cl-',
-                'tag:cl-1.9.6-2@b0000000000000000000000000000000000000bb',
-            ],
-            $repository->calls,
+            'b0000000000000000000000000000000000000bb',
+            $repository->taggedTarget,
+            'the tag belongs on the merge commit, not on the head that was tested',
         );
+        self::assertFalse($repository->bypassed);
     }
 
     public function test_refuses_to_merge_a_check_that_failed_after_waiting(): void

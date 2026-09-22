@@ -18,6 +18,9 @@ final class Fake implements Repository
 
     public ?string $tagged = null;
 
+    /** The commit the tag was put on. */
+    public ?string $taggedTarget = null;
+
     /** True once a merge bypassed branch protection. */
     public bool $bypassed = false;
 
@@ -168,5 +171,6 @@ final class Fake implements Repository
     {
         $this->calls[] = "tag:{$name}@{$target}";
         $this->tagged = $name;
+        $this->taggedTarget = $target;
     }
 }

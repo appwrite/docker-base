@@ -53,6 +53,20 @@ final class RefusalTest extends TestCase
             'Something GitHub has not said before.',
             false,
         ];
+        yield 'a review alongside a deployment' => [
+            'At least 1 approving review is required by reviewers with write access. '
+            . 'Required deployment "production" is pending.',
+            false,
+        ];
+        yield 'a review alongside unresolved conversations' => [
+            'Changes requested by a reviewer. '
+            . 'All conversations on this pull request must be resolved.',
+            false,
+        ];
+        yield 'a review alongside a branch restriction' => [
+            'At least 2 approving reviews are required. You are not authorized to push to this branch.',
+            false,
+        ];
     }
 
     #[DataProvider('refusals')]
