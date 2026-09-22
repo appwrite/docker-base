@@ -1,6 +1,6 @@
 # Pin php:8.5-alpine by multi-arch index digest. Bump with:
 #   docker buildx imagetools inspect php:8.5-alpine | head -2
-ARG BASE_IMAGE="php:8.5-alpine@sha256:0554eb53778b5316f6b9a3447c9dfa3cf2141c0c02ff816c42cdc9aa240a34aa"
+ARG BASE_IMAGE="php:8.5-alpine@sha256:4992c6fda82eadfb3b22dca3929188dc5831e9f44a3d42b3c8d36a460b4d5a80"
 
 FROM $BASE_IMAGE AS compile
 
@@ -13,14 +13,14 @@ ENV \
     PHP_BROTLI_COMMIT="ced23f5b6f52ef58a3a96d4731db4bee40a82736" \
     PHP_IMAGICK_VERSION="3.8.1" \
     PHP_IMAGICK_COMMIT="70087bab33eab913e99ac77d64d04d1a2fd0b7b0" \
-    PHP_LZ4_VERSION="0.7.0" \
-    PHP_LZ4_COMMIT="b871fbf4d0c5c2b0cad22dd74721a340cb2e4ffa" \
-    PHP_MAXMINDDB_VERSION="v1.13.1" \
-    PHP_MAXMINDDB_COMMIT="2194f58d0f024ce923e685cdf92af3daf9951908" \
-    PHP_MONGODB_VERSION="2.4.0" \
-    PHP_MONGODB_COMMIT="f4534cfde9dd9b3f3a691ecda8ccbda6a9678c35" \
-    PHP_PROTOBUF_VERSION="5.36.0" \
-    PHP_PROTOBUF_CHECKSUM="bbf710ddc3b7ff53acfc327a7c0644d3632590c152567ff57e5d23f11bb8eba7" \
+    PHP_LZ4_VERSION="0.7.1" \
+    PHP_LZ4_COMMIT="065a57d8fe237924d74efa3baedf231b7f837c3a" \
+    PHP_MAXMINDDB_VERSION="v1.14.0" \
+    PHP_MAXMINDDB_COMMIT="f3c92f68b3bec42a9aa780368399e03dc6b91e89" \
+    PHP_MONGODB_VERSION="2.5.2" \
+    PHP_MONGODB_COMMIT="365aabbed6a6ba1f6a126d6c876d87cdf9f61a82" \
+    PHP_PROTOBUF_VERSION="5.36.2" \
+    PHP_PROTOBUF_CHECKSUM="f0a17c67de29df0fb0e5215a381df9b155125e1ace6252dd617bf16b4194dd5b" \
     PHP_REDIS_VERSION="6.3.0" \
     PHP_REDIS_COMMIT="df4fab2de7fc327c54c94a13af2b9542e4fbd720" \
     PHP_SCRYPT_VERSION="2.0.2" \
@@ -34,6 +34,8 @@ ENV \
     PHP_ZSTD_VERSION="0.18.0" \
     PHP_ZSTD_COMMIT="c2593a4ce2457b23e7fa7f81ddf0dd9bbdd89b47"
 
+# libcurl 8.22.0 fixes retained TLS shutdown sockets in the socket-action API
+# used by Swoole's curl hook (curl/curl#22282). Require it here and at runtime.
 RUN \
   apk update && \
   apk upgrade --no-cache && \
@@ -43,7 +45,7 @@ RUN \
     brotli-dev \
     c-ares-dev \
     curl \
-    curl-dev \
+    'curl-dev>=8.22.0' \
     g++ \
     gcc \
     git \
@@ -157,6 +159,23 @@ RUN \
   cp $(php-config --extension-dir)/brotli.so /artifacts/ && \
   strip /artifacts/brotli.so
 
+# igbinary 3.2.17RC1 is the first tag that builds on PHP 8.5, and no final
+# 3.2.17 exists yet. The dependency updater only understands x.y.z pins, so the
+# commit is inlined here rather than declared as PHP_IGBINARY_VERSION/COMMIT;
+# move it into the catalog (.github/scripts/src/Dependency/Catalog.php) once
+# igbinary tags a final release.
+FROM compile AS igbinary
+RUN \
+  git init igbinary && \
+  cd igbinary && \
+  git fetch --depth 1 https://github.com/igbinary/igbinary.git edda7101adf583df047d028a154abf3bf04ced61 && \
+  git checkout FETCH_HEAD && \
+  phpize && \
+  ./configure && \
+  make -j"$(nproc)" && make install && \
+  cp $(php-config --extension-dir)/igbinary.so /artifacts/ && \
+  strip /artifacts/igbinary.so
+
 FROM compile AS lz4
 RUN \
   git init lz4 && \
@@ -268,6 +287,7 @@ RUN apk update && \
     imagemagick \
     imagemagick-heic \
     libavif \
+    'libcurl>=8.22.0' \
     libgomp \
     libheif \
     libjpeg-turbo \
@@ -300,6 +320,7 @@ WORKDIR /usr/src/code
 
 COPY --from=core-extensions /artifacts/ /tmp/exts/
 COPY --from=brotli   /artifacts/ /tmp/exts/
+COPY --from=igbinary /artifacts/ /tmp/exts/
 COPY --from=imagick  /artifacts/ /tmp/exts/
 COPY --from=lz4      /artifacts/ /tmp/exts/
 COPY --from=maxmind  /artifacts/ /tmp/exts/
@@ -317,6 +338,7 @@ RUN cp /tmp/exts/*.so $(php-config --extension-dir)/ && \
     docker-php-ext-enable \
       brotli \
       gd \
+      igbinary \
       imagick \
       intl \
       lz4 \

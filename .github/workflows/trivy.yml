@@ -33,13 +33,16 @@ jobs:
       - name: Run Trivy vulnerability scanner (sarif report)
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
+          exit-code: '1'
           format: 'sarif'
+          ignore-unfixed: true
           image-ref: '${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}'
           output: 'trivy-image-results.sarif'
-          severity: 'CRITICAL,HIGH'
+          severity: 'CRITICAL,HIGH,MEDIUM'
 
       # https://github.com/github/codeql-action/blob/main/upload-sarif/action.yml
       - name: Upload Trivy scan results
+        if: always()
         uses: github/codeql-action/upload-sarif@ff2f1c621b7f889edc0d3c761ac2e6a3f8cdb0dd # v4.37.7
         with:
           sarif_file: '.'

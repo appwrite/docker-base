@@ -2,8 +2,14 @@
 
 ## Version 2.1.0
 
+### Security
+
+* Refresh the PHP 8.5 Alpine base image to PHP 8.5.10, pulling patched `libexpat` 2.8.4-r0 and `rsync` 3.5.0-r0 packages. The resulting production and XDebug images have no vulnerabilities reported by Trivy.
+* Make the Trivy workflow fail on fixable medium, high, or critical vulnerabilities while continuing to upload its SARIF report.
+
 ### Add
 
+* The `igbinary` extension, so Appwrite can store cache entries as binary payloads through the `Igbinary` codec in `utopia-php/cache` instead of JSON.
 * Weekly dependency automation (`.github/workflows/dependencies.yml`). A scheduled job resolves the newest upstream release for every pinned Dockerfile source, rewrites the pins, opens a pull request, waits for the exact CI runs for that head, approves and merges it, then tags, builds, and publishes the release. A `recover` step resumes a run that died between merge and publish, so a half-finished release is completed rather than duplicated.
 * PHP automation domain under `.github/scripts` — `Dependency` (catalog, resolvers, Dockerfile pin rewriting, reporting), `Automation` (release orchestration, version selection, merge and target validation, recovery), `Command`, and `Parity`. Entry points are `bin/dependencies.php`, `bin/orchestrator.php`, and `bin/parity.php`.
 * Composer tooling for the automation: `lint` (Pint), `check` (PHPStan), `test` (PHPUnit), `parity` (asserts every source class has covering tests), and `verify` to run all four. CI runs `composer verify` before touching any dependency.
