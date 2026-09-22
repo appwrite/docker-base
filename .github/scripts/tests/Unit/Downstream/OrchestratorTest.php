@@ -80,14 +80,13 @@ final class OrchestratorTest extends TestCase
         $release = $this->orchestrator($repository)->release(93, self::HEAD);
 
         self::assertSame('cl-1.9.6-2', (string) $release);
-        self::assertSame(
-            [false],
-            $repository->merges,
+        self::assertFalse(
+            $repository->bypassed,
             'a mergeable pull request must never be admin-merged',
         );
     }
 
-    public function test_bypasses_only_the_review_requirement(): void
+    public function test_bypasses_a_missing_review(): void
     {
         $repository = new Fake(
             self::DOCKERFILE,
@@ -96,17 +95,54 @@ final class OrchestratorTest extends TestCase
                 [self::check('Tests / Unit', 'COMPLETED', 'SUCCESS')],
             ],
             states: ['BLOCKED', 'BLOCKED'],
-            protectionRefusesMerge: true,
+            protectionRefusal: 'At least 1 approving review is required by reviewers with write access.',
         );
 
         $release = $this->orchestrator($repository)->release(93, self::HEAD);
 
         self::assertSame('cl-1.9.6-2', (string) $release);
-        self::assertSame(
-            [false, true],
-            $repository->merges,
-            'the bypass must be a fallback, never the first attempt',
+        self::assertTrue($repository->bypassed);
+    }
+
+    public function test_does_not_bypass_a_protection_other_than_review(): void
+    {
+        $repository = new Fake(
+            self::DOCKERFILE,
+            rounds: [
+                [self::check('Tests / Unit', 'COMPLETED', 'SUCCESS')],
+                [self::check('Tests / Unit', 'COMPLETED', 'SUCCESS')],
+            ],
+            states: ['BLOCKED', 'BLOCKED'],
+            protectionRefusal: 'Required deployment "production" is pending.',
         );
+
+        $this->expectException(Exception::class);
+        $this->expectExceptionMessage('Required deployment');
+
+        $this->orchestrator($repository)->release(93, self::HEAD);
+    }
+
+    public function test_does_not_bypass_a_refusal_it_cannot_classify(): void
+    {
+        $repository = new Fake(
+            self::DOCKERFILE,
+            rounds: [
+                [self::check('Tests / Unit', 'COMPLETED', 'SUCCESS')],
+                [self::check('Tests / Unit', 'COMPLETED', 'SUCCESS')],
+            ],
+            states: ['BLOCKED', 'BLOCKED'],
+            protectionRefusal: 'Something GitHub has not said before.',
+        );
+
+        try {
+            $this->orchestrator($repository)->release(93, self::HEAD);
+            self::fail('an unrecognised refusal must not be bypassed');
+        } catch (Exception $exception) {
+            self::assertStringContainsString('Something GitHub has not said before', $exception->getMessage());
+        }
+
+        self::assertFalse($repository->bypassed);
+        self::assertNull($repository->tagged);
     }
 
     public function test_does_not_bypass_a_check_that_went_red_at_the_merge(): void
@@ -118,7 +154,7 @@ final class OrchestratorTest extends TestCase
                 [self::check('Tests / Unit', 'COMPLETED', 'FAILURE')],
             ],
             states: ['CLEAN', 'BLOCKED'],
-            protectionRefusesMerge: true,
+            protectionRefusal: 'At least 1 approving review is required by reviewers with write access.',
         );
 
         try {
@@ -131,7 +167,7 @@ final class OrchestratorTest extends TestCase
             );
         }
 
-        self::assertSame([false], $repository->merges);
+        self::assertFalse($repository->bypassed);
         self::assertNull($repository->tagged);
     }
 
@@ -144,7 +180,7 @@ final class OrchestratorTest extends TestCase
                 [self::check('Tests / Unit', 'IN_PROGRESS', '')],
             ],
             states: ['CLEAN', 'BLOCKED'],
-            protectionRefusesMerge: true,
+            protectionRefusal: 'At least 1 approving review is required by reviewers with write access.',
         );
 
         $this->expectException(Exception::class);

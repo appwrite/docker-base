@@ -97,10 +97,15 @@ final readonly class Orchestrator
 
     /**
      * Merge through branch protection so GitHub evaluates the required checks
-     * at merge time, which is the only place that evaluation is atomic. A
-     * refusal is only bypassed once the checks are re-read and still green, so
-     * the bypass covers the review requirement the automation cannot satisfy
-     * on its own and never a check that changed underneath it.
+     * at merge time, which is the only place that evaluation is atomic.
+     *
+     * A refusal is bypassed only when GitHub says it was the review
+     * requirement - the one protection a single automation identity cannot
+     * satisfy, because it opens the pull request and GitHub forbids
+     * self-approval - and only when the required checks are re-read and still
+     * green. Every other refusal, including one whose reason is not
+     * recognised, is rethrown: a required deployment, signed commits,
+     * unresolved conversations or a branch restriction must stop the release.
      *
      * @param list<string> $required
      */
@@ -112,6 +117,10 @@ final readonly class Orchestrator
         try {
             return $this->repository->merge($pull, $head, bypass: false);
         } catch (Exception $refused) {
+            if (! new Refusal($refused->getMessage())->isReviewRequirement()) {
+                throw $refused;
+            }
+
             $status = $this->repository->status($pull);
             if (Checks::pending($status->checks, $required) !== []) {
                 throw $refused;
