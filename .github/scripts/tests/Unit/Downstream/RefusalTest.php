@@ -62,7 +62,7 @@ final class RefusalTest extends TestCase
     ): void {
         self::assertSame(
             $bypassable,
-            new Refusal($message)->isReviewRequirement(),
+            (new Refusal($message))->isReviewRequirement(),
         );
     }
 }

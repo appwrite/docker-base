@@ -117,7 +117,7 @@ final readonly class Orchestrator
         try {
             return $this->repository->merge($pull, $head, bypass: false);
         } catch (Exception $refused) {
-            if (! new Refusal($refused->getMessage())->isReviewRequirement()) {
+            if (! (new Refusal($refused->getMessage()))->isReviewRequirement()) {
                 throw $refused;
             }
 
