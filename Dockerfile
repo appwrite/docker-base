@@ -282,6 +282,7 @@ RUN apk update && \
     freetype \
     docker-cli \
     docker-cli-compose \
+    exiftool \
     git \
     icu-libs \
     imagemagick \
