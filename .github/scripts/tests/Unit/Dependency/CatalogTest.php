@@ -29,7 +29,7 @@ use ReflectionClass;
 #[CoversClass(Dependency::class)]
 final class CatalogTest extends TestCase
 {
-    public function test_defines_all_thirteen_extensions(): void
+    public function test_defines_all_fourteen_dependencies(): void
     {
         $dependencies = Catalog::create()->dependencies();
         $names = array_map(
@@ -40,7 +40,7 @@ final class CatalogTest extends TestCase
         sort($names, SORT_STRING);
         sort($expected, SORT_STRING);
 
-        self::assertSame(13, count($dependencies));
+        self::assertSame(14, count($dependencies));
         self::assertSame($expected, $names);
     }
 
@@ -48,6 +48,7 @@ final class CatalogTest extends TestCase
     {
         $expected = [
             'brotli' => 'https://github.com/kjdev/php-ext-brotli.git',
+            'entire' => 'https://github.com/entireio/cli.git',
             'imagick' => 'https://github.com/imagick/imagick',
             'lz4' => 'https://github.com/kjdev/php-ext-lz4.git',
             'maxminddb' => 'https://github.com/maxmind/MaxMind-DB-Reader-php.git',

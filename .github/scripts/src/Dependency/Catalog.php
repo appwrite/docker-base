@@ -31,6 +31,12 @@ final readonly class Catalog
                 new Git('https://github.com/kjdev/php-ext-brotli.git'),
             ),
             new Dependency(
+                'entire',
+                'ENTIRE_CLI_VERSION',
+                'ENTIRE_CLI_COMMIT',
+                new Git('https://github.com/entireio/cli.git'),
+            ),
+            new Dependency(
                 'imagick',
                 'PHP_IMAGICK_VERSION',
                 'PHP_IMAGICK_COMMIT',
