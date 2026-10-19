@@ -40,7 +40,7 @@ final class DockerfileTest extends TestCase
         sort($names, SORT_STRING);
         sort($expected, SORT_STRING);
 
-        self::assertSame(27, count($pins));
+        self::assertSame(29, count($pins));
         self::assertSame(Catalog::BASE, $pins[0]->name);
         self::assertSame(Fixture::OLD_DIGEST, $pins[0]->current);
         self::assertSame($expected, $names);
@@ -54,12 +54,12 @@ final class DockerfileTest extends TestCase
 
         $count = preg_match_all(
             '/^[ \t]*(?:(?:ARG|ENV)[ \t]+)?'
-            . '((?:BASE_IMAGE|PHP_[A-Z0-9_]+_(?:VERSION|COMMIT|CHECKSUM)))'
+            . '((?:BASE_IMAGE|ENTIRE_CLI_(?:VERSION|COMMIT)|PHP_[A-Z0-9_]+_(?:VERSION|COMMIT|CHECKSUM)))'
             . '[ \t]*=/m',
             $content,
             $matches,
         );
-        self::assertSame(27, $count);
+        self::assertSame(29, $count);
 
         $declarations = array_values(array_unique($matches[1]));
         $expectedDeclarations = Fixture::EXPECTED_DOCKERFILE_DECLARATIONS;

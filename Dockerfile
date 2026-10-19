@@ -266,6 +266,30 @@ RUN \
   cp $(php-config --extension-dir)/swoole.so /artifacts/ && \
   strip /artifacts/swoole.so
 
+# git-remote-entire, git's remote helper for entire:// URLs: Entire serves git
+# only through it, so Appwrite clones Entire repositories with it. Built from
+# the pinned commit the way upstream's release builds it (.goreleaser.yaml),
+# static so it runs on Alpine.
+FROM golang:1.27-alpine@sha256:f92b6ef800e499660581efdabdf25d9d817a9d124eaf900924f0504e7e27e12d AS entire
+
+ENV \
+    ENTIRE_CLI_VERSION="v0.11.5" \
+    ENTIRE_CLI_COMMIT="4b8cdfaf0d15e236835c3b7c85d8803b112574bc"
+
+RUN \
+  apk add --no-cache git && \
+  mkdir -p /artifacts && \
+  git init cli && \
+  cd cli && \
+  git fetch --depth 1 https://github.com/entireio/cli.git $ENTIRE_CLI_COMMIT && \
+  git checkout FETCH_HEAD && \
+  CGO_ENABLED=0 go build -trimpath \
+    -ldflags "-s -w \
+      -X github.com/entireio/cli/cmd/entire/cli/versioninfo.Version=${ENTIRE_CLI_VERSION#v} \
+      -X github.com/entireio/cli/cmd/entire/cli/versioninfo.Commit=$(git rev-parse --short HEAD)" \
+    -o /artifacts/git-remote-entire \
+    ./cmd/git-remote-entire
+
 FROM $BASE_IMAGE AS final
 
 ARG BASE_IMAGE
@@ -355,6 +379,8 @@ RUN cp /tmp/exts/*.so $(php-config --extension-dir)/ && \
       swoole \
       yaml \
       zstd
+
+COPY --from=entire /artifacts/git-remote-entire /usr/local/bin/git-remote-entire
 
 EXPOSE 80
 

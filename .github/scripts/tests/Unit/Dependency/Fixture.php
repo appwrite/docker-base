@@ -10,6 +10,7 @@ final readonly class Fixture
 {
     public const array CURRENT = [
         'brotli' => '0.18.3',
+        'entire' => 'v0.11.4',
         'imagick' => '3.8.1',
         'lz4' => '0.6.0',
         'maxminddb' => 'v1.13.1',
@@ -26,6 +27,7 @@ final readonly class Fixture
 
     public const array DECLARATIONS = [
         ['brotli', 'PHP_BROTLI_VERSION', 'PHP_BROTLI_COMMIT'],
+        ['entire', 'ENTIRE_CLI_VERSION', 'ENTIRE_CLI_COMMIT'],
         ['imagick', 'PHP_IMAGICK_VERSION', 'PHP_IMAGICK_COMMIT'],
         ['lz4', 'PHP_LZ4_VERSION', 'PHP_LZ4_COMMIT'],
         ['maxminddb', 'PHP_MAXMINDDB_VERSION', 'PHP_MAXMINDDB_COMMIT'],
@@ -41,6 +43,8 @@ final readonly class Fixture
 
     public const array EXPECTED_DOCKERFILE_DECLARATIONS = [
         'BASE_IMAGE',
+        'ENTIRE_CLI_COMMIT',
+        'ENTIRE_CLI_VERSION',
         'PHP_BROTLI_COMMIT',
         'PHP_BROTLI_VERSION',
         'PHP_IMAGICK_COMMIT',
