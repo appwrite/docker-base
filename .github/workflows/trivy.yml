@@ -39,6 +39,7 @@ jobs:
           image-ref: '${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}'
           output: 'trivy-image-results.sarif'
           severity: 'CRITICAL,HIGH,MEDIUM'
+          trivyignores: '.trivyignore.yaml'
 
       # https://github.com/github/codeql-action/blob/main/upload-sarif/action.yml
       - name: Upload Trivy scan results
