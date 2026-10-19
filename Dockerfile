@@ -269,7 +269,9 @@ RUN \
 # git-remote-entire, git's remote helper for entire:// URLs: Entire serves git
 # only through it, so Appwrite clones Entire repositories with it. Built from
 # the pinned commit the way upstream's release builds it (.goreleaser.yaml),
-# static so it runs on Alpine.
+# static so it runs on Alpine. Tagging the commit with the version it was
+# resolved from lets go stamp that version into the build info, as upstream's
+# tag build does; scanners read it to decide which advisories apply.
 FROM golang:1.27-alpine@sha256:f92b6ef800e499660581efdabdf25d9d817a9d124eaf900924f0504e7e27e12d AS entire
 
 ENV \
@@ -283,6 +285,7 @@ RUN \
   cd cli && \
   git fetch --depth 1 https://github.com/entireio/cli.git $ENTIRE_CLI_COMMIT && \
   git checkout FETCH_HEAD && \
+  git tag $ENTIRE_CLI_VERSION && \
   CGO_ENABLED=0 go build -trimpath \
     -ldflags "-s -w \
       -X github.com/entireio/cli/cmd/entire/cli/versioninfo.Version=${ENTIRE_CLI_VERSION#v} \
