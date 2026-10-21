@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## Version 1.4.5
+
+### Security
+
+* Update the PHP 8.5 Alpine base image to PHP 8.5.12, which fixes two critical remote code execution advisories: [GHSA-w8hw-w9fx-j79w](https://github.com/php/php-src/security/advisories/GHSA-w8hw-w9fx-j79w) (CVE-2026-109618) and [GHSA-6wmf-4rv5-p3rp](https://github.com/php/php-src/security/advisories/GHSA-6wmf-4rv5-p3rp) (CVE-2026-109619). Backport of #125 to the 1.4.x line, which Appwrite 1.9.x builds on.
+
 ## Version 1.3.2
 
 ### Security
