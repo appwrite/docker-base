@@ -1,6 +1,6 @@
 # Pin php:8.5-alpine by multi-arch index digest. Bump with:
 #   docker buildx imagetools inspect php:8.5-alpine | head -2
-ARG BASE_IMAGE="php:8.5-alpine@sha256:93684051146ec037620855feb77f278090bde45ddc030801cd3f2a7685bc4deb"
+ARG BASE_IMAGE="php:8.5-alpine@sha256:467382d6924d279a32b1fe46bf1076a738fca289b51082121364c355213d5121"
 
 FROM $BASE_IMAGE AS trusted-base
 
