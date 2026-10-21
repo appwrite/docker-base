@@ -278,7 +278,8 @@ RUN \
 # static so it runs on Alpine. Tagging the commit with the version it was
 # resolved from lets go stamp that version into the build info, as upstream's
 # tag build does; scanners read it to decide which advisories apply.
-FROM golang:1.27-alpine@sha256:f92b6ef800e499660581efdabdf25d9d817a9d124eaf900924f0504e7e27e12d AS entire
+# Go 1.27.3 also rejects the compromised eMudhra intermediates in crypto/x509.
+FROM golang:1.27.3-alpine@sha256:f2c872bcee949b7be9c490efd02b48a8a2fbf947cdf533f1c58525ec9d8170fd AS entire
 
 ENV \
     ENTIRE_CLI_VERSION="v0.11.5" \
