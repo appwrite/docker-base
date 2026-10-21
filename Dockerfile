@@ -2,7 +2,13 @@
 #   docker buildx imagetools inspect php:8.5-alpine | head -2
 ARG BASE_IMAGE="php:8.5-alpine@sha256:93684051146ec037620855feb77f278090bde45ddc030801cd3f2a7685bc4deb"
 
-FROM $BASE_IMAGE AS compile
+FROM $BASE_IMAGE AS trusted-base
+
+# Distrust the compromised eMudhra chains before build-time or runtime HTTPS.
+RUN apk add --no-cache 'ca-certificates>=20261020-r0' 'ca-certificates-bundle>=20261020-r0' && \
+  update-ca-certificates
+
+FROM trusted-base AS compile
 
 # Every source is fetched by immutable reference — a commit SHA for git, a
 # tarball checksum for PECL — because a tag can be repointed at any time. The
@@ -279,7 +285,8 @@ ENV \
     ENTIRE_CLI_COMMIT="4b8cdfaf0d15e236835c3b7c85d8803b112574bc"
 
 RUN \
-  apk add --no-cache git && \
+  apk add --no-cache git 'ca-certificates>=20261020-r0' 'ca-certificates-bundle>=20261020-r0' && \
+  update-ca-certificates && \
   mkdir -p /artifacts && \
   git init cli && \
   cd cli && \
@@ -293,7 +300,7 @@ RUN \
     -o /artifacts/git-remote-entire \
     ./cmd/git-remote-entire
 
-FROM $BASE_IMAGE AS final
+FROM trusted-base AS final
 
 ARG BASE_IMAGE
 
