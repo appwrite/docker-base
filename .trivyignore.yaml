@@ -1,35 +1,3 @@
 # Accepted findings. Each entry is scoped to one path and expires, so it cannot
 # outlive the reason for it.
-#
-# git-remote-entire is built from entireio/cli v0.11.5, which pins
-# golang.org/x/net v0.59.0. These HTTP/2 advisories are fixed in v0.60.0;
-# entireio/cli main already requires it but has not released yet. The helper
-# is an HTTP client that only talks to Entire's own git servers. The weekly
-# updater moves the helper to the next release; if that has not happened by
-# the expiry, the scan fails again.
-vulnerabilities:
-  - id: CVE-2026-78669
-    paths:
-      - "usr/local/bin/git-remote-entire"
-    statement: "golang.org/x/net v0.59.0 (HIGH) in git-remote-entire from entireio/cli v0.11.5; fixed by the next entireio/cli release."
-    expired_at: 2026-11-30
-  - id: CVE-2026-78659
-    paths:
-      - "usr/local/bin/git-remote-entire"
-    statement: "golang.org/x/net v0.59.0 (MEDIUM) in git-remote-entire from entireio/cli v0.11.5; fixed by the next entireio/cli release."
-    expired_at: 2026-11-30
-  - id: CVE-2026-78660
-    paths:
-      - "usr/local/bin/git-remote-entire"
-    statement: "golang.org/x/net v0.59.0 (MEDIUM) in git-remote-entire from entireio/cli v0.11.5; fixed by the next entireio/cli release."
-    expired_at: 2026-11-30
-  - id: CVE-2026-78663
-    paths:
-      - "usr/local/bin/git-remote-entire"
-    statement: "golang.org/x/net v0.59.0 (MEDIUM) in git-remote-entire from entireio/cli v0.11.5; fixed by the next entireio/cli release."
-    expired_at: 2026-11-30
-  - id: CVE-2026-97032
-    paths:
-      - "usr/local/bin/git-remote-entire"
-    statement: "golang.org/x/net v0.59.0 (MEDIUM) in git-remote-entire from entireio/cli v0.11.5; fixed by the next entireio/cli release."
-    expired_at: 2026-11-30
+vulnerabilities: []
