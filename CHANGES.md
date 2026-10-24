@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## Version 1.4.6
+
+### Security
+
+* Require `brotli-libs` 1.2.1, which fixes the Brotli decoder out-of-bounds write (CVE-2026-111497). 1.4.5 shipped 1.2.0-r1, which libcurl, Swoole and the brotli extension all link.
+
 ## Version 1.4.5
 
 ### Security
