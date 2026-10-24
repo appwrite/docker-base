@@ -218,6 +218,7 @@ RUN apk update && \
   apk upgrade --no-cache && \
   apk add --no-cache \
     brotli \
+    'brotli-libs>=1.2.1-r0' \
     c-ares \
     certbot \
     freetype \
