@@ -1,6 +1,6 @@
 # Pin php:8.5-alpine by multi-arch index digest. Bump with:
 #   docker buildx imagetools inspect php:8.5-alpine | head -2
-ARG BASE_IMAGE="php:8.5-alpine@sha256:467382d6924d279a32b1fe46bf1076a738fca289b51082121364c355213d5121"
+ARG BASE_IMAGE="php:8.5-alpine@sha256:e899a75c775804e5466dbd9c96b31f8b6c6ae2ddb053a8466223a0c32992ff8e"
 
 FROM $BASE_IMAGE AS trusted-base
 
@@ -15,8 +15,8 @@ FROM trusted-base AS compile
 # version beside each reference is the release it was resolved from; the
 # weekly updater rewrites both together.
 ENV \
-    PHP_BROTLI_VERSION="0.21.0" \
-    PHP_BROTLI_COMMIT="ced23f5b6f52ef58a3a96d4731db4bee40a82736" \
+    PHP_BROTLI_VERSION="0.21.1" \
+    PHP_BROTLI_COMMIT="eaa63da67ae9ae7bbb5afbb52a185703bad70389" \
     PHP_IMAGICK_VERSION="3.8.1" \
     PHP_IMAGICK_COMMIT="70087bab33eab913e99ac77d64d04d1a2fd0b7b0" \
     PHP_LZ4_VERSION="0.8.0" \
@@ -33,8 +33,8 @@ ENV \
     PHP_SCRYPT_COMMIT="5a14bc766423dac3f868792fa8c41f85f47263ec" \
     PHP_SNAPPY_VERSION="0.2.3" \
     PHP_SNAPPY_COMMIT="d31b77d63955dbbf1a302ca13c4795292f91d140" \
-    PHP_SWOOLE_VERSION="v6.2.3" \
-    PHP_SWOOLE_COMMIT="8b20cd39f8c19da7aaf70290037e04f616db5ff7" \
+    PHP_SWOOLE_VERSION="v6.2.4" \
+    PHP_SWOOLE_COMMIT="c7e514509451beafd4d70ce5b78943d51e76381c" \
     PHP_YAML_VERSION="2.3.0" \
     PHP_YAML_COMMIT="c1f0d8ba5ef3884846261bbdb91c2ab0b07db44c" \
     PHP_ZSTD_VERSION="0.18.0" \
@@ -282,8 +282,8 @@ RUN \
 FROM golang:1.27.3-alpine@sha256:f2c872bcee949b7be9c490efd02b48a8a2fbf947cdf533f1c58525ec9d8170fd AS entire
 
 ENV \
-    ENTIRE_CLI_VERSION="v0.12.0" \
-    ENTIRE_CLI_COMMIT="29f996951b44aeb0b9e834c2de2337eba65fd324"
+    ENTIRE_CLI_VERSION="v0.12.1" \
+    ENTIRE_CLI_COMMIT="e7c0393725dd82e1ed8753b2f8f806a8a12d642a"
 
 RUN \
   apk add --no-cache git 'ca-certificates>=20261020-r0' 'ca-certificates-bundle>=20261020-r0' && \
