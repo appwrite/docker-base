@@ -279,7 +279,7 @@ RUN \
 # resolved from lets go stamp that version into the build info, as upstream's
 # tag build does; scanners read it to decide which advisories apply.
 # Go 1.27.3 also rejects the compromised eMudhra intermediates in crypto/x509.
-FROM golang:1.27.3-alpine@sha256:f2c872bcee949b7be9c490efd02b48a8a2fbf947cdf533f1c58525ec9d8170fd AS entire
+FROM golang:1.27.3-alpine@sha256:d200d2dd76b03a99b52651fd1325aff7dcd35422c35c01bac56571b0507f3deb AS entire
 
 ENV \
     ENTIRE_CLI_VERSION="v0.12.1" \
