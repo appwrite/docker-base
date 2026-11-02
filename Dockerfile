@@ -282,8 +282,9 @@ RUN \
 FROM golang:1.27.3-alpine@sha256:f2c872bcee949b7be9c490efd02b48a8a2fbf947cdf533f1c58525ec9d8170fd AS entire
 
 ENV \
-    ENTIRE_CLI_VERSION="v0.12.1" \
-    ENTIRE_CLI_COMMIT="e7c0393725dd82e1ed8753b2f8f806a8a12d642a"
+    ENTIRE_CLI_VERSION="v0.12.2" \
+    ENTIRE_CLI_COMMIT="c4f103d8dfed1f1549db9b2c793f2d7e10f65eb8" \
+    ENTIRE_CLI_X_NET_VERSION="v0.62.0"
 
 RUN \
   apk add --no-cache git 'ca-certificates>=20261020-r0' 'ca-certificates-bundle>=20261020-r0' && \
@@ -293,11 +294,13 @@ RUN \
   cd cli && \
   git fetch --depth 1 https://github.com/entireio/cli.git $ENTIRE_CLI_COMMIT && \
   git checkout FETCH_HEAD && \
+  go get golang.org/x/net@$ENTIRE_CLI_X_NET_VERSION && \
+  git -c user.name=docker-base -c user.email=docker-base@appwrite.io commit -qam "golang.org/x/net $ENTIRE_CLI_X_NET_VERSION" && \
   git tag $ENTIRE_CLI_VERSION && \
   CGO_ENABLED=0 go build -trimpath \
     -ldflags "-s -w \
       -X github.com/entireio/cli/cmd/entire/cli/versioninfo.Version=${ENTIRE_CLI_VERSION#v} \
-      -X github.com/entireio/cli/cmd/entire/cli/versioninfo.Commit=$(git rev-parse --short HEAD)" \
+      -X github.com/entireio/cli/cmd/entire/cli/versioninfo.Commit=$(git rev-parse --short HEAD^)" \
     -o /artifacts/git-remote-entire \
     ./cmd/git-remote-entire
 
