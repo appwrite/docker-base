@@ -282,8 +282,8 @@ RUN \
 FROM golang:1.27.3-alpine@sha256:f2c872bcee949b7be9c490efd02b48a8a2fbf947cdf533f1c58525ec9d8170fd AS entire
 
 ENV \
-    ENTIRE_CLI_VERSION="v0.12.1" \
-    ENTIRE_CLI_COMMIT="e7c0393725dd82e1ed8753b2f8f806a8a12d642a"
+    ENTIRE_CLI_VERSION="v0.12.2" \
+    ENTIRE_CLI_COMMIT="c4f103d8dfed1f1549db9b2c793f2d7e10f65eb8"
 
 RUN \
   apk add --no-cache git 'ca-certificates>=20261020-r0' 'ca-certificates-bundle>=20261020-r0' && \
