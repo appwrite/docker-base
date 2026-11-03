@@ -1,5 +1,17 @@
 # CHANGELOG
 
+## Version 2.2.9
+
+### Security
+
+* Hold Swoole at v6.2.3. The weekly update moved 2.2.8 to v6.2.4, which unlinks the path named by a client-supplied `Swoole-Upload-File` multipart part header when the request is freed, even after the application clears `$request->tmpfiles` (swoole/swoole-src#6309). The fix is on Swoole's `6.2` branch but not in a tagged release yet.
+* Keep the 2.2.8 package updates (`curl`/`libcurl` 8.23.0, `docker-cli` 29.9.2, `docker-cli-compose` 5.6.1) and pick up `libexpat` 2.10.0 (CVE-2026-117610, CVE-2026-118370) through the existing `apk upgrade`.
+
+### Add
+
+* `tests.yaml` runs a Swoole server in the built image, posts a multipart part with a `Swoole-Upload-File` header naming an existing file, and fails if the file is gone afterwards. Any future Swoole bump that deletes it fails CI, so the dependency automation cannot merge it.
+* The dependency updater can exclude specific releases per dependency. Swoole excludes v6.2.4, so the weekly run keeps shipping other updates instead of opening a pull request that cannot pass; later Swoole releases are still selected and must pass the new test.
+
 ## Version 2.1.0
 
 ### Security
