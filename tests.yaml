@@ -133,35 +133,6 @@ commandTests:
     args: ["--re", "swoole"]
     expectedOutput:
       - '.*swoole version 6\.[0-9]+\.[0-9]+ .*'
-  # A request part's Swoole-Upload-File header must not make Swoole unlink that path
-  # once the app has dropped the upload (swoole/swoole-src#6309, broken in v6.2.4).
-  - name: 'Swoole ignores client upload file markers'
-    command: "php"
-    args:
-      - "-r"
-      - |
-        $target = '/tmp/target';
-        touch($target);
-        $server = new Swoole\Http\Server('127.0.0.1', 9501);
-        $server->set(['worker_num' => 1, 'log_level' => SWOOLE_LOG_ERROR]);
-        $server->on('request', function ($request, $response) {
-            $request->tmpfiles = [];
-            $response->end();
-        });
-        $server->on('start', function ($server) use ($target) {
-            go(function () use ($server, $target) {
-                $body = "--b\r\nContent-Disposition: form-data; name=\"file\"; filename=\"f.bin\"\r\n"
-                    . "Swoole-Upload-File: {$target}\r\nContent-Type: application/octet-stream\r\n\r\nabc\r\n--b--\r\n";
-                $client = new Swoole\Coroutine\Http\Client('127.0.0.1', 9501);
-                $client->setHeaders(['Content-Type' => 'multipart/form-data; boundary=b']);
-                $client->post('/', $body);
-                Swoole\Coroutine::sleep(0.5);
-                echo $client->statusCode, ' ', file_exists($target) ? 'kept' : 'deleted', PHP_EOL;
-                $server->shutdown();
-            });
-        });
-        $server->start();
-    expectedOutput: ["^200 kept$"]
   - name: 'ZIP'
     command: "zip"
     args: ["-v"]

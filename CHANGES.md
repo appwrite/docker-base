@@ -9,7 +9,7 @@
 
 ### Add
 
-* `tests.yaml` runs a Swoole server in the built image, posts a multipart part with a `Swoole-Upload-File` header naming an existing file, and fails if the file is gone afterwards. Any future Swoole bump that deletes it fails CI, so the dependency automation cannot merge it.
+* `tests-swoole.php`, run by `structure-test.yml` against the built image, starts a Swoole server, posts a multipart part with a `Swoole-Upload-File` header naming an existing file, and fails if the file is gone afterwards. Any future Swoole bump that deletes it fails CI, so the dependency automation cannot merge it.
 * The dependency updater can exclude specific releases per dependency. Swoole excludes v6.2.4, so the weekly run keeps shipping other updates instead of opening a pull request that cannot pass; later Swoole releases are still selected and must pass the new test.
 
 ## Version 2.1.0
