@@ -8,9 +8,13 @@ final readonly class Selector
 {
     /**
      * @param iterable<Release> $releases
+     * @param list<string> $excluded
      */
-    public function select(Release $current, iterable $releases): Release
-    {
+    public function select(
+        Release $current,
+        iterable $releases,
+        array $excluded = [],
+    ): Release {
         $currentVersion = Version::parse($current->version);
         if ($currentVersion === null) {
             throw new Exception("Invalid current version: {$current->version}");
@@ -22,6 +26,7 @@ final readonly class Selector
             $version = Version::parse($release->version);
             if (
                 $version === null
+                || in_array($release->version, $excluded, true)
                 || $version->major !== $currentVersion->major
                 || $version->compare($currentVersion) <= 0
             ) {

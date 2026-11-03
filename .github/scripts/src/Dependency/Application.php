@@ -48,7 +48,11 @@ final readonly class Application
             $reference = $pins[($index * 2) + 2];
             $current = new Release($version->current, $reference->current);
             $releases = $this->resolver->releases($dependency);
-            $release = $this->selector->select($current, $releases);
+            $release = $this->selector->select(
+                $current,
+                $releases,
+                $dependency->excluded,
+            );
             $resolved = $this->resolver->reference(
                 $dependency,
                 $release->version,
