@@ -1,0 +1,5 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "description": "The weekly dependency workflow owns the Dockerfile pins (PHP base digest, extensions, Swoole hold), so Renovate leaves Dockerfile alone.",
+  "dockerfile": { "enabled": false }
+}
