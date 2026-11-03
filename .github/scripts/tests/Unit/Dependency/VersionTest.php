@@ -151,6 +151,28 @@ final class VersionTest extends TestCase
         );
     }
 
+    public function test_skips_excluded_releases(): void
+    {
+        $selector = new Selector();
+
+        self::assertSame(
+            'v1.2.3',
+            $selector->select(
+                self::release('v1.2.3'),
+                self::releases(['v1.2.4']),
+                ['v1.2.4'],
+            )->version,
+        );
+        self::assertSame(
+            'v1.2.5',
+            $selector->select(
+                self::release('v1.2.3'),
+                self::releases(['v1.2.4', 'v1.2.5']),
+                ['v1.2.4'],
+            )->version,
+        );
+    }
+
     public function test_rejects_invalid_current_version(): void
     {
         $this->expectException(Exception::class);

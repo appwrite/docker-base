@@ -31,6 +31,11 @@ jobs:
           image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
           config: tests.yaml
 
+      - name: Check Swoole upload marker handling
+        run: |
+          docker run --rm -v "$PWD/tests-swoole.php:/tests-swoole.php:ro" \
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} php /tests-swoole.php
+
       - name: Run container structure tests for the XDebug variant
         uses: plexsystems/container-structure-test-action@c0a028aa96e8e82ae35be556040340cbb3e280ca # v0.3.0
         with:

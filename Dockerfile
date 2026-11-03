@@ -33,8 +33,9 @@ ENV \
     PHP_SCRYPT_COMMIT="5a14bc766423dac3f868792fa8c41f85f47263ec" \
     PHP_SNAPPY_VERSION="0.2.3" \
     PHP_SNAPPY_COMMIT="d31b77d63955dbbf1a302ca13c4795292f91d140" \
-    PHP_SWOOLE_VERSION="v6.2.4" \
-    PHP_SWOOLE_COMMIT="c7e514509451beafd4d70ce5b78943d51e76381c" \
+    # v6.2.4 unlinks paths named by client Swoole-Upload-File part headers (swoole/swoole-src#6309).
+    PHP_SWOOLE_VERSION="v6.2.3" \
+    PHP_SWOOLE_COMMIT="8b20cd39f8c19da7aaf70290037e04f616db5ff7" \
     PHP_YAML_VERSION="2.3.0" \
     PHP_YAML_COMMIT="c1f0d8ba5ef3884846261bbdb91c2ab0b07db44c" \
     PHP_ZSTD_VERSION="0.18.0" \

@@ -81,6 +81,18 @@ final class CatalogTest extends TestCase
         self::assertSame(Catalog::PECL_RELEASES, $protobuf->source->url());
     }
 
+    public function test_excludes_swoole_releases_that_unlink_upload_markers(): void
+    {
+        $excluded = [];
+        foreach (Catalog::create()->dependencies() as $dependency) {
+            if ($dependency->excluded !== []) {
+                $excluded[$dependency->name] = $dependency->excluded;
+            }
+        }
+
+        self::assertSame(['swoole' => ['v6.2.4']], $excluded);
+    }
+
     public function test_source_definitions_are_immutable(): void
     {
         self::assertSame(true, (new ReflectionClass(Git::class))->isReadOnly());
