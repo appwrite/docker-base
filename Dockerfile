@@ -1,6 +1,6 @@
 # Pin php:8.5-alpine by multi-arch index digest. Bump with:
 #   docker buildx imagetools inspect php:8.5-alpine | head -2
-ARG BASE_IMAGE="php:8.5-alpine@sha256:e899a75c775804e5466dbd9c96b31f8b6c6ae2ddb053a8466223a0c32992ff8e"
+ARG BASE_IMAGE="php:8.5-alpine@sha256:d1fbbe78850d1eb9aa8f7da652ec5db61eb4c9377c8215cf5e23f3b528ed4f2b"
 
 FROM $BASE_IMAGE AS trusted-base
 
@@ -23,8 +23,8 @@ ENV \
     PHP_LZ4_COMMIT="7406b442fa02f71baa39f207bd79d90765e11331" \
     PHP_MAXMINDDB_VERSION="v1.14.0" \
     PHP_MAXMINDDB_COMMIT="f3c92f68b3bec42a9aa780368399e03dc6b91e89" \
-    PHP_MONGODB_VERSION="2.5.5" \
-    PHP_MONGODB_COMMIT="515d38e6bf97dcbe57ae4af6e284bee964d787dd" \
+    PHP_MONGODB_VERSION="2.5.7" \
+    PHP_MONGODB_COMMIT="df1a385e2a3ea8d2a4050968a43f1743ea11e079" \
     PHP_PROTOBUF_VERSION="5.36.2" \
     PHP_PROTOBUF_CHECKSUM="f0a17c67de29df0fb0e5215a381df9b155125e1ace6252dd617bf16b4194dd5b" \
     PHP_REDIS_VERSION="6.3.0" \
@@ -34,8 +34,8 @@ ENV \
     PHP_SNAPPY_VERSION="0.2.3" \
     PHP_SNAPPY_COMMIT="d31b77d63955dbbf1a302ca13c4795292f91d140" \
     # v6.2.4 unlinks paths named by client Swoole-Upload-File part headers (swoole/swoole-src#6309).
-    PHP_SWOOLE_VERSION="v6.2.3" \
-    PHP_SWOOLE_COMMIT="8b20cd39f8c19da7aaf70290037e04f616db5ff7" \
+    PHP_SWOOLE_VERSION="v6.2.5" \
+    PHP_SWOOLE_COMMIT="76c657d88be39b7af6bf85e46bcbac0da7387760" \
     PHP_YAML_VERSION="2.3.0" \
     PHP_YAML_COMMIT="c1f0d8ba5ef3884846261bbdb91c2ab0b07db44c" \
     PHP_ZSTD_VERSION="0.18.0" \
@@ -283,8 +283,8 @@ RUN \
 FROM golang:1.27.3-alpine@sha256:f2c872bcee949b7be9c490efd02b48a8a2fbf947cdf533f1c58525ec9d8170fd AS entire
 
 ENV \
-    ENTIRE_CLI_VERSION="v0.12.2" \
-    ENTIRE_CLI_COMMIT="c4f103d8dfed1f1549db9b2c793f2d7e10f65eb8" \
+    ENTIRE_CLI_VERSION="v0.13.1" \
+    ENTIRE_CLI_COMMIT="3a760b96a60fe1bf68f70bc1c164257df7b43e9e" \
     ENTIRE_CLI_X_NET_VERSION="v0.62.0"
 
 RUN \
