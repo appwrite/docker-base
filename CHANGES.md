@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## Version 2.2.10
+
+### Security
+
+* Update Swoole to v6.2.5, which ignores a client-supplied `Swoole-Upload-File` multipart part header (swoole/swoole-src#6309). The path it names is no longer reported as an upload or unlinked, with or without the application clearing `$request->tmpfiles`. `tests-swoole.php` passes against it. The updater still excludes v6.2.4.
+
 ## Version 2.2.9
 
 ### Security
