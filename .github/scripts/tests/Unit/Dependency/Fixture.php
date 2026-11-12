@@ -11,7 +11,6 @@ final readonly class Fixture
     public const array CURRENT = [
         'brotli' => '0.18.3',
         'entire' => 'v0.11.4',
-        'imagick' => '3.8.1',
         'lz4' => '0.6.0',
         'maxminddb' => 'v1.13.1',
         'mongodb' => '2.2.1',
@@ -28,7 +27,6 @@ final readonly class Fixture
     public const array DECLARATIONS = [
         ['brotli', 'PHP_BROTLI_VERSION', 'PHP_BROTLI_COMMIT'],
         ['entire', 'ENTIRE_CLI_VERSION', 'ENTIRE_CLI_COMMIT'],
-        ['imagick', 'PHP_IMAGICK_VERSION', 'PHP_IMAGICK_COMMIT'],
         ['lz4', 'PHP_LZ4_VERSION', 'PHP_LZ4_COMMIT'],
         ['maxminddb', 'PHP_MAXMINDDB_VERSION', 'PHP_MAXMINDDB_COMMIT'],
         ['mongodb', 'PHP_MONGODB_VERSION', 'PHP_MONGODB_COMMIT'],
@@ -47,8 +45,6 @@ final readonly class Fixture
         'ENTIRE_CLI_VERSION',
         'PHP_BROTLI_COMMIT',
         'PHP_BROTLI_VERSION',
-        'PHP_IMAGICK_COMMIT',
-        'PHP_IMAGICK_VERSION',
         'PHP_LZ4_COMMIT',
         'PHP_LZ4_VERSION',
         'PHP_MAXMINDDB_COMMIT',

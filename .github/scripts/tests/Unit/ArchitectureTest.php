@@ -41,8 +41,8 @@ final class ArchitectureTest extends TestCase
         );
         self::assertSame(
             [
-                'bytes' => 10308,
-                'sha256' => '503e122b9ae273434b5398e657311021675abc15f2234c8edc402e88d99a2634',
+                'bytes' => 9726,
+                'sha256' => 'b119f1ba595230950371489e3b91b8168fb038fb63093c3ea6f8c44b886c89f2',
             ],
             $equivalence['deterministic'] ?? null,
         );
