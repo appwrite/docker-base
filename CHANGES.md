@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## Version 2.2.11
+
+### Security
+
+* Require `git` 2.54.1-r0 (CVE-2026-105437, CVE-2026-111760, CVE-2026-114466).
+
 ## Version 2.2.10
 
 ### Security

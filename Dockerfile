@@ -321,7 +321,7 @@ RUN apk update && \
     docker-cli \
     docker-cli-compose \
     exiftool \
-    git \
+    'git>=2.54.1-r0' \
     icu-libs \
     imagemagick \
     imagemagick-heic \
