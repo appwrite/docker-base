@@ -5,6 +5,7 @@
 ### Security
 
 * Require `git` 2.54.1-r0 (CVE-2026-105437, CVE-2026-111760, CVE-2026-114466).
+* Build `git-remote-entire` with Go 1.27.4 (CVE-2026-97054).
 
 ## Version 2.2.10
 
