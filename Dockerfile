@@ -279,7 +279,7 @@ RUN \
 # resolved from lets go stamp that version into the build info, as upstream's
 # tag build does; scanners read it to decide which advisories apply.
 # Go 1.27.3 also rejects the compromised eMudhra intermediates in crypto/x509.
-FROM golang:1.27.3-alpine@sha256:f2c872bcee949b7be9c490efd02b48a8a2fbf947cdf533f1c58525ec9d8170fd AS entire
+FROM golang:1.27.4-alpine@sha256:0a5f7fe796599ff487605987432e7619ae45beeb2fba4c2ce0b907879932aebf AS entire
 
 ENV \
     ENTIRE_CLI_VERSION="v0.12.2" \
@@ -321,7 +321,7 @@ RUN apk update && \
     docker-cli \
     docker-cli-compose \
     exiftool \
-    git \
+    'git>=2.54.1-r0' \
     icu-libs \
     imagemagick \
     imagemagick-heic \
