@@ -1,5 +1,16 @@
 # CHANGELOG
 
+## Version 2.3.0
+
+### Remove
+
+* ImageMagick (`imagemagick`, `imagemagick-heic`), the `imagick` PHP extension and the hardened `policy.xml`. Appwrite processes images with the `utopia` extension it builds itself (appwrite/appwrite#15541), which bounds an image's width, height and decoded size on its own, so nothing in the image reads the policy. An image that still needs Imagick must stay on 2.2.x.
+* `libjxl`, which only ImageMagick used.
+
+### Keep
+
+* `libheif` with its codec plugins, `libavif`, `libwebp`, `libjpeg-turbo`, `libpng` and `freetype`: the `utopia` extension links `libheif`, and GD keeps AVIF, WebP, JPEG, PNG and FreeType support.
+
 ## Version 2.2.11
 
 ### Security
