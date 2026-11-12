@@ -5,10 +5,10 @@ commandTests:
     command: "php"
     args: ["-r", 'exit(version_compare(curl_version()["version"], "8.22.0", ">=") ? 0 : 1);']
     exitCode: 0
-  - name: 'Imagemagick command'
-    command: "magick"
-    args: ["--version"]
-    expectedOutput: [".*ImageMagick 7.1.2.*"]
+  - name: 'No ImageMagick'
+    command: "sh"
+    args: ["-c", "! command -v magick && ! command -v identify && ! php -m | grep -qi imagick"]
+    exitCode: 0
   - name: 'rsync command'
     command: "rsync"
     args: ["--version"]
@@ -53,7 +53,6 @@ commandTests:
       - hash
       - iconv
       - igbinary
-      - imagick
       - intl
       - json
       - libxml
@@ -110,19 +109,13 @@ commandTests:
     args: ["-v"]
     expectedOutput:
       - "PHP 8.5.* (cli)*"
-  - name: 'ImageMagick supported formats'
-    command: "php"
-    args: ["-i"]
+  - name: 'libheif decodes HEIC and AVIF, and encodes AVIF'
+    command: "sh"
+    args: ["-c", "ls /usr/lib/libheif/ | tr '\\n' ' '"]
     expectedOutput:
-      - "ImageMagick supported formats .*WEBP.*"
-  - name: 'ImageMagick hardened policy loaded'
-    command: "identify"
-    args: ["-list", "policy"]
-    expectedOutput:
-      - "name: width"
-      - "name: height"
-      - "name: disk"
-      - "50KP"
+      - "libde265"
+      - "dav1d"
+      - "aomenc"
   - name: 'PHP intl'
     command: "php"
     args: ["-r", 'print(\Normalizer::FORM_D);']

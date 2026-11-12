@@ -40,7 +40,7 @@ final class DockerfileTest extends TestCase
         sort($names, SORT_STRING);
         sort($expected, SORT_STRING);
 
-        self::assertSame(29, count($pins));
+        self::assertSame(27, count($pins));
         self::assertSame(Catalog::BASE, $pins[0]->name);
         self::assertSame(Fixture::OLD_DIGEST, $pins[0]->current);
         self::assertSame($expected, $names);
@@ -59,7 +59,7 @@ final class DockerfileTest extends TestCase
             $content,
             $matches,
         );
-        self::assertSame(29, $count);
+        self::assertSame(27, $count);
 
         $declarations = array_values(array_unique($matches[1]));
         $expectedDeclarations = Fixture::EXPECTED_DOCKERFILE_DECLARATIONS;

@@ -17,8 +17,6 @@ FROM trusted-base AS compile
 ENV \
     PHP_BROTLI_VERSION="0.21.1" \
     PHP_BROTLI_COMMIT="eaa63da67ae9ae7bbb5afbb52a185703bad70389" \
-    PHP_IMAGICK_VERSION="3.8.1" \
-    PHP_IMAGICK_COMMIT="70087bab33eab913e99ac77d64d04d1a2fd0b7b0" \
     PHP_LZ4_VERSION="0.8.0" \
     PHP_LZ4_COMMIT="7406b442fa02f71baa39f207bd79d90765e11331" \
     PHP_MAXMINDDB_VERSION="v1.14.0" \
@@ -56,11 +54,9 @@ RUN \
     gcc \
     git \
     freetype-dev \
-    imagemagick-dev \
     icu-dev \
     libavif-dev \
     libjpeg-turbo-dev \
-    libjxl-dev \
     libwebp-dev \
     libmaxminddb-dev \
     libpng-dev \
@@ -89,18 +85,6 @@ RUN \
   make -j"$(nproc)" && make install && \
   cp $(php-config --extension-dir)/redis.so /artifacts/ && \
   strip /artifacts/redis.so
-
-FROM compile AS imagick
-RUN \
-  git init imagick && \
-  cd imagick && \
-  git fetch --depth 1 https://github.com/imagick/imagick $PHP_IMAGICK_COMMIT && \
-  git checkout FETCH_HEAD && \
-  phpize && \
-  ./configure && \
-  make -j"$(nproc)" && make install && \
-  cp $(php-config --extension-dir)/imagick.so /artifacts/ && \
-  strip /artifacts/imagick.so
 
 FROM compile AS yaml
 RUN \
@@ -323,14 +307,12 @@ RUN apk update && \
     exiftool \
     'git>=2.54.1-r0' \
     icu-libs \
-    imagemagick \
-    imagemagick-heic \
     libavif \
     'libcurl>=8.22.0' \
     libgomp \
     libheif \
+    libheif-aom \
     libjpeg-turbo \
-    libjxl \
     libmaxminddb \
     libpng \
     libpq \
@@ -343,24 +325,11 @@ RUN apk update && \
     zstd-libs \
   && rm -rf /var/cache/apk/*
 
-# Hardened ImageMagick policy — bounds per-decode width/height/disk so a crafted
-# "image bomb" (small on disk, enormous when decoded) cannot exhaust memory or
-# fill the disk and take down the container or its neighbours. Installed into
-# ImageMagick's configure dir, discovered at build time so it survives package
-# path changes; the build fails loudly if the policy does not load.
-COPY policy.xml /tmp/policy.xml
-RUN set -eux; \
-    POLICY_DIR="$(identify -list configure | awk '/^CONFIGURE_PATH/ {print $2}' | cut -d: -f1)"; \
-    cp /tmp/policy.xml "${POLICY_DIR%/}/policy.xml"; \
-    rm /tmp/policy.xml; \
-    identify -list policy | grep -q '50KP'
-
 WORKDIR /usr/src/code
 
 COPY --from=core-extensions /artifacts/ /tmp/exts/
 COPY --from=brotli   /artifacts/ /tmp/exts/
 COPY --from=igbinary /artifacts/ /tmp/exts/
-COPY --from=imagick  /artifacts/ /tmp/exts/
 COPY --from=lz4      /artifacts/ /tmp/exts/
 COPY --from=maxmind  /artifacts/ /tmp/exts/
 COPY --from=mongodb  /artifacts/ /tmp/exts/
@@ -378,7 +347,6 @@ RUN cp /tmp/exts/*.so $(php-config --extension-dir)/ && \
       brotli \
       gd \
       igbinary \
-      imagick \
       intl \
       lz4 \
       maxminddb \

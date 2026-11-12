@@ -37,12 +37,6 @@ final readonly class Catalog
                 new Git('https://github.com/entireio/cli.git'),
             ),
             new Dependency(
-                'imagick',
-                'PHP_IMAGICK_VERSION',
-                'PHP_IMAGICK_COMMIT',
-                new Git('https://github.com/imagick/imagick'),
-            ),
-            new Dependency(
                 'lz4',
                 'PHP_LZ4_VERSION',
                 'PHP_LZ4_COMMIT',
