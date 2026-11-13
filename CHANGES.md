@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## Version 2.3.1
+
+### Fix
+
+* Build on PHP 8.5.13RC1. PHP 8.5.12's OPcache can flag a newly interned shared class name as having a CE-cache slot before it stores the slot's `map_ptr` offset (php-src GH-24577). A forked Swoole worker that links a class in that window reads the string's refcount, 2, as the offset and writes that class pointer across `map_ptr` slots 0 and 1. `ext/date` registers first at startup, so slot 1 is always `DateTime`'s: its cached class entry loses its low byte and every `DateTime` type check in that worker fails with `must be of type DateTime, DateTime given` until the worker exits. php-src 47d5c0c fixes it and first ships in 8.5.13RC1. The `php:8.5.13RC1-alpine` index digest is pinned on the `php:8.5-alpine` line, and the weekly updater's pull request is blocked until `php:8.5-alpine` serves 8.5.13.
+* `tests.yaml` fails any image older than PHP 8.5.13, so the weekly updater cannot merge 8.5.12 again.
+
 ## Version 2.3.0
 
 ### Remove
