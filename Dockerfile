@@ -1,6 +1,8 @@
 # Pin php:8.5-alpine by multi-arch index digest. Bump with:
 #   docker buildx imagetools inspect php:8.5-alpine | head -2
-ARG BASE_IMAGE="php:8.5-alpine@sha256:e899a75c775804e5466dbd9c96b31f8b6c6ae2ddb053a8466223a0c32992ff8e"
+# tests.yaml requires PHP 8.5.13+ (php-src GH-24577); while php:8.5-alpine
+# serves 8.5.12, pin php:8.5.13RC1-alpine's digest instead.
+ARG BASE_IMAGE="php:8.5-alpine@sha256:0633948d1639fffd0610c298be81d38759e4087450d44b61721b4dbfa9c1f876"
 
 FROM $BASE_IMAGE AS trusted-base
 
