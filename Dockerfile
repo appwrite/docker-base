@@ -31,8 +31,8 @@ ENV \
     PHP_SCRYPT_COMMIT="5a14bc766423dac3f868792fa8c41f85f47263ec" \
     PHP_SNAPPY_VERSION="0.2.3" \
     PHP_SNAPPY_COMMIT="d31b77d63955dbbf1a302ca13c4795292f91d140" \
-    PHP_SWOOLE_VERSION="v6.2.5" \
-    PHP_SWOOLE_COMMIT="76c657d88be39b7af6bf85e46bcbac0da7387760" \
+    PHP_SWOOLE_VERSION="v0.1.0" \
+    PHP_SWOOLE_COMMIT="34516580163686bb381c7f644185a226ca03de9a" \
     PHP_YAML_VERSION="2.3.0" \
     PHP_YAML_COMMIT="c1f0d8ba5ef3884846261bbdb91c2ab0b07db44c" \
     PHP_ZSTD_VERSION="0.18.0" \
@@ -233,27 +233,29 @@ RUN docker-php-ext-configure gd \
       /artifacts/pdo_pgsql.so \
       /artifacts/sockets.so
 
-# Built without --enable-swoole-stdext: stdext registers user opcode
-# handlers, which makes opcache's JIT refuse to enable in downstream images.
+# Swoole is appwrite-labs/swoole-rs: Swoole v6.2.5's PHP extension rewritten in
+# Rust and built by Cargo, so PHP_SWOOLE_VERSION is a swoole-rs release while
+# the extension reports 6.2.5. Brotli, zstd, OpenSSL and sockets are built in;
+# the --configure switches are the rest of upstream's. Built without --stdext:
+# stdext registers user opcode handlers, which makes opcache's JIT refuse to
+# enable in downstream images. rust-toolchain.toml in the source picks Rust.
 FROM compile AS swoole
 RUN \
+  apk add --no-cache clang-dev pcre2-dev pkgconf python3 rustup && \
+  rustup-init -y --profile minimal --default-toolchain none && \
+  . "$HOME/.cargo/env" && \
   git init swoole && \
   cd swoole && \
-  git fetch --depth 1 https://github.com/swoole/swoole-src.git $PHP_SWOOLE_COMMIT && \
+  git fetch --depth 1 https://github.com/appwrite-labs/swoole-rs.git $PHP_SWOOLE_COMMIT && \
   git checkout FETCH_HEAD && \
-  phpize && \
-  ./configure \
-    --enable-brotli \
-    --enable-cares \
-    --enable-mysqlnd \
-    --enable-openssl \
-    --enable-sockets \
-    --enable-swoole-curl \
-    --enable-swoole-pgsql \
-    --enable-zstd \
-    --with-openssl-dir=/usr && \
-  make -j"$(nproc)" && make install && \
-  cp $(php-config --extension-dir)/swoole.so /artifacts/ && \
+  rustup toolchain install && \
+  RUSTFLAGS="-C target-feature=-crt-static" python3 tools/build_ext.py \
+    --php-sockets \
+    --configure=--enable-cares \
+    --configure=--enable-mysqlnd \
+    --configure=--enable-swoole-curl \
+    --configure=--enable-swoole-pgsql && \
+  cp target/ext/swoole.so /artifacts/ && \
   strip /artifacts/swoole.so
 
 # git-remote-entire, git's remote helper for entire:// URLs: Entire serves git
