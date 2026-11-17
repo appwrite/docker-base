@@ -4,7 +4,7 @@
 
 ### Change
 
-* Build Swoole from [appwrite-labs/swoole-rs](https://github.com/appwrite-labs/swoole-rs) v0.1.0, Swoole v6.2.5's PHP extension rewritten in Rust, in place of `swoole/swoole-src`. It reports itself as Swoole 6.2.5 and keeps the same switches: c-ares, mysqlnd, sockets, Brotli, zstd, OpenSSL, the curl hook and the coroutine pgsql driver. swoole-rs is experimental; its README covers what is and isn't proven.
+* Build Swoole from [appwrite-labs/swoole-rs](https://github.com/appwrite-labs/swoole-rs) v0.1.1, Swoole v6.2.5's PHP extension rewritten in Rust, in place of `swoole/swoole-src`. It reports itself as Swoole 6.2.5 and keeps the same switches: c-ares, mysqlnd, sockets, Brotli, zstd, OpenSSL, the curl hook and the coroutine pgsql driver. swoole-rs is experimental; its README covers what is and isn't proven.
 * `PHP_SWOOLE_VERSION` is now a swoole-rs release, and the weekly updater follows swoole-rs's tags. The v6.2.4 exclusion goes with swoole-src. `tests-swoole.php` still guards the `Swoole-Upload-File` behaviour (swoole/swoole-src#6309).
 
 ## Version 2.3.0
