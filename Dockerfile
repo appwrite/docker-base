@@ -31,8 +31,8 @@ ENV \
     PHP_SCRYPT_COMMIT="5a14bc766423dac3f868792fa8c41f85f47263ec" \
     PHP_SNAPPY_VERSION="0.2.3" \
     PHP_SNAPPY_COMMIT="d31b77d63955dbbf1a302ca13c4795292f91d140" \
-    PHP_SWOOLE_VERSION="v0.1.1" \
-    PHP_SWOOLE_COMMIT="a7ae0ba87cf70a2e265cd2e4bd44b18326a26af1" \
+    PHP_SWOOLE_VERSION="v0.1.3" \
+    PHP_SWOOLE_COMMIT="9c3d850a0e82cc8e4a0a8b1ad797b037bac002b4" \
     PHP_YAML_VERSION="2.3.0" \
     PHP_YAML_COMMIT="c1f0d8ba5ef3884846261bbdb91c2ab0b07db44c" \
     PHP_ZSTD_VERSION="0.18.0" \
@@ -233,9 +233,9 @@ RUN docker-php-ext-configure gd \
       /artifacts/pdo_pgsql.so \
       /artifacts/sockets.so
 
-# Swoole is appwrite-labs/swoole-rs: Swoole v6.2.5's PHP extension rewritten in
+# Swoole is appwrite-labs/swoole-rs: Swoole v6.2.6's PHP extension rewritten in
 # Rust and built by Cargo, so PHP_SWOOLE_VERSION is a swoole-rs release while
-# the extension reports 6.2.5. Brotli, zstd, OpenSSL and sockets are built in;
+# the extension reports 6.2.6. Brotli, zstd, OpenSSL and sockets are built in;
 # the --configure switches are the rest of upstream's. Built without --stdext:
 # stdext registers user opcode handlers, which makes opcache's JIT refuse to
 # enable in downstream images. rust-toolchain.toml in the source picks Rust.
