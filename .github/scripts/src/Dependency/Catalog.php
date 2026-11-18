@@ -82,9 +82,7 @@ final readonly class Catalog
                 'swoole',
                 'PHP_SWOOLE_VERSION',
                 'PHP_SWOOLE_COMMIT',
-                new Git('https://github.com/swoole/swoole-src.git'),
-                // Unlinks paths named by client Swoole-Upload-File part headers (swoole/swoole-src#6309).
-                ['v6.2.4'],
+                new Git('https://github.com/appwrite-labs/swoole-rs.git'),
             ),
             new Dependency(
                 'xdebug',

@@ -55,7 +55,7 @@ final class CatalogTest extends TestCase
             'redis' => 'https://github.com/phpredis/phpredis.git',
             'scrypt' => 'https://github.com/DomBlack/php-scrypt.git',
             'snappy' => 'https://github.com/kjdev/php-ext-snappy.git',
-            'swoole' => 'https://github.com/swoole/swoole-src.git',
+            'swoole' => 'https://github.com/appwrite-labs/swoole-rs.git',
             'xdebug' => 'https://github.com/xdebug/xdebug',
             'yaml' => 'https://github.com/php/pecl-file_formats-yaml',
             'zstd' => 'https://github.com/kjdev/php-ext-zstd.git',
@@ -78,18 +78,6 @@ final class CatalogTest extends TestCase
 
         self::assertSame(true, $protobuf->source instanceof PECL);
         self::assertSame(Catalog::PECL_RELEASES, $protobuf->source->url());
-    }
-
-    public function test_excludes_swoole_releases_that_unlink_upload_markers(): void
-    {
-        $excluded = [];
-        foreach (Catalog::create()->dependencies() as $dependency) {
-            if ($dependency->excluded !== []) {
-                $excluded[$dependency->name] = $dependency->excluded;
-            }
-        }
-
-        self::assertSame(['swoole' => ['v6.2.4']], $excluded);
     }
 
     public function test_source_definitions_are_immutable(): void

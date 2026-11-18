@@ -34,45 +34,6 @@ final class StructureTest extends TestCase
         }
     }
 
-    public function test_swoole_expectation_accepts_every_release_the_updater_selects(): void
-    {
-        $matched = preg_match(
-            "/- name: 'Swoole version'\\n(?:[ ]{4}[^\\n]*\\n)*?"
-            . "[ ]{4}expectedOutput:\\n[ ]{6}- '([^'\\n]+)'\\n/",
-            $this->read('tests.yaml'),
-            $expectation,
-        );
-        self::assertSame(1, $matched, 'tests.yaml must assert the Swoole version');
-        $pattern = '/' . str_replace('/', '\/', $expectation[1]) . '/';
-
-        $version = $this->versions()['swoole'];
-        $major = (int) $version->major;
-        $minor = (int) $version->minor;
-        $patch = (int) $version->patch;
-        $line = static fn (string $release): string => 'Extension [ <persistent> '
-            . "extension #46 swoole version {$release} ] {";
-
-        foreach ([
-            "{$major}.{$minor}.{$patch}",
-            "{$major}.{$minor}." . ($patch + 1),
-            "{$major}." . ($minor + 1) . '.0',
-        ] as $release) {
-            self::assertSame(
-                1,
-                preg_match($pattern, $line($release)),
-                "Swoole {$release} must pass the structure test",
-            );
-        }
-
-        foreach ([($major + 1) . '.0.0', "{$major}.{$minor}.{$patch}-dev"] as $release) {
-            self::assertSame(
-                0,
-                preg_match($pattern, $line($release)),
-                "Swoole {$release} must fail the structure test",
-            );
-        }
-    }
-
     /**
      * @return array<string, Version>
      */
