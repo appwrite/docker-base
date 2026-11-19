@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## Version 2.4.2
+
+### Fix
+
+* Build on PHP 8.5.13. PHP 8.5.12's OPcache could corrupt `DateTime`'s cached class entry in a forked Swoole worker (php-src GH-24577), after which every `DateTime` type check in that worker failed with `must be of type DateTime, DateTime given` until the worker exited.
+
 ## Version 2.4.1
 
 ### Change
