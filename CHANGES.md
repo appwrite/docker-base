@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## Version 2.4.1
+
+### Change
+
+* Update swoole-rs to v0.1.5. libcurl's callbacks, `curl_exec`, `curl_setopt`, `curl_getinfo` and the multi API of the coroutine cURL hook now run in Rust, and so do more of the PDO PostgreSQL and plain-file stream code.
+
 ## Version 2.4.0
 
 ### Change
