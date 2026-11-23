@@ -73,7 +73,6 @@ commandTests:
       - readline
       - redis
       - Reflection
-      - scrypt
       - session
       - SimpleXML
       - snappy
