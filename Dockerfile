@@ -27,8 +27,6 @@ ENV \
     PHP_PROTOBUF_CHECKSUM="f0a17c67de29df0fb0e5215a381df9b155125e1ace6252dd617bf16b4194dd5b" \
     PHP_REDIS_VERSION="6.3.0" \
     PHP_REDIS_COMMIT="df4fab2de7fc327c54c94a13af2b9542e4fbd720" \
-    PHP_SCRYPT_VERSION="2.0.2" \
-    PHP_SCRYPT_COMMIT="5a14bc766423dac3f868792fa8c41f85f47263ec" \
     PHP_SNAPPY_VERSION="0.2.3" \
     PHP_SNAPPY_COMMIT="d31b77d63955dbbf1a302ca13c4795292f91d140" \
     PHP_SWOOLE_VERSION="v0.1.5" \
@@ -192,18 +190,6 @@ RUN \
   cp $(php-config --extension-dir)/snappy.so /artifacts/ && \
   strip /artifacts/snappy.so
 
-FROM compile AS scrypt
-RUN \
-  git init scrypt && \
-  cd scrypt && \
-  git fetch --depth 1 https://github.com/DomBlack/php-scrypt.git $PHP_SCRYPT_COMMIT && \
-  git checkout FETCH_HEAD && \
-  phpize && \
-  ./configure --enable-scrypt && \
-  make -j"$(nproc)" && make install && \
-  cp $(php-config --extension-dir)/scrypt.so /artifacts/ && \
-  strip /artifacts/scrypt.so
-
 FROM compile AS protobuf
 RUN curl -fsSL -o protobuf.tgz \
       https://pecl.php.net/get/protobuf-${PHP_PROTOBUF_VERSION}.tgz && \
@@ -337,7 +323,6 @@ COPY --from=maxmind  /artifacts/ /tmp/exts/
 COPY --from=mongodb  /artifacts/ /tmp/exts/
 COPY --from=protobuf /artifacts/ /tmp/exts/
 COPY --from=redis    /artifacts/ /tmp/exts/
-COPY --from=scrypt   /artifacts/ /tmp/exts/
 COPY --from=snappy   /artifacts/ /tmp/exts/
 COPY --from=swoole   /artifacts/ /tmp/exts/
 COPY --from=yaml     /artifacts/ /tmp/exts/
@@ -357,7 +342,6 @@ RUN cp /tmp/exts/*.so $(php-config --extension-dir)/ && \
       pdo_pgsql \
       protobuf \
       redis \
-      scrypt \
       snappy \
       sockets \
       swoole \

@@ -67,12 +67,6 @@ final readonly class Catalog
                 new Git('https://github.com/phpredis/phpredis.git'),
             ),
             new Dependency(
-                'scrypt',
-                'PHP_SCRYPT_VERSION',
-                'PHP_SCRYPT_COMMIT',
-                new Git('https://github.com/DomBlack/php-scrypt.git'),
-            ),
-            new Dependency(
                 'snappy',
                 'PHP_SNAPPY_VERSION',
                 'PHP_SNAPPY_COMMIT',
