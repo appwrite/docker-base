@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## Version 2.5.1
+
+### Change
+
+* Update swoole-rs to v0.1.7. `proc_open`, `proc_close`, `proc_terminate` and `proc_get_status` under the coroutine hook now run in Rust, along with the rest of the cURL hook's `curl_exec` path. A thread's empty event table gives its storage back.
+
 ## Version 2.4.2
 
 ### Fix
