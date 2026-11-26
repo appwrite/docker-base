@@ -5,6 +5,10 @@ commandTests:
     command: "php"
     args: ["-r", 'exit(version_compare(curl_version()["version"], "8.22.0", ">=") ? 0 : 1);']
     exitCode: 0
+  - name: 'libexpat includes the 2.11.0 security fixes'
+    command: "sh"
+    args: ["-c", "apk info -v 2>/dev/null | sed -n 's/^libexpat-//p' | xargs -I{} apk version -t {} 2.11.0-r0 | grep -qv '<'"]
+    exitCode: 0
   - name: 'No ImageMagick'
     command: "sh"
     args: ["-c", "! command -v magick && ! command -v identify && ! php -m | grep -qi imagick"]

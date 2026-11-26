@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## Version 2.5.3
+
+### Fix
+
+* Require libexpat 2.11.0-r0, which fixes CVE-2026-124317 (out-of-bounds read), CVE-2026-128241 (`xmlwf` follows symlinks) and CVE-2026-134703 (improper Unicode handling). The final stage's `apk upgrade` reused a cached layer that still held 2.10.0.
+
 ## Version 2.5.1
 
 ### Change
