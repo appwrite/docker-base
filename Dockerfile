@@ -296,6 +296,7 @@ RUN apk update && \
     'git>=2.54.1-r0' \
     icu-libs \
     libavif \
+    'libexpat>=2.11.0-r0' \
     'libcurl>=8.22.0' \
     libgomp \
     libheif \
