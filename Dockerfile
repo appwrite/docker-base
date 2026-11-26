@@ -17,8 +17,6 @@ FROM trusted-base AS compile
 ENV \
     PHP_BROTLI_VERSION="0.21.1" \
     PHP_BROTLI_COMMIT="eaa63da67ae9ae7bbb5afbb52a185703bad70389" \
-    PHP_LZ4_VERSION="0.8.0" \
-    PHP_LZ4_COMMIT="7406b442fa02f71baa39f207bd79d90765e11331" \
     PHP_MAXMINDDB_VERSION="v1.14.0" \
     PHP_MAXMINDDB_COMMIT="f3c92f68b3bec42a9aa780368399e03dc6b91e89" \
     PHP_MONGODB_VERSION="2.5.5" \
@@ -27,14 +25,10 @@ ENV \
     PHP_PROTOBUF_CHECKSUM="f0a17c67de29df0fb0e5215a381df9b155125e1ace6252dd617bf16b4194dd5b" \
     PHP_REDIS_VERSION="6.3.0" \
     PHP_REDIS_COMMIT="df4fab2de7fc327c54c94a13af2b9542e4fbd720" \
-    PHP_SNAPPY_VERSION="0.2.3" \
-    PHP_SNAPPY_COMMIT="d31b77d63955dbbf1a302ca13c4795292f91d140" \
     PHP_SWOOLE_VERSION="v0.1.7" \
     PHP_SWOOLE_COMMIT="2eadb0e1b4dc6cde067d8ebeac5c0edac5056924" \
     PHP_YAML_VERSION="2.3.0" \
-    PHP_YAML_COMMIT="c1f0d8ba5ef3884846261bbdb91c2ab0b07db44c" \
-    PHP_ZSTD_VERSION="0.18.0" \
-    PHP_ZSTD_COMMIT="c2593a4ce2457b23e7fa7f81ddf0dd9bbdd89b47"
+    PHP_YAML_COMMIT="c1f0d8ba5ef3884846261bbdb91c2ab0b07db44c"
 
 # libcurl 8.22.0 fixes retained TLS shutdown sockets in the socket-action API
 # used by Swoole's curl hook (curl/curl#22282). Require it here and at runtime.
@@ -122,19 +116,6 @@ RUN \
   cp $(php-config --extension-dir)/mongodb.so /artifacts/ && \
   strip /artifacts/mongodb.so
 
-FROM compile AS zstd
-RUN \
-  git init zstd && \
-  cd zstd && \
-  git fetch --depth 1 https://github.com/kjdev/php-ext-zstd.git $PHP_ZSTD_COMMIT && \
-  git checkout FETCH_HEAD && \
-  git submodule update --init --recursive && \
-  phpize && \
-  ./configure --with-libzstd && \
-  make -j"$(nproc)" && make install && \
-  cp $(php-config --extension-dir)/zstd.so /artifacts/ && \
-  strip /artifacts/zstd.so
-
 FROM compile AS brotli
 RUN \
   git init brotli && \
@@ -163,32 +144,6 @@ RUN \
   make -j"$(nproc)" && make install && \
   cp $(php-config --extension-dir)/igbinary.so /artifacts/ && \
   strip /artifacts/igbinary.so
-
-FROM compile AS lz4
-RUN \
-  git init lz4 && \
-  cd lz4 && \
-  git fetch --depth 1 https://github.com/kjdev/php-ext-lz4.git $PHP_LZ4_COMMIT && \
-  git checkout FETCH_HEAD && \
-  git submodule update --init --recursive && \
-  phpize && \
-  ./configure --with-lz4-includedir=/usr && \
-  make -j"$(nproc)" && make install && \
-  cp $(php-config --extension-dir)/lz4.so /artifacts/ && \
-  strip /artifacts/lz4.so
-
-FROM compile AS snappy
-RUN \
-  git init snappy && \
-  cd snappy && \
-  git fetch --depth 1 https://github.com/kjdev/php-ext-snappy.git $PHP_SNAPPY_COMMIT && \
-  git checkout FETCH_HEAD && \
-  git submodule update --init --recursive && \
-  phpize && \
-  ./configure && \
-  make -j"$(nproc)" && make install && \
-  cp $(php-config --extension-dir)/snappy.so /artifacts/ && \
-  strip /artifacts/snappy.so
 
 FROM compile AS protobuf
 RUN curl -fsSL -o protobuf.tgz \
@@ -319,15 +274,12 @@ WORKDIR /usr/src/code
 COPY --from=core-extensions /artifacts/ /tmp/exts/
 COPY --from=brotli   /artifacts/ /tmp/exts/
 COPY --from=igbinary /artifacts/ /tmp/exts/
-COPY --from=lz4      /artifacts/ /tmp/exts/
 COPY --from=maxmind  /artifacts/ /tmp/exts/
 COPY --from=mongodb  /artifacts/ /tmp/exts/
 COPY --from=protobuf /artifacts/ /tmp/exts/
 COPY --from=redis    /artifacts/ /tmp/exts/
-COPY --from=snappy   /artifacts/ /tmp/exts/
 COPY --from=swoole   /artifacts/ /tmp/exts/
 COPY --from=yaml     /artifacts/ /tmp/exts/
-COPY --from=zstd     /artifacts/ /tmp/exts/
 
 RUN cp /tmp/exts/*.so $(php-config --extension-dir)/ && \
     rm -rf /tmp/exts && \
@@ -336,18 +288,15 @@ RUN cp /tmp/exts/*.so $(php-config --extension-dir)/ && \
       gd \
       igbinary \
       intl \
-      lz4 \
       maxminddb \
       mongodb \
       pdo_mysql \
       pdo_pgsql \
       protobuf \
       redis \
-      snappy \
       sockets \
       swoole \
-      yaml \
-      zstd
+      yaml
 
 COPY --from=entire /artifacts/git-remote-entire /usr/local/bin/git-remote-entire
 

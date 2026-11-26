@@ -60,7 +60,6 @@ commandTests:
       - intl
       - json
       - libxml
-      - lz4
       - maxminddb
       - mbstring
       - mysqlnd
@@ -79,7 +78,6 @@ commandTests:
       - Reflection
       - session
       - SimpleXML
-      - snappy
       - sockets
       - sodium
       - SPL
@@ -92,7 +90,13 @@ commandTests:
       - xmlwriter
       - yaml
       - zlib
-      - zstd
+  - name: 'PECL zstd, lz4 and snappy absent'
+    command: "php"
+    args: ["-m"]
+    excludedOutput:
+      - '(?m)^zstd$'
+      - '(?m)^lz4$'
+      - '(?m)^snappy$'
   - name: 'XDebug absent'
     command: "php"
     args: ["-m"]

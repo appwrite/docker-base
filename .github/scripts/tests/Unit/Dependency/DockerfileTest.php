@@ -40,7 +40,7 @@ final class DockerfileTest extends TestCase
         sort($names, SORT_STRING);
         sort($expected, SORT_STRING);
 
-        self::assertSame(25, count($pins));
+        self::assertSame(19, count($pins));
         self::assertSame(Catalog::BASE, $pins[0]->name);
         self::assertSame(Fixture::OLD_DIGEST, $pins[0]->current);
         self::assertSame($expected, $names);
@@ -59,7 +59,7 @@ final class DockerfileTest extends TestCase
             $content,
             $matches,
         );
-        self::assertSame(25, $count);
+        self::assertSame(19, $count);
 
         $declarations = array_values(array_unique($matches[1]));
         $expectedDeclarations = Fixture::EXPECTED_DOCKERFILE_DECLARATIONS;
@@ -122,7 +122,7 @@ final class DockerfileTest extends TestCase
         self::assertSame(
             1,
             preg_match(
-                '/PHP_SNAPPY_COMMIT="' . Fixture::reference('snappy') . '"/',
+                '/PHP_YAML_COMMIT="' . Fixture::reference('yaml') . '"/',
                 $plan->content,
             ),
             'an unchanged dependency must keep its reference',
@@ -132,25 +132,25 @@ final class DockerfileTest extends TestCase
     public function test_reports_a_reference_only_change_as_an_update(): void
     {
         $content = str_replace(
-            'PHP_SNAPPY_COMMIT="' . Fixture::reference('snappy') . '"',
-            'PHP_SNAPPY_COMMIT="' . str_repeat('9', 40) . '"',
+            'PHP_YAML_COMMIT="' . Fixture::reference('yaml') . '"',
+            'PHP_YAML_COMMIT="' . str_repeat('9', 40) . '"',
             Fixture::dockerfile(),
         );
         $plan = $this->application(new Discovery())->plan($content);
 
-        $snappy = null;
+        $yaml = null;
         foreach ($plan->changes as $change) {
-            if ($change->name === 'snappy') {
-                $snappy = $change;
+            if ($change->name === 'yaml') {
+                $yaml = $change;
             }
         }
 
-        self::assertNotNull($snappy);
-        self::assertSame(Fixture::CURRENT['snappy'], $snappy->latest);
-        self::assertSame(true, $snappy->changed());
+        self::assertNotNull($yaml);
+        self::assertSame(Fixture::CURRENT['yaml'], $yaml->latest);
+        self::assertSame(true, $yaml->changed());
         self::assertSame(
-            Fixture::commit(Fixture::CURRENT['snappy']),
-            $snappy->latestReference,
+            Fixture::commit(Fixture::CURRENT['yaml']),
+            $yaml->latestReference,
         );
     }
 
@@ -204,10 +204,10 @@ final class DockerfileTest extends TestCase
     public function test_rejects_a_pinned_tag_that_upstream_no_longer_has(): void
     {
         $this->expectException(Exception::class);
-        $this->expectExceptionMessage('No upstream tag for snappy 0.2.3');
+        $this->expectExceptionMessage('No upstream tag for yaml 2.3.0');
 
         $this->application(new Discovery(
-            releases: ['snappy' => ['0.2.2']],
+            releases: ['yaml' => ['2.2.0']],
         ))->plan(Fixture::dockerfile());
     }
 
@@ -215,11 +215,11 @@ final class DockerfileTest extends TestCase
     {
         $this->assertFailure(
             str_replace(
-                'PHP_SNAPPY_COMMIT="' . Fixture::reference('snappy') . '"',
-                'PHP_SNAPPY_COMMIT="main"',
+                'PHP_YAML_COMMIT="' . Fixture::reference('yaml') . '"',
+                'PHP_YAML_COMMIT="main"',
                 Fixture::dockerfile(),
             ),
-            'PHP_SNAPPY_COMMIT must be a lowercase immutable reference',
+            'PHP_YAML_COMMIT must be a lowercase immutable reference',
         );
     }
 
