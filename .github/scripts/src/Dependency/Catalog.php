@@ -37,12 +37,6 @@ final readonly class Catalog
                 new Git('https://github.com/entireio/cli.git'),
             ),
             new Dependency(
-                'lz4',
-                'PHP_LZ4_VERSION',
-                'PHP_LZ4_COMMIT',
-                new Git('https://github.com/kjdev/php-ext-lz4.git'),
-            ),
-            new Dependency(
                 'maxminddb',
                 'PHP_MAXMINDDB_VERSION',
                 'PHP_MAXMINDDB_COMMIT',
@@ -67,12 +61,6 @@ final readonly class Catalog
                 new Git('https://github.com/phpredis/phpredis.git'),
             ),
             new Dependency(
-                'snappy',
-                'PHP_SNAPPY_VERSION',
-                'PHP_SNAPPY_COMMIT',
-                new Git('https://github.com/kjdev/php-ext-snappy.git'),
-            ),
-            new Dependency(
                 'swoole',
                 'PHP_SWOOLE_VERSION',
                 'PHP_SWOOLE_COMMIT',
@@ -89,12 +77,6 @@ final readonly class Catalog
                 'PHP_YAML_VERSION',
                 'PHP_YAML_COMMIT',
                 new Git('https://github.com/php/pecl-file_formats-yaml'),
-            ),
-            new Dependency(
-                'zstd',
-                'PHP_ZSTD_VERSION',
-                'PHP_ZSTD_COMMIT',
-                new Git('https://github.com/kjdev/php-ext-zstd.git'),
             ),
         ]);
     }

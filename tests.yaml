@@ -60,7 +60,6 @@ commandTests:
       - intl
       - json
       - libxml
-      - lz4
       - maxminddb
       - mbstring
       - mysqlnd
@@ -79,7 +78,6 @@ commandTests:
       - Reflection
       - session
       - SimpleXML
-      - snappy
       - sockets
       - sodium
       - SPL
@@ -92,7 +90,6 @@ commandTests:
       - xmlwriter
       - yaml
       - zlib
-      - zstd
   - name: 'XDebug absent'
     command: "php"
     args: ["-m"]

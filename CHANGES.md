@@ -1,5 +1,16 @@
 # CHANGELOG
 
+## Version 2.6.0
+
+### Remove
+
+* The `zstd`, `lz4` and `snappy` PHP extensions (PECL). Appwrite's `Utopia\Compression` classes come from the `utopia` extension it builds itself (appwrite/appwrite#16127), which links the codecs on its own, and nothing else in Appwrite or Cloud calls `zstd_*()`, `lz4_*()` or `snappy_*()`. An image that still runs the PHP `Utopia\Compression` classes (Appwrite 1.9.x) must stay on 2.5.x. Appwrite's compression parity corpus (`crates/extension/tests/compression.php`) still writes streams with these extensions to check the classes read them, so it needs them stored as fixtures before Appwrite moves to 2.6.
+
+### Keep
+
+* The `brotli` PHP extension: Appwrite's HTTP `Response` streams with `brotli_compress_init()`.
+* `zstd-libs` and `lz4-libs`: Swoole is built with zstd, and the `utopia` extension loads the system `libzstd.so.1`.
+
 ## Version 2.5.3
 
 ### Fix

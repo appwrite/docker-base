@@ -29,7 +29,7 @@ use ReflectionClass;
 #[CoversClass(Dependency::class)]
 final class CatalogTest extends TestCase
 {
-    public function test_defines_all_twelve_dependencies(): void
+    public function test_defines_all_nine_dependencies(): void
     {
         $dependencies = Catalog::create()->dependencies();
         $names = array_map(
@@ -40,7 +40,7 @@ final class CatalogTest extends TestCase
         sort($names, SORT_STRING);
         sort($expected, SORT_STRING);
 
-        self::assertSame(12, count($dependencies));
+        self::assertSame(9, count($dependencies));
         self::assertSame($expected, $names);
     }
 
@@ -49,15 +49,12 @@ final class CatalogTest extends TestCase
         $expected = [
             'brotli' => 'https://github.com/kjdev/php-ext-brotli.git',
             'entire' => 'https://github.com/entireio/cli.git',
-            'lz4' => 'https://github.com/kjdev/php-ext-lz4.git',
             'maxminddb' => 'https://github.com/maxmind/MaxMind-DB-Reader-php.git',
             'mongodb' => 'https://github.com/mongodb/mongo-php-driver.git',
             'redis' => 'https://github.com/phpredis/phpredis.git',
-            'snappy' => 'https://github.com/kjdev/php-ext-snappy.git',
             'swoole' => 'https://github.com/appwrite-labs/swoole-rs.git',
             'xdebug' => 'https://github.com/xdebug/xdebug',
             'yaml' => 'https://github.com/php/pecl-file_formats-yaml',
-            'zstd' => 'https://github.com/kjdev/php-ext-zstd.git',
         ];
         $actual = [];
         $protobuf = null;

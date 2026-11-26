@@ -11,30 +11,24 @@ final readonly class Fixture
     public const array CURRENT = [
         'brotli' => '0.18.3',
         'entire' => 'v0.11.4',
-        'lz4' => '0.6.0',
         'maxminddb' => 'v1.13.1',
         'mongodb' => '2.2.1',
         'protobuf' => '5.34.0',
         'redis' => '6.3.0',
-        'snappy' => '0.2.3',
         'swoole' => 'v6.2.0',
         'xdebug' => '3.5.1',
         'yaml' => '2.3.0',
-        'zstd' => '0.15.2',
     ];
 
     public const array DECLARATIONS = [
         ['brotli', 'PHP_BROTLI_VERSION', 'PHP_BROTLI_COMMIT'],
         ['entire', 'ENTIRE_CLI_VERSION', 'ENTIRE_CLI_COMMIT'],
-        ['lz4', 'PHP_LZ4_VERSION', 'PHP_LZ4_COMMIT'],
         ['maxminddb', 'PHP_MAXMINDDB_VERSION', 'PHP_MAXMINDDB_COMMIT'],
         ['mongodb', 'PHP_MONGODB_VERSION', 'PHP_MONGODB_COMMIT'],
         ['protobuf', 'PHP_PROTOBUF_VERSION', 'PHP_PROTOBUF_CHECKSUM'],
         ['redis', 'PHP_REDIS_VERSION', 'PHP_REDIS_COMMIT'],
-        ['snappy', 'PHP_SNAPPY_VERSION', 'PHP_SNAPPY_COMMIT'],
         ['swoole', 'PHP_SWOOLE_VERSION', 'PHP_SWOOLE_COMMIT'],
         ['yaml', 'PHP_YAML_VERSION', 'PHP_YAML_COMMIT'],
-        ['zstd', 'PHP_ZSTD_VERSION', 'PHP_ZSTD_COMMIT'],
     ];
 
     public const array EXPECTED_DOCKERFILE_DECLARATIONS = [
@@ -43,8 +37,6 @@ final readonly class Fixture
         'ENTIRE_CLI_VERSION',
         'PHP_BROTLI_COMMIT',
         'PHP_BROTLI_VERSION',
-        'PHP_LZ4_COMMIT',
-        'PHP_LZ4_VERSION',
         'PHP_MAXMINDDB_COMMIT',
         'PHP_MAXMINDDB_VERSION',
         'PHP_MONGODB_COMMIT',
@@ -53,16 +45,12 @@ final readonly class Fixture
         'PHP_PROTOBUF_VERSION',
         'PHP_REDIS_COMMIT',
         'PHP_REDIS_VERSION',
-        'PHP_SNAPPY_COMMIT',
-        'PHP_SNAPPY_VERSION',
         'PHP_SWOOLE_COMMIT',
         'PHP_SWOOLE_VERSION',
         'PHP_XDEBUG_COMMIT',
         'PHP_XDEBUG_VERSION',
         'PHP_YAML_COMMIT',
         'PHP_YAML_VERSION',
-        'PHP_ZSTD_COMMIT',
-        'PHP_ZSTD_VERSION',
     ];
 
     public const string OLD_CHECKSUM = 'c0ffee00000000000000000000000000000000000000000000000000000000ee';

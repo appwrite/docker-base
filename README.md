@@ -82,7 +82,6 @@ docker run appwrite/base:latest php -m
 # yaml
 # Zend OPcache
 # zlib
-# zstd
 # 
 # [Zend Modules]
 # Zend OPcache
