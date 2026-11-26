@@ -7,7 +7,7 @@ commandTests:
     exitCode: 0
   - name: 'libexpat includes the 2.11.0 security fixes'
     command: "sh"
-    args: ["-c", 'v=$(apk info -v 2>/dev/null | sed -n "s/^libexpat-//p"); [ -n "$v" ] && [ "$(apk version -t "$v" 2.11.0-r0)" != "<" ]']
+    args: ["-c", "apk info -v 2>/dev/null | sed -n 's/^libexpat-//p' | xargs -I{} apk version -t {} 2.11.0-r0 | grep -qv '<'"]
     exitCode: 0
   - name: 'No ImageMagick'
     command: "sh"
