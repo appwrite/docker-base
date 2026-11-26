@@ -90,6 +90,13 @@ commandTests:
       - xmlwriter
       - yaml
       - zlib
+  - name: 'PECL zstd, lz4 and snappy absent'
+    command: "php"
+    args: ["-m"]
+    excludedOutput:
+      - '(?m)^zstd$'
+      - '(?m)^lz4$'
+      - '(?m)^snappy$'
   - name: 'XDebug absent'
     command: "php"
     args: ["-m"]
